@@ -1257,8 +1257,6 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 	if (use_bbcorepointer) {
 		lappendstr(defs_list, "static void bbcore_read(double *, int*, int*, int*, _threadargsproto_);\n");
 		lappendstr(defs_list, "extern void hoc_reg_bbcore_read(int, void(*)(double *, int*, int*, int*, _threadargsproto_));\n");
-		lappendstr(defs_list, "static void bbcore_write(double *, int*, int*, int*, _threadargsproto_);\n");
-		lappendstr(defs_list, "extern void hoc_reg_bbcore_write(int, void(*)(double *, int*, int*, int*, _threadargsproto_));\n");
 	}
 	Lappendstr(defs_list, "\
 extern Symbol* hoc_lookup(const char*);\n\
@@ -1369,7 +1367,6 @@ extern void _cvode_abstol( Symbol**, double*, int);\n\n\
 	}
 	if (use_bbcorepointer) {
 		lappendstr(defs_list, "  hoc_reg_bbcore_read(_mechtype, bbcore_read);\n");
-		lappendstr(defs_list, "  hoc_reg_bbcore_write(_mechtype, bbcore_write);\n");
 	}
 	sprintf(buf, " hoc_register_prop_size(_mechtype, _psize, _ppsize);\n");
 	Lappendstr(defs_list, buf);
