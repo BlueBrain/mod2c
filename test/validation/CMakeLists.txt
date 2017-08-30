@@ -39,7 +39,7 @@ configure_file("test_mod2c.in" ${CMAKE_CURRENT_BINARY_DIR}/test_mod2c_core @ONLY
 
 set(TEST_ENVIRONMENT "MODLUNIT=${CMAKE_SOURCE_DIR}/share/nrnunits.lib")
 
-foreach(mod2c "mod2c" "mod2c_core")
+foreach(mod2c "mod2c_core")
     set(test_data "${CMAKE_CURRENT_SOURCE_DIR}/${mod2c}")
     file(GLOB test_mods RELATIVE "${test_data}/mod" "${test_data}/mod/*.mod")
 
