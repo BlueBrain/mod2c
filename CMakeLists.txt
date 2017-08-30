@@ -52,7 +52,6 @@ include(CTest)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
-add_subdirectory(src/mod2c)
 add_subdirectory(src/mod2c_core)
 add_subdirectory(test/validation)
 
