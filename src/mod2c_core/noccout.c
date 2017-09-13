@@ -158,7 +158,7 @@ static void rhs_d_pnt_race(const char* r, const char* d) {
 }
 
 /* when vectorize = 0 */
-void c_out(const char* prefix)
+void c_out()
 {
 #if NMODL
 	Item *q;
@@ -176,7 +176,7 @@ void c_out(const char* prefix)
 	if (vectorize) {
 		vectorize_do_substitute();
 		kin_vect2();	/* heh, heh.. bet you can't guess what this is */
-		c_out_vectorize(prefix);
+		c_out_vectorize();
 		return;
 	}
 #endif
@@ -695,11 +695,10 @@ static void print_cuda_launcher_call(char *name) {
     P("#endif\n\n");
 }
 
-void c_out_vectorize(const char* prefix)
+void c_out_vectorize()
 {
 	Item *q;
 	extern int point_process;
-	(void)prefix; /* not used */
 
 	/* things which must go first and most declarations */
 	P("/* VECTORIZED */\n");

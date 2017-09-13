@@ -25,8 +25,6 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include "nmodlconf.h"
-
 /*
  * int main(int argc, char *argv[]) --- returns 0 if translation is
  * successful. Diag will exit with 1 if error. 
@@ -48,232 +46,169 @@ THE POSSIBILITY OF SUCH DAMAGE.
  *
  * 3) Output the lists. 
  *
- * void openfiles(int argc, char *argv[]) parse the argument list, and open
- * files. Print usage message and exit if no argument 
- *
  */
 
-/*
- * In order to interface this process with merge, a second argument is
- * allowed which gives the complete input filename.  The first argument
- * still gives the prefix of the .c and .var files.
- */
- 
-/* the first arg may also be a file.mod (containing the .mod suffix)*/
-#if MAC
-#include <sioux.h>
-#endif
-#if HAVE_STDLIB_H
+#include "nmodlconf.h"
+#include <getopt.h>
+#include <string.h>
 #include <stdlib.h>
-#endif
 #include "modl.h"
-FILE
-	* fin,			/* input file descriptor for filename.mod */
-				/* or file2 from the second argument */
-	*fparout,		/* output file descriptor for filename.var */
-	*fcout;			/* output file descriptor for filename.c */
-#if SIMSYS
-FILE	*fctlout,		/* filename.ctl */
-	*fnumout;		/* filename.num */
-#endif
+FILE* fin;      /* input file descriptor for  filename.mod */
+FILE* fcout;    /* output file descriptor for filename.c */
+char* finname;
+char* modprefix;
 
-
-char		*modprefix, prefix_[NRN_BUFSIZE];	/* the first argument */
-
-char            finname[NRN_BUFSIZE];	/* filename.mod  or second argument */
+static struct option long_options[] = {
+  {"version", no_argument, 0, 'v'},
+  {"help", no_argument, 0, 'h'},
+  {"outdir", required_argument, 0, 'o'},
+  {0,0,0,0}
+};
 
 #if LINT
-char           *clint;
-int             ilint;
-Item           *qlint;
+char*        clint;
+int          ilint;
+Item*        qlint;
+#endif
+
+#if NMODL && VECTORIZE
+extern int   vectorize;
+extern int   numlist;
+extern char* nmodl_version_;
+extern int   usederivstatearray;
 #endif
 
 extern int yyparse();
+extern int mkdir_p();
+
+static void openfiles(char* given_filename, char* output_dir) {
+  char  output_filename [NRN_BUFSIZE];
+  char  input_filename  [NRN_BUFSIZE];
+  modprefix = strdup (given_filename);                      // we want to keep original string to open input file
+  char* first_ext_char = strrchr(modprefix, '.');           // find last '.' that delimit file name from extension
+
+  if(first_ext_char) *first_ext_char = '\0';                // effectively cut the extension from prefix if it exist in given_filename
+  if ((fin = fopen(given_filename, "r")) == (FILE *) 0) {   // first try to open given_filename
+    Sprintf(input_filename, "%s.mod", given_filename);      // if it dont work try to add ".mod" extension and retry
+    Sprintf(finname, "%s.mod", given_filename);             // finname is still a global variable, so we need to update it
+    if ((fin = fopen(input_filename, "r")) == (FILE *) 0) {
+      diag("Can't open input file: ", input_filename);
+    }
+  }
+  if (output_dir) {
+      if(mkdir_p(output_dir) != 0) {
+        fprintf(stderr, "Can't create output directory %s\n", output_dir);
+        exit(1);
+      }
+      char* basename = strrchr(modprefix,'/');
+      Sprintf(output_filename, "%s%s.c", output_dir, basename);
+  }
+  else
+    Sprintf(output_filename, "%s.c", modprefix);
+
+  if ((fcout = fopen(output_filename, "w")) == (FILE *) 0) {
+  diag("Can't create C file: ", output_filename);
+  }
+  Fprintf(stderr, "Translating %s into %s\n", input_filename, output_filename);
+}
+
+static void show_options(char** argv) {
+  fprintf(stderr, "Source to source compiler from NMODL to C\n");
+  fprintf(stderr, "Usage: %s [options] Inputfile\n", argv[0]);
+  fprintf(stderr, "Options:\n");
+  fprintf(stderr, "\t-o | --outdir <OUTPUT_DIRECTORY>    directory where output files will be written\n");
+  fprintf(stderr, "\t-h | --help                         print this message\n");
+  fprintf(stderr, "\t-v | --version                      print version number\n");
+}
+
+int main(int argc, char** argv) {
+  int option        = -1;
+  int option_index  = 0;
+  char* output_dir = NULL;
+
+  if (argc < 2) {
+    show_options(argv);
+    exit(1);
+  }
+
+  while ( (option = getopt_long (argc, argv, ":vho:", long_options, &option_index)) != -1) {
+    switch (option) {
+      case 'v':
+        printf("%s\n", nmodl_version_);
+        exit(0);
+
+      case 'o':
+        output_dir = strdup(optarg);
+        break;
+
+      case 'h':
+        show_options(argv);
+        exit(0);
+
+      case ':':
+        fprintf(stderr, "%s: option '-%c' requires an argument\n", argv[0], optopt);
+        exit (-1);
+
+      case '?':
+      default:
+        fprintf(stderr, "%s: invalid option `-%c' \n", argv[0], optopt);
+        exit (-1);
+    }
+  }
+  if ((argc - optind) > 1) {
+    fprintf(stderr, "%s: Warning several input files specified on command line but only one will be processed\n", argv[0]);
+  }
+
+  init(); /* keywords into symbol table, initialize lists, etc. */
+  finname = argv[optind];
+  openfiles(finname, output_dir); /* .mrg else .mod,  .var, .c */
+  IGNORE(yyparse());
+/*
+ * At this point all blocks are fully processed except the kinetic
+ * block and the solve statements. Even in these cases the 
+ * processing doesn't involve syntax since the information is
+ * held in intermediate lists of specific structure.
+ *
+ */
+/*
+ * go through the list of solve statements and construct the model()
+ * code 
+ */
+  solvhandler();
+/* 
+ * NAME's can be used in many cases before they were declared and
+ * no checking up to this point has been done to make sure that
+ * names have been used in only one way.
+ *
+ */
+  consistency();
+  chk_thread_safe();
+  parout();
+  c_out();   /* print .c file */
+
+  IGNORE(fclose(fcout));
 
 #if NMODL && VECTORIZE
-extern int vectorize;
-extern int numlist;
-extern char* nmodl_version_;
-extern int usederivstatearray;
-#endif
-
-/*SUPPRESS 763*/
-static char pgm_name[] =	"nmodl";
-extern char *RCS_version;
-extern char *RCS_date;
-static void openfiles();
-
-int main(argc, argv)
-	int             argc;
-	char           *argv[]; {
-	/*
-	 * arg 1 is the prefix to the input file and output .c and .par
-	 * files 
-	 * We first look for a .mrg file and then a .mod file
-	 */
-#if NMODL
-	if (argc > 1 && strcmp(argv[1], "--version") == 0) {
-		printf("%s\n", nmodl_version_);
-		exit(0);
-	}
-#endif
-#if MAC
-	SIOUXSettings.asktosaveonclose = false;
-#if !SIMSYS
-	Fprintf(stderr, "%s   %s   %s\n",
-		pgm_name, RCS_version, RCS_date);
-#endif
-#endif	
-							
-	modprefix = prefix_;
-	init();			/* keywords into symbol table, initialize
-				 * lists, etc. */
-#if MAC
-	modl_units(); /* since we will be changing the cwd */
-	mac_cmdline(&argc, &argv);
-	{
-	char cs[NRN_BUFSIZE], *cp;
-	strncpy(cs, argv[1], NRN_BUFSIZE);
-	cp  = strrchr(cs, ':');
-	if (cp) {
-		*cp = '\0';
-		 if (chdir(cs) == 0) {
-			printf("current directory is \"%s\"\n", cs);
-			strcpy(argv[1], cp+1);
-		}
-	}
-	}		
-
-#endif
-
-	openfiles(argc, argv);	/* .mrg else .mod,  .var, .c */
-#if NMODL || HMODL
-	Fprintf(stderr, "Translating %s into %s.c\n", finname,
-		modprefix);
-#else
-#if !SIMSYS
-	Fprintf(stderr, "Translating %s into %s.c and %s.var\n", finname,
-		modprefix, modprefix);
-#endif
-#endif
-	IGNORE(yyparse());
-	/*
-	 * At this point all blocks are fully processed except the kinetic
-	 * block and the solve statements. Even in these cases the 
-	 * processing doesn't involve syntax since the information is
-	 * held in intermediate lists of specific structure.
-	 *
-	 */
-	/*
-	 * go through the list of solve statements and construct the model()
-	 * code 
-	 */
-	solvhandler();
-	/* 
-	 * NAME's can be used in many cases before they were declared and
-	 * no checking up to this point has been done to make sure that
-	 * names have been used in only one way.
-	 *
-	 */
-	consistency();
-#if 0 && !_CRAY && NMODL && VECTORIZE
-/* allowing Kinetic models to be vectorized on cray. So nonzero numlist is
-no longer adequate for saying we can not */
-	if (numlist) {
-		vectorize = 0;
-	}
-#endif
-	chk_thread_safe();
-	parout();		/* print .var file.
-				 * Also #defines which used to be in defs.h
-				 * are printed into .c file at beginning.
-				 */
-	c_out(modprefix);			/* print .c file */
-#if HMODL || NMODL
-#else
-	IGNORE(fclose(fparout));
-#endif
-#if SIMSYS
-	IGNORE(fclose(fctlout));
-	IGNORE(fclose(fnumout));
-#endif
-	IGNORE(fclose(fcout));
-
-#if NMODL && VECTORIZE
-	if (vectorize) {
-		Fprintf(stderr, "Thread Safe\n");
-	}
-	if (usederivstatearray) {
-fprintf(stderr, "Derivatives of STATE array variables are not translated correctly and compile time errors will be generated.\n");
-fprintf(stderr, "The %s.c file may be manually edited to fix these errors.\n", modprefix);
-	}
+  if (vectorize) {
+    Fprintf(stderr, "Thread Safe\n");
+  }
+  if (usederivstatearray) {
+    fprintf(stderr, "Derivatives of STATE array variables are not translated correctly and compile time errors will be generated.\n");
+    fprintf(stderr, " %s.c file may be manually edited to fix these errors.\n", modprefix);
+  }
 #endif
 
 #if LINT
-	{			/* for lex */
-		extern int      yytchar, yylineno;
-		extern FILE    *yyin;
-		IGNORE(yyin);
-		IGNORE(yytchar);
-		IGNORE(yylineno);
-		IGNORE(yyinput());
-		yyunput(ilint);
-		yyoutput(ilint);
-	}
-#endif
-#if MAC
-	printf("Done\n");
-	SIOUXSettings.autocloseonquit = true;
-#endif
-	return 0;
+{ /* for lex */
+  extern int      yytchar, yylineno;
+  extern FILE    *yyin;
+  IGNORE(yyin);
+  IGNORE(yytchar);
+  IGNORE(yylineno);
+  IGNORE(yyinput());
+  yyunput(ilint);
+  yyoutput(ilint);
 }
-
-static void openfiles(argc, argv)
-	int             argc;
-	char           *argv[];
-{
-	char            s[NRN_BUFSIZE];
-	char *cp;
-
-	if (argc > 1) {
-		sprintf(modprefix, "%s", argv[1]);
-		cp = strstr(modprefix, ".mod");
-		if (cp) {
-			*cp = '\0';
-		}
-	}
-	if (argc == 2) {
-		Sprintf(finname, "%s.mrg", modprefix);
-	} else if (argc == 3) {
-		Sprintf(finname, "%s", argv[2]);
-	} else {
-		diag("Usage:", "modl prefixto.mod [inputfile]");
-	}
-	if ((fin = fopen(finname, "r")) == (FILE *) 0) {
-		Sprintf(finname, "%s.mod", modprefix);
-		if ((fin = fopen(finname, "r")) == (FILE *) 0) {
-			diag("Can't open input file: ", finname);
-		}
-	}
-#if HMODL || NMODL
-#else
-	Sprintf(s, "%s.var", modprefix);
-	if ((fparout = fopen(s, "w")) == (FILE *) 0) {
-		diag("Can't create variable file: ", s);
-	}
 #endif
-	Sprintf(s, "%s.c", modprefix);
-	if ((fcout = fopen(s, "w")) == (FILE *) 0) {
-		diag("Can't create C file: ", s);
-	}
-#if SIMSYS
-	Sprintf(s, "%s.ctl", modprefix);
-	if ((fctlout = fopen(s, "w")) == (FILE *) 0) {
-		diag("Can't create variable file: ", s);
-	}
-	Sprintf(s, "%s.num", modprefix);
-	if ((fnumout = fopen(s, "w")) == (FILE *) 0) {
-		diag("Can't create C file: ", s);
-	}
-#endif
+  return 0;
 }

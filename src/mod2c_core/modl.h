@@ -240,9 +240,9 @@ extern Symbol
 
 extern char suffix[];
 
-extern char     finname[],	/* the input file prefix */
-                buf[];		/* general purpose temporary buffer */
-
+extern char*     finname;  /* the input file prefix */
+extern char      buf[];    /* general purpose temporary buffer */
+extern char*     modprefix;
 extern List
 		*intoken,	/* Main list of input tokens */
 		*initfunc,	/* see discussion above */
@@ -258,7 +258,6 @@ extern List
 
 extern FILE
 		*fin,		/* .mod input file descriptor */
-		*fparout,	/* .var file */
 		*fcout;		/* .c file */
 
 extern Symbol

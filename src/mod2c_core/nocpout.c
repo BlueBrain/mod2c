@@ -144,7 +144,7 @@ extern Symbol *stepsym;
 extern char   *reprime();
 extern List	*symlist[];
 extern List* ldifuslist;
-extern char finname[];
+extern char* finname;
 extern int check_tables_threads(List*);
 List* acc_present_list;
 List *syminorder;
@@ -191,7 +191,7 @@ static List *rangestate;
 static List *nrnpointers;
 static List* uip; /* void _update_ion_pointer(Datum* _ppvar){...} text */
 char suffix[50];
-extern char *modprefix;
+extern char* modprefix;
 static char *rsuffix;	/* point process range and functions don't have suffix*/
 static char *mechname;
 static char* modbase;
