@@ -9,13 +9,8 @@
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
 #include "coreneuron/nrnoc/multicore.h"
-
-#if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include "coreneuron/nrniv/nrn_acc_manager.h"
-
-#endif
 #include "coreneuron/utils/randoms/nrnran123.h"
-
 #include "coreneuron/nrnoc/md2redef.h"
 #if METHOD3
 extern int _method3;
@@ -258,10 +253,10 @@ static void _acc_globals_update() {
 };
  static double _sav_indep;
  static void nrn_alloc(double*, Datum*, int);
-void  nrn_init(_NrnThread*, _Memb_list*, int);
+void nrn_init(_NrnThread*, _Memb_list*, int);
 void nrn_state(_NrnThread*, _Memb_list*, int);
  void nrn_cur(_NrnThread*, _Memb_list*, int);
- void  nrn_jacob(_NrnThread*, _Memb_list*, int);
+ void nrn_jacob(_NrnThread*, _Memb_list*, int);
  
 #if 0 /*BBCORE*/
  static void _hoc_destroy_pnt(_vptr) void* _vptr; {

@@ -9,13 +9,8 @@
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
 #include "coreneuron/nrnoc/multicore.h"
-
-#if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include "coreneuron/nrniv/nrn_acc_manager.h"
-
-#endif
 #include "coreneuron/utils/randoms/nrnran123.h"
-
 #include "coreneuron/nrnoc/md2redef.h"
 #if METHOD3
 extern int _method3;
@@ -38,7 +33,7 @@ extern double hoc_Exp(double);
 #else
 #define _PRAGMA_FOR_INIT_ACC_LOOP_ _Pragma("acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], nrn_ion_global_map[0:nrn_ion_global_map_size], _nt[0:1] _thread_present_) if(_nt->compute_gpu)")
 #endif
-#define _PRAGMA_FOR_STATE_ACC_LOOP_ _Pragma("acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], _nt[0:1] _thread_present_) if(_nt->compute_gpu) async(stream_id)")
+#define _PRAGMA_FOR_STATE_ACC_LOOP_ _Pragma("acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], _nt[0:1], _ml[0:1] _thread_present_) if(_nt->compute_gpu) async(stream_id)")
 #define _PRAGMA_FOR_CUR_ACC_LOOP_ _Pragma("acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], _vec_d[0:_nt->end], _vec_rhs[0:_nt->end], _nt[0:1] _thread_present_) if(_nt->compute_gpu) async(stream_id)")
 #define _PRAGMA_FOR_CUR_SYN_ACC_LOOP_ _Pragma("acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], _vec_shadow_rhs[0:_nt->shadow_rhs_cnt], _vec_shadow_d[0:_nt->shadow_rhs_cnt], _vec_d[0:_nt->end], _vec_rhs[0:_nt->end], _nt[0:1]) if(_nt->compute_gpu) async(stream_id)")
 #define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma("acc parallel loop present(_pnt[0:_pnt_length], _nrb[0:1], _nt[0:1], nrn_threads[0:nrn_nthread]) if(_nt->compute_gpu) async(stream_id)")
@@ -292,7 +287,7 @@ static void _acc_globals_update() {
 };
  static double _sav_indep;
  static void nrn_alloc(double*, Datum*, int);
-void  nrn_init(_NrnThread*, _Memb_list*, int);
+void nrn_init(_NrnThread*, _Memb_list*, int);
 void nrn_state(_NrnThread*, _Memb_list*, int);
  void nrn_cur(_NrnThread*, _Memb_list*, int);
  
@@ -1047,6 +1042,7 @@ for (;;) { /* help clang-format properly indent */
  initmodel(_threadargs_);
 }
 
+#if NET_RECEIVE_BUFFERING
   NetSendBuffer_t* _nsb = _ml->_net_send_buffer;
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
   #pragma acc wait(stream_id)
@@ -1062,6 +1058,7 @@ for (;;) { /* help clang-format properly indent */
   _nsb->_cnt = 0;
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
   #pragma acc update device(_nsb->_cnt) if(_nt->compute_gpu)
+#endif
 #endif
 }
 
