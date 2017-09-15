@@ -1,6 +1,8 @@
 # MOD2C
 > NMODL to C converter for CoreNEURON
 
+[![Build Status](https://travis-ci.org/BlueBrain/mod2c.svg?branch=master)](https://travis-ci.org/BlueBrain/mod2c)
+
 MOD2C is NMODL to C adapted for [CoreNEURON simulator](https://github.com/BlueBrain/CoreNEURON).
 More information about NMODL can be found [here](https://www.neuron.yale.edu/neuron/static/docs/refman/nocmodl.html).
 
