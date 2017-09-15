@@ -11,4 +11,4 @@ before_script:
       - cd build
       - cmake .. -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
 
-script: make
+script: make && make test
