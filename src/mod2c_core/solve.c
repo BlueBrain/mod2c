@@ -129,6 +129,9 @@ diag("The SOLVE statement must be before the DERIVATIVE block for ", SYM(lq)->na
 			cvode_cnexp_solve = lq;
 #endif
 		}
+		if (strcmp(SYM(q2)->name, "euler") == 0) {
+			add_deriv_imp_really(SYM(q1)->name);
+		}
 		delete(q2->prev);
 		delete(q2);
 	}else{
@@ -220,7 +223,7 @@ void solvhandler()
 			}
 			if (btype == BREAKPOINT && !steadystate) {
 				/* derivatives recalculated after while loop */
-if (strcmp(method->name, "cnexp") != 0 && strcmp(method->name, "derivimplicit") != 0) {
+if (strcmp(method->name, "cnexp") != 0 && strcmp(method->name, "derivimplicit") != 0 && strcmp(method->name, "euler") != 0) {
 fprintf(stderr, "Notice: %s is not thread safe. Complain to Hines\n", method->name);
 				vectorize = 0;
 				Sprintf(buf, " %s();\n", fun->name);
