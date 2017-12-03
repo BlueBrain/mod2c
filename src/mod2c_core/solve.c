@@ -129,6 +129,8 @@ diag("The SOLVE statement must be before the DERIVATIVE block for ", SYM(lq)->na
 			cvode_cnexp_solve = lq;
 #endif
 		}
+        // state functions for euler should be non-staic
+        // deriv_imp_really list is used to track those functions
 		if (strcmp(SYM(q2)->name, "euler") == 0) {
 			add_deriv_imp_really(SYM(q1)->name);
 		}

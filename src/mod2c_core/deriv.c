@@ -194,6 +194,8 @@ numeqn, listnum, listnum, fun->name, suffix);
 	  , ssprefix, method->name);
 	linsertstr(procfunc, buf);
 
+    // euler_thread is defined externally and need a callback function
+    // selection of callback is using switch-case implemented in _kinderiv.h
     if(strcmp(method->name, "euler") == 0) {
         Sprintf(buf,
           "\n"
