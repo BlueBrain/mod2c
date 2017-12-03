@@ -193,6 +193,21 @@ numeqn, listnum, listnum, fun->name, suffix);
 	  "extern int %s%s_thread(int, int*, int*, int, _threadargsproto_);\n"
 	  , ssprefix, method->name);
 	linsertstr(procfunc, buf);
+
+    // euler_thread is defined externally and need a callback function
+    // selection of callback is using switch-case implemented in _kinderiv.h
+    if(strcmp(method->name, "euler") == 0) {
+        Sprintf(buf,
+          "\n"
+          "/* _euler_ %s %s */\n"
+          "#ifndef INSIDE_NMODL\n"
+          "#define INSIDE_NMODL\n"
+          "#endif\n"
+          "#include \"_kinderiv.h\"\n"
+          , fun->name, suffix);
+        Linsertstr(procfunc, buf);
+    }
+
 	}else{ /* kinetic */
    if (vectorize) {
 Sprintf(buf,
@@ -523,6 +538,7 @@ void massagederiv(q1, q2, q3, q4, sensused)
 	}
 
 	deriv_implicit_really = 0;
+
 	if (deriv_imp_really) ITERATE(q, deriv_imp_really) {
 		if (strcmp(derfun->name, STR(q)) == 0) {
 			deriv_implicit_really = 1;
