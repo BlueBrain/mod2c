@@ -332,12 +332,12 @@ extern void* nrn_cons_newtonspace(int, int);
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
  
-/* _derivimplic_ states _Is */
+/* _derivimplicit_ states _Is */
 #ifndef INSIDE_NMODL
 #define INSIDE_NMODL
 #endif
 #include "_kinderiv.h"
- extern int _cb_states_Is(_threadargsproto_);
+ extern int _newton_states_Is(_threadargsproto_);
  
 #define _slist2 _slist2_Is
 int* _slist2;
@@ -373,13 +373,13 @@ int states (_threadargsproto_) {int _reset=0; int error = 0;
  double* _dlist2 = (double*)(_thread[_dith1]._pval) + (2*_cntml_padded);
  {int _id; for(_id=0; _id < 2; _id++) { _savstate1[_id*_STRIDE] = _p[_slist1[_id]*_STRIDE];}}
  #pragma acc routine(nrn_newton_thread) seq
-_reset = nrn_newton_thread(_newtonspace1, 2,_slist2, _derivimplic_states_Is, _dlist2,  _threadargs_);
+_reset = nrn_newton_thread(_newtonspace1, 2,_slist2, _derivimplicit_states_Is, _dlist2,  _threadargs_);
  /*if(_reset) {abort_run(_reset);}*/ }
  
   return _reset;
 }
 
-int _cb_states_Is (_threadargsproto_) {  int _reset=0;
+int _newton_states_Is (_threadargsproto_) {  int _reset=0;
  { double* _savstate1 = (double*)_thread[_dith1]._pval;
  double* _dlist2 = (double*)(_thread[_dith1]._pval) + (2*_cntml_padded);
  int _counte = -1;
@@ -691,10 +691,10 @@ for (;;) { /* help clang-format properly indent */
 {
   cai = _ion_cai;
  {  
-  #if !defined(_derivimplic_states_Is)
-    #define _derivimplic_states_Is 0
+  #if !defined(_derivimplicit_states_Is)
+    #define _derivimplicit_states_Is 0
   #endif
-  derivimplicit_thread(2, _slist1, _dlist1, _derivimplic_states_Is, _threadargs_);
+  derivimplicit_thread(2, _slist1, _dlist1, _derivimplicit_states_Is, _threadargs_);
   }   }}
 
 }
