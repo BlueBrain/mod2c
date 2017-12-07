@@ -179,13 +179,13 @@ dindepname, fun->name, listnum, listnum);
 	if (method->subtype & DERF) { /* derivimplicit */
 Sprintf(buf,
 "\n"
-"  #if !defined(_derivimplic_%s%s)\n"
-"    #define _derivimplic_%s%s 0\n"
+"  #if !defined(_%s_%s%s)\n"
+"    #define _%s_%s%s 0\n"
 "  #endif\n"
-"  %s%s_thread(%d, _slist%d, _dlist%d, _derivimplic_%s%s, _threadargs_);\n",
-fun->name, suffix, fun->name, suffix,
-ssprefix, method->name,
-numeqn, listnum, listnum, fun->name, suffix);
+"  %s%s_thread(%d, _slist%d, _dlist%d, _%s_%s%s, _threadargs_);\n",
+method->name, fun->name, suffix, method->name, fun->name,
+suffix, ssprefix, method->name,
+numeqn, listnum, listnum, method->name, fun->name, suffix);
 	vectorize_substitute(qsol, buf);
 	Sprintf(buf,
 	  "\n"
