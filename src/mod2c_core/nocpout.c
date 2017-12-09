@@ -335,11 +335,12 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	}
 
 	Lappendstr(defs_list, "\
+\n#include \"coreneuron/utils/randoms/nrnran123.h\"\
 \n#include \"coreneuron/nrnoc/md1redef.h\"\
 \n#include \"coreneuron/nrnconf.h\"\
 \n#include \"coreneuron/nrnoc/multicore.h\"\
 \n#include \"coreneuron/nrniv/nrn_acc_manager.h\"\
-\n#include \"coreneuron/utils/randoms/nrnran123.h\"\n\
+\n#include \"coreneuron/mech/cfile/scoplib.h\"\n\
 \n#include \"coreneuron/nrnoc/md2redef.h\"\
 \n#if METHOD3\nextern int _method3;\n#endif\n\
 \n#if !NRNGPU\

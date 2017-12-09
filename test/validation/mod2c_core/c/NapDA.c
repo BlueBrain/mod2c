@@ -3,14 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "coreneuron/mech/cfile/scoplib.h"
 #undef PI
  
+#include "coreneuron/utils/randoms/nrnran123.h"
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
 #include "coreneuron/nrnoc/multicore.h"
 #include "coreneuron/nrniv/nrn_acc_manager.h"
-#include "coreneuron/utils/randoms/nrnran123.h"
+#include "coreneuron/mech/cfile/scoplib.h"
 
 #include "coreneuron/nrnoc/md2redef.h"
 #if METHOD3
