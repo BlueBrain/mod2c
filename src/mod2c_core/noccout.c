@@ -702,7 +702,7 @@ void c_out_vectorize()
 
 	/* things which must go first and most declarations */
 	P("/* VECTORIZED */\n");
-	P("#include <stdio.h>\n#include <stdlib.h>\n#include <math.h>\n#include \"coreneuron/mech/cfile/scoplib.h\"\n");
+	P("#include <stdio.h>\n#include <stdlib.h>\n#include <math.h>\n");
 	P("#undef PI\n");
 	printlist(defs_list);
 	printlist(firstlist);
