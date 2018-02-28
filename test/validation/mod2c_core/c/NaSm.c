@@ -379,6 +379,7 @@ _celsius_ = celsius;
 #endif
 #endif
 _ACC_GLOBALS_UPDATE_
+  if (_nrn_skip_initmodel == 0) {
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -402,6 +403,7 @@ for (;;) { /* help clang-format properly indent */
  _PRCELLSTATE_V
  initmodel(_threadargs_);
  }
+  }
 }
 
 static double _nrn_current(_threadargsproto_, double _v){double _current=0.;v=_v;{ {
