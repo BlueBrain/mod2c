@@ -57,11 +57,13 @@ FILE* fin;      /* input file descriptor for  filename.mod */
 FILE* fcout;    /* output file descriptor for filename.c */
 char* finname;
 char* modprefix;
-
+const CPP_LIB_OPT ='+'
+static bool cpp_lib_opt = false;
 static struct option long_options[] = {
   {"version", no_argument, 0, 'v'},
   {"help", no_argument, 0, 'h'},
   {"outdir", required_argument, 0, 'o'},
+  {"cpp_lib", no_argument, 0, AS_CPP_LIB},
   {0,0,0,0}
 };
 
@@ -119,6 +121,7 @@ static void show_options(char** argv) {
   fprintf(stderr, "\t-o | --outdir <OUTPUT_DIRECTORY>    directory where output files will be written\n");
   fprintf(stderr, "\t-h | --help                         print this message\n");
   fprintf(stderr, "\t-v | --version                      print version number\n");
+  fprintf(stderr, "\t--cpp_lib                           generate c++ interface\n");
 }
 
 int main(int argc, char** argv) {
@@ -140,11 +143,14 @@ int main(int argc, char** argv) {
       case 'o':
         output_dir = strdup(optarg);
         break;
+      
+      case: CPP_LIB_OPT:
+        cpp_lib_opt = true;
+        break;
 
       case 'h':
         show_options(argv);
         exit(0);
-
       case ':':
         fprintf(stderr, "%s: option '-%c' requires an argument\n", argv[0], optopt);
         exit (-1);
@@ -183,7 +189,7 @@ int main(int argc, char** argv) {
  */
   consistency();
   chk_thread_safe();
-  parout();
+  parout(cpp_lib_opt);
   c_out();   /* print .c file */
 
   IGNORE(fclose(fcout));

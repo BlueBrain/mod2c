@@ -291,7 +291,7 @@ void nrninit() {
 	newtonspace_list = newlist();
 }
 
-void parout() {
+void parout(bool as_cpp_lib) {
 	int i, j, ioncount, pointercount, gind, emit_check_table_thread;
 	Item *q, *q1, *extra_pragma_loop_arg;
 	Symbol *s, *sion;
@@ -743,6 +743,8 @@ sprintf(buf, "static double %s;\n", SYM(q)->name);
 	}
 	/* double scalars declared internally */
 	Lappendstr(defs_list, "/* declare global and static user variables */\n");
+    if (as_cpp_lib) 
+       Lappendstr(defs_list, "namespace coreneuron_lib {\n");
 	if (gind) {
 		sprintf(buf, "static int _thread1data_inuse = 0;\nstatic double _thread1data[%d];\n#define _gth %d\n", gind, thread_data_index);
 		Lappendstr(defs_list, buf);
@@ -804,7 +806,8 @@ s->name, suffix, gind, s->name, gind);
 #endif
 		}
 	}
-
+    if (as_cpp_lib) 
+       Lappendstr(defs_list, "namespace coreneuron_lib {\n");
 #if BBCORE
 	if (acc_globals_update_list) {
 		Lappendstr(defs_list, "\nstatic void _acc_globals_update() {\n");
