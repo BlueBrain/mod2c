@@ -807,7 +807,7 @@ s->name, suffix, gind, s->name, gind);
 		}
 	}
     if (as_cpp_lib) 
-       Lappendstr(defs_list, "namespace coreneuron_lib {\n");
+       Lappendstr(defs_list, "} // namespace coreneuronlib\n");
 #if BBCORE
 	if (acc_globals_update_list) {
 		Lappendstr(defs_list, "\nstatic void _acc_globals_update() {\n");
