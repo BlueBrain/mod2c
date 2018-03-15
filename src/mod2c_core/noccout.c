@@ -1047,7 +1047,7 @@ void c_out_vectorize()
 	P("  if (!_first) return;\n");
 	printlist(initlist);
 	P("_first = 0;\n}\n");
-	P("\n#if defined(__cplusplus)\n} /* extern \"C\" */\n#endif\n");
+	//P("\n#if defined(__cplusplus)\n} /* extern \"C\" */\n#endif\n");
 }
 
 void vectorize_substitute(q, str)

@@ -69,7 +69,7 @@ void c_out_vectorize();
 void vectorize_substitute();
 void vectorize_do_substitute();
 void nrninit();
-void parout(bool as_cpp_lib);
+void parout(int as_cpp_lib);
 void warn_ignore();
 void ldifusreg();
 void decode_ustr();
