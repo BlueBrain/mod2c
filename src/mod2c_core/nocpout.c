@@ -313,7 +313,10 @@ void parout(int as_cpp_lib) {
 #if 1 || defined(__MINGW32__)
 		/* x86_64-w64-mingw32-gcc passed 0 without zeroing the high 32 bits */
 		/* also cygwin64 gcc 4.8.1, so cast to void* universally */
-		brkpnt_str_ = "(void*)0, (void*)0, (void*)0";
+        if (as_cpp_lib)
+            brkpnt_str_ = "NULL, NULL, NULL";
+        else
+            brkpnt_str_ = "(void*)0, (void*)0, (void*)0";
 #endif
 	}
 
@@ -351,9 +354,12 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \nextern double hoc_Exp(double);\
 \n#endif\n\
 ");
+
 	if (protect_include_) {
 		Lappendstr(defs_list, "\n#include \"nmodlmutex.h\"");
 	}
+    if (as_cpp_lib) 
+       Lappendstr(defs_list, "namespace coreneuron_lib {\n");
 
 	if (vectorize) {
         /* macros for compiler dependent ivdep like pragma and memory layout. INIT and STATE pragma are same
@@ -592,7 +598,7 @@ Sprintf(buf, "static void _hoc_%s(void);\n", s->name);
 		replacstr(q, buf);
 	}
 	Lappendstr(defs_list, "\
-extern int nrn_get_mechtype();\n\
+extern int nrn_get_mechtype(const char*);\n\
 extern void hoc_register_prop_size(int, int, int);\n\
 extern Memb_func* memb_func;\n\
 "	);
@@ -743,8 +749,6 @@ sprintf(buf, "static double %s;\n", SYM(q)->name);
 	}
 	/* double scalars declared internally */
 	Lappendstr(defs_list, "/* declare global and static user variables */\n");
-    if (as_cpp_lib) 
-       Lappendstr(defs_list, "namespace coreneuron_lib {\n");
 	if (gind) {
 		sprintf(buf, "static int _thread1data_inuse = 0;\nstatic double _thread1data[%d];\n#define _gth %d\n", gind, thread_data_index);
 		Lappendstr(defs_list, buf);
@@ -806,8 +810,6 @@ s->name, suffix, gind, s->name, gind);
 #endif
 		}
 	}
-    if (as_cpp_lib) 
-       Lappendstr(defs_list, "} // namespace coreneuronlib\n");
 #if BBCORE
 	if (acc_globals_update_list) {
 		Lappendstr(defs_list, "\nstatic void _acc_globals_update() {\n");
@@ -1562,6 +1564,7 @@ static void _destructor(Prop* _prop) {\n\
 		movelist(destructorfunc->next, destructorfunc->prev, procfunc);
 		Lappendstr(procfunc, "\n}\n}\n#endif /*BBCORE*/\n");
 	}
+        
 	if (ldifuslist) {
 		ldifusreg();
 	}
@@ -3126,7 +3129,7 @@ static void emit_nrn_watch_check_code() {
 "          #if NET_RECEIVE_BUFFERING\n"
 "          _net_send_buffering(_ml->_net_send_buffer, 0, _tqitem, 0, _ppvar[1*_STRIDE], t +  0.0 , %s );\n"
 "          #else\n"
-"          net_send ( _tqitem, -1, _nt->_vdata[_ppvar[1*_STRIDE]], t +  0.0 , %s ) ;\n"
+"          net_send ( _tqitem, -1, (Point_process*) _nt->_vdata[_ppvar[1*_STRIDE]], t +  0.0 , %s ) ;\n"
 "          #endif\n"
 "        }\n"
 "        _watch_array(%d) = 3;\n"

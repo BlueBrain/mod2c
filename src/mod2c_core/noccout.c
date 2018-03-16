@@ -158,7 +158,7 @@ static void rhs_d_pnt_race(const char* r, const char* d) {
 }
 
 /* when vectorize = 0 */
-void c_out()
+void c_out(int as_cpp_lib)
 {
 #if NMODL
 	Item *q;
@@ -176,7 +176,7 @@ void c_out()
 	if (vectorize) {
 		vectorize_do_substitute();
 		kin_vect2();	/* heh, heh.. bet you can't guess what this is */
-		c_out_vectorize();
+		c_out_vectorize(as_cpp_lib);
 		return;
 	}
 #endif
@@ -487,6 +487,8 @@ void c_out()
 	P("  if (!_first) return;\n");
 	printlist(initlist);
 	P("_first = 0;\n}\n");
+    if (as_cpp_lib)
+        P(" } // namespace coreneuron_lib\n");
 }
 
 /*
@@ -695,7 +697,7 @@ static void print_cuda_launcher_call(char *name) {
     P("#endif\n\n");
 }
 
-void c_out_vectorize()
+void c_out_vectorize(int as_cpp_lib)
 {
 	Item *q;
 	extern int point_process;
@@ -1048,6 +1050,8 @@ void c_out_vectorize()
 	printlist(initlist);
 	P("_first = 0;\n}\n");
 	//P("\n#if defined(__cplusplus)\n} /* extern \"C\" */\n#endif\n");
+    if (as_cpp_lib)
+        P("} // namespace coreneuron_lib\n");
 }
 
 void vectorize_substitute(q, str)

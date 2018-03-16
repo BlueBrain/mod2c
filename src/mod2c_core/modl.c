@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
   consistency();
   chk_thread_safe();
   parout(as_cpp);
-  c_out();   /* print .c file */
+  c_out(as_cpp);   /* print .c file */
 
   IGNORE(fclose(fcout));
 

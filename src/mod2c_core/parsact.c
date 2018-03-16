@@ -1120,7 +1120,7 @@ acc_net_add(qname, qpar1, qexpr, qpar2, "0, _tqitem, _weight_index, _ppvar[1*_ST
 			}else if (blocktype == INITIAL1){
 			  net_send_buffer_in_initial = 1;
 acc_net_add(qname, qpar1, qexpr, qpar2, "0, _tqitem, 0, _ppvar[1*_STRIDE],", "");
-				Insertstr(qpar1->next, "_tqitem, -1, _nt->_vdata[_ppvar[1*_STRIDE]],");
+				Insertstr(qpar1->next, "_tqitem, -1, (Point_process*) _nt->_vdata[_ppvar[1*_STRIDE]],");
 			}else{
 diag("net_send allowed only in INITIAL and NET_RECEIVE blocks", (char*)0);
 			}
