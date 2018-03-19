@@ -118,8 +118,8 @@ if (deriv_imp_list) {	/* make sure deriv block translation matches method */
 	derivimplic_listnum = listnum;	
 	Sprintf(buf, "static int _deriv%d_advance = 1;\n", listnum);
 	q = linsertstr(procfunc, buf);
-	Sprintf(buf, "\n#define _deriv%d_advance _thread[%d]._i\n\
-#define _dith%d %d\n#define _newtonspace%d _thread[%d]._pvoid\nextern void* nrn_cons_newtonspace(int, int);\n\
+    Sprintf(buf, "\n#define _deriv%d_advance _thread[%d]._i\n\
+#define _dith%d %d\n#define _newtonspace%d _thread[%d]._pvoid\n\
 ", listnum, thread_data_index, listnum, thread_data_index+1, listnum, thread_data_index+2);
 
 	vectorize_substitute(q, buf);
@@ -145,7 +145,7 @@ if (deriv_imp_list) {	/* make sure deriv block translation matches method */
 	lappendstr(newtonspace_list, buf);
 	Sprintf(buf, "  free((void*)(_thread[_dith%d]._pval));\n", listnum);
 	lappendstr(thread_cleanup_list, buf);
-	Sprintf(buf, "  nrn_destroy_newtonspace(_newtonspace%d);\n", listnum);
+    Sprintf(buf, "  nrn_destroy_newtonspace((NewtonSpace*) _newtonspace%d);\n", listnum);
 	lappendstr(thread_cleanup_list, buf);
 	thread_data_index += 3;
 }

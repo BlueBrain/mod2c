@@ -488,7 +488,7 @@ void c_out(int as_cpp_lib)
 	printlist(initlist);
 	P("_first = 0;\n}\n");
     if (as_cpp_lib)
-        P(" } // namespace coreneuron_lib\n");
+        P(" } // namespace coreneuron\n");
 }
 
 /*

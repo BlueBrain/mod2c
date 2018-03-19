@@ -344,6 +344,8 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/nrnoc/multicore.h\"\
 \n#include \"coreneuron/nrniv/nrn_acc_manager.h\"\
 \n#include \"coreneuron/mech/cfile/scoplib.h\"\n\
+\n#include \"coreneuron/public/newton.hpp\"\n\
+\n#include \"coreneuron/public/sparse.hpp\"\n\
 \n#include \"coreneuron/nrnoc/md2redef.h\"\
 \n#if METHOD3\nextern int _method3;\n#endif\n\
 \n#if !NRNGPU\
@@ -359,7 +361,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 		Lappendstr(defs_list, "\n#include \"nmodlmutex.h\"");
 	}
     if (as_cpp_lib) 
-       Lappendstr(defs_list, "namespace coreneuron_lib {\n");
+       Lappendstr(defs_list, "namespace coreneuron {\n");
 
 	if (vectorize) {
         /* macros for compiler dependent ivdep like pragma and memory layout. INIT and STATE pragma are same
