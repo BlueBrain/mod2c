@@ -163,7 +163,7 @@ extern "C" {
 #define _mechtype _mechtype_ZoidSyn
 int _mechtype;
 #pragma acc declare copyin (_mechtype)
- extern int nrn_get_mechtype();
+ extern int nrn_get_mechtype(const char*);
 extern void hoc_register_prop_size(int, int, int);
 extern Memb_func* memb_func;
  static int _pointtype;
@@ -538,7 +538,7 @@ static void initmodel(_threadargsproto_) {
 #if NET_RECEIVE_BUFFERING
     _net_send_buffering(_ml->_net_send_buffer, 0, _tqitem, 0, _ppvar[1*_STRIDE], t +  start , 1.0 );
 #else
- net_send ( _tqitem, -1, _nt->_vdata[_ppvar[1*_STRIDE]], t +  start , 1.0 ) ;
+ net_send ( _tqitem, -1, (Point_process*) _nt->_vdata[_ppvar[1*_STRIDE]], t +  start , 1.0 ) ;
      
 #endif
  tally = tally - 1.0 ;

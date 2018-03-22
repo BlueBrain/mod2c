@@ -148,7 +148,7 @@ extern "C" {
  
 #endif /*BBCORE*/
  static int _mechtype;
- extern int nrn_get_mechtype();
+ extern int nrn_get_mechtype(const char*);
 extern void hoc_register_prop_size(int, int, int);
 extern Memb_func* memb_func;
  
@@ -325,7 +325,7 @@ int states (_threadargsproto_) {int _reset=0; int error = 0;
  double* _dlist2 = (double*)(_thread[_dith1]._pval) + (2*_cntml_padded);
  {int _id; for(_id=0; _id < 2; _id++) { _savstate1[_id*_STRIDE] = _p[_slist1[_id]*_STRIDE];}}
  #pragma acc routine(nrn_newton_thread) seq
-_reset = nrn_newton_thread(_newtonspace1, 2,_slist2, _derivimplicit_states_NapDA, _dlist2,  _threadargs_);
+_reset = nrn_newton_thread((NewtonSpace*)_newtonspace1, 2,_slist2, _derivimplicit_states_NapDA, _dlist2,  _threadargs_);
  /*if(_reset) {abort_run(_reset);}*/ }
  
   return _reset;
@@ -449,7 +449,7 @@ static void _thread_mem_init(ThreadDatum* _thread) {
    _thread[_dith1]._pval = NULL; }
  
 static void _thread_cleanup(ThreadDatum* _thread) {
-   free((void*)(_thread[_dith1]._pval));
+   free((void*)((NewtonSpace*) _thread[_dith1]._pval));
    nrn_destroy_newtonspace(_newtonspace1);
  }
  static void _update_ion_pointer(Datum* _ppvar) {

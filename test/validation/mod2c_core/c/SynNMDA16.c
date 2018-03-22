@@ -196,7 +196,7 @@ extern "C" {
  
 #endif /*BBCORE*/
  static int _mechtype;
- extern int nrn_get_mechtype();
+ extern int nrn_get_mechtype(const char*);
 extern void hoc_register_prop_size(int, int, int);
 extern Memb_func* memb_func;
  static int _pointtype;
@@ -572,7 +572,7 @@ extern int sparse_thread(void*, int, int*, int*, double*, double, int, int, _thr
 #pragma acc routine seq
 extern double *_nrn_thread_getelm(void*, int, int, int);
  
-#define _MATELM1(_row,_col) _nrn_thread_getelm(_so, _row + 1, _col + 1, _iml)[_iml]
+#define _MATELM1(_row,_col) _nrn_thread_getelm((SparseObj*)_so, _row + 1, _col + 1, _iml)[_iml]
  
 #define _RHS1(_arg) _rhs[(_arg+1)*_STRIDE]
   
@@ -1275,8 +1275,8 @@ static void _thread_mem_init(ThreadDatum* _thread) {
  }
  
 static void _thread_cleanup(ThreadDatum* _thread) {
-   _nrn_destroy_sparseobj_thread(_thread[_cvspth1]._pvoid);
-   _nrn_destroy_sparseobj_thread(_thread[_spth1]._pvoid);
+   _nrn_destroy_sparseobj_thread((SparseObj*)_thread[_cvspth1]._pvoid);
+   _nrn_destroy_sparseobj_thread((SparseObj*)_thread[_spth1]._pvoid);
   if (_thread[_gth]._pval == _thread1data) {
    _thread1data_inuse = 0;
   }else{

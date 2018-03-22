@@ -313,7 +313,7 @@ void parout() {
 #if 1 || defined(__MINGW32__)
 		/* x86_64-w64-mingw32-gcc passed 0 without zeroing the high 32 bits */
 		/* also cygwin64 gcc 4.8.1, so cast to void* universally */
-		brkpnt_str_ = "(void*)0, (void*)0, (void*)0";
+		brkpnt_str_ = "NULL, NULL, NULL";
 #endif
 	}
 
@@ -592,7 +592,7 @@ Sprintf(buf, "static void _hoc_%s(void);\n", s->name);
 		replacstr(q, buf);
 	}
 	Lappendstr(defs_list, "\
-extern int nrn_get_mechtype();\n\
+extern int nrn_get_mechtype(const char*);\n\
 extern void hoc_register_prop_size(int, int, int);\n\
 extern Memb_func* memb_func;\n\
 "	);
@@ -3123,7 +3123,7 @@ static void emit_nrn_watch_check_code() {
 "          #if NET_RECEIVE_BUFFERING\n"
 "          _net_send_buffering(_ml->_net_send_buffer, 0, _tqitem, 0, _ppvar[1*_STRIDE], t +  0.0 , %s );\n"
 "          #else\n"
-"          net_send ( _tqitem, -1, _nt->_vdata[_ppvar[1*_STRIDE]], t +  0.0 , %s ) ;\n"
+"          net_send ( _tqitem, -1, (Point_process*) _nt->_vdata[_ppvar[1*_STRIDE]], t +  0.0 , %s ) ;\n"
 "          #endif\n"
 "        }\n"
 "        _watch_array(%d) = 3;\n"

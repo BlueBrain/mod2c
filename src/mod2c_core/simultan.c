@@ -238,7 +238,7 @@ numlist, numlist-1, counts);
 #if 0
 	  "_reset = nrn_newton_thread(_newtonspace%d, %d,_slist%d, _newton_%s%s, _dlist%d,  _threadargs_);\n"
 #else
-	  "_reset = nrn_newton_thread(_newtonspace%d, %d,_slist%d, _derivimplicit_%s%s, _dlist%d,  _threadargs_);\n"
+	  "_reset = nrn_newton_thread((NewtonSpace*)_newtonspace%d, %d,_slist%d, _derivimplicit_%s%s, _dlist%d,  _threadargs_);\n"
 #endif
 	  , numlist-1, counts, numlist, SYM(q2)->name, suffix, numlist);
 	vectorize_substitute(qret, buf);
