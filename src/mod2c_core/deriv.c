@@ -119,7 +119,7 @@ if (deriv_imp_list) {	/* make sure deriv block translation matches method */
 	Sprintf(buf, "static int _deriv%d_advance = 1;\n", listnum);
 	q = linsertstr(procfunc, buf);
 	Sprintf(buf, "\n#define _deriv%d_advance _thread[%d]._i\n\
-#define _dith%d %d\n#define _newtonspace%d _thread[%d]._pvoid\nextern void* nrn_cons_newtonspace(int, int);\n\
+#define _dith%d %d\n#define _newtonspace%d _thread[%d]._pvoid\n\
 ", listnum, thread_data_index, listnum, thread_data_index+1, listnum, thread_data_index+2);
 
 	vectorize_substitute(q, buf);
@@ -187,12 +187,6 @@ method->name, fun->name, suffix, method->name, fun->name,
 suffix, ssprefix, method->name,
 numeqn, listnum, listnum, method->name, fun->name, suffix);
 	vectorize_substitute(qsol, buf);
-	Sprintf(buf,
-	  "\n"
-	  "#pragma acc routine seq\n"
-	  "extern int %s%s_thread(int, int*, int*, int, _threadargsproto_);\n"
-	  , ssprefix, method->name);
-	linsertstr(procfunc, buf);
 
     // euler_thread is defined externally and need a callback function
     // selection of callback is using switch-case implemented in _kinderiv.h
@@ -220,12 +214,6 @@ fun->name, suffix, fun->name, suffix,
 ssprefix, method->name, listnum, numeqn, listnum, listnum, indepsym->name,
 dindepname, fun->name, suffix, listnum);
 	vectorize_substitute(qsol, buf);
-	Sprintf(buf,
-	  "\n"
-	  "#pragma acc routine seq\n"
-	  "extern int %s%s_thread(void*, int, int*, int*, double*, double, int, int, _threadargsproto_);\n"
-	  , ssprefix, method->name);
-	linsertstr(procfunc, buf);
    }
 #endif
 	}

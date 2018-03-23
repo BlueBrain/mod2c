@@ -243,10 +243,6 @@ numlist, numlist-1, counts);
 	  , numlist-1, counts, numlist, SYM(q2)->name, suffix, numlist);
 	vectorize_substitute(qret, buf);
 	Insertstr(q3, "/*if(_reset) {abort_run(_reset);}*/ }\n");
-	Sprintf(buf,
-	  "extern int _newton_%s%s(_threadargsproto_);\n"
-	  , SYM(q2)->name, suffix);
-	Linsertstr(procfunc, buf);
 
 	Sprintf(buf,
 	  "\n"

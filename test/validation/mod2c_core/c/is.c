@@ -8,21 +8,18 @@
 #include "coreneuron/utils/randoms/nrnran123.h"
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
+#include "coreneuron/nrnoc/membfunc.h"
 #include "coreneuron/nrnoc/multicore.h"
 #include "coreneuron/nrniv/nrn_acc_manager.h"
 #include "coreneuron/mech/cfile/scoplib.h"
 
+#include "coreneuron/scopmath_core/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
-#if METHOD3
-extern int _method3;
-#endif
-
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
 #define exp hoc_Exp
 #endif
-extern double hoc_Exp(double);
 #endif
  
 #define _thread_present_ /**/ , _thread[0:4] , _slist1[0:2], _dlist1[0:2] , _slist2[0:2] 
@@ -95,8 +92,7 @@ extern double hoc_Exp(double);
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
 	/*SUPPRESS 765*/
-	 extern double *getarg();
- /* Thread safe. No static _p or _ppvar. */
+	 /* Thread safe. No static _p or _ppvar. */
  
 #define t _nt->_t
 #define dt _nt->_dt
@@ -145,14 +141,6 @@ extern "C" {
 #endif
  static int hoc_nrnpointerindex =  -1;
  static ThreadDatum* _extcall_thread;
- /* external NEURON variables */
- extern double celsius;
- #if defined(PG_ACC_BUGS)
-#define _celsius_ _celsius__Is
-double _celsius_;
-#pragma acc declare copyin(_celsius_)
-#define celsius _celsius_
-#endif
  
 #if 0 /*BBCORE*/
  /* declaration of user functions */
@@ -162,9 +150,6 @@ double _celsius_;
  
 #endif /*BBCORE*/
  static int _mechtype;
- extern int nrn_get_mechtype(const char*);
-extern void hoc_register_prop_size(int, int, int);
-extern Memb_func* memb_func;
  
 #if 0 /*BBCORE*/
  /* connect user functions to hoc names */
@@ -276,11 +261,6 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  
 #define _psize 12
 #define _ppsize 7
- extern Symbol* hoc_lookup(const char*);
-extern void _nrn_thread_reg(int, int, void(*f)(Datum*));
-extern void _nrn_thread_table_reg(int, void(*)(_threadargsproto_, int));
-extern void _cvode_abstol( Symbol**, double*, int);
-
  void _is_reg() {
 	int _vectorized = 1;
   _initlists();
@@ -321,13 +301,9 @@ static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
 static int rates(_threadargsprotocomma_ double);
  
-#pragma acc routine seq
-extern int derivimplicit_thread(int, int*, int*, int, _threadargsproto_);
- 
 #define _deriv1_advance _thread[0]._i
 #define _dith1 1
 #define _newtonspace1 _thread[2]._pvoid
-extern void* nrn_cons_newtonspace(int, int);
  
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
@@ -337,7 +313,6 @@ static int _ode_spec1(_threadargsproto_);
 #define INSIDE_NMODL
 #endif
 #include "_kinderiv.h"
- extern int _newton_states_Is(_threadargsproto_);
  
 #define _slist2 _slist2_Is
 int* _slist2;

@@ -797,12 +797,6 @@ void kinetic_implicit(fun, dt, mname)
 		vectorize_substitute(q, buf);
 		sprintf(buf, "  _nrn_destroy_sparseobj_thread((SparseObj*)_thread[_spth%d]._pvoid);\n", fun->u.i);
 		lappendstr(thread_cleanup_list, buf);
-#if 0
-		Sprintf(buf, "extern void* nrn_cons_sparseobj(int(*)(void*, double*, _threadargsproto_), int, _Memb_list*, _threadargsproto_);\n");
-#else
-		Sprintf(buf, "extern void* nrn_cons_sparseobj(int, int, _Memb_list*, _threadargsproto_);\n");
-#endif
-		linsertstr(procfunc, buf);
 	}
     }	
 	if (rlst->sens_parm) {
@@ -978,15 +972,6 @@ Insertstr(rlst->position, "}");
 #endif
 	{static int first = 1; if (first) {
 		first = 0;
-		Sprintf(buf,"extern double *_getelm();\n");
-		qv = linsertstr(procfunc, buf);
-#if VECTORIZE
-		Sprintf(buf,
-		  "\n#pragma acc routine seq\n"
-		  "extern double *_nrn_thread_getelm(void*, int, int, int);\n"
-		  );
-		vectorize_substitute(qv, buf);
-#endif
 	}}
       }
      }

@@ -8,21 +8,18 @@
 #include "coreneuron/utils/randoms/nrnran123.h"
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
+#include "coreneuron/nrnoc/membfunc.h"
 #include "coreneuron/nrnoc/multicore.h"
 #include "coreneuron/nrniv/nrn_acc_manager.h"
 #include "coreneuron/mech/cfile/scoplib.h"
 
+#include "coreneuron/scopmath_core/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
-#if METHOD3
-extern int _method3;
-#endif
-
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
 #define exp hoc_Exp
 #endif
-extern double hoc_Exp(double);
 #endif
  
 #define _thread_present_ /**/ , _thread[0:2] , _slist1[0:10], _dlist1[0:10] 
@@ -106,8 +103,7 @@ static void _net_buf_receive(_NrnThread*);
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
 	/*SUPPRESS 765*/
-	 extern double *getarg();
- /* Thread safe. No static _p or _ppvar. */
+	 /* Thread safe. No static _p or _ppvar. */
  
 #define t _nt->_t
 #define dt _nt->_dt
@@ -180,7 +176,6 @@ extern "C" {
 #endif
  static int hoc_nrnpointerindex =  -1;
  static ThreadDatum* _extcall_thread;
- /* external NEURON variables */
  
 #if 0 /*BBCORE*/
  /* declaration of user functions */
@@ -192,9 +187,6 @@ extern "C" {
 #define _mechtype _mechtype_NMDA10_2_2
 int _mechtype;
 #pragma acc declare copyin (_mechtype)
- extern int nrn_get_mechtype(const char*);
-extern void hoc_register_prop_size(int, int, int);
-extern Memb_func* memb_func;
  static int _pointtype;
  
 #if 0 /*BBCORE*/
@@ -367,11 +359,6 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  
 #define _psize 42
 #define _ppsize 3
- extern Symbol* hoc_lookup(const char*);
-extern void _nrn_thread_reg(int, int, void(*f)(Datum*));
-extern void _nrn_thread_table_reg(int, void(*)(_threadargsproto_, int));
-extern void _cvode_abstol( Symbol**, double*, int);
-
  void _SynNMDA10_2_2_reg() {
 	int _vectorized = 1;
   _initlists();
@@ -414,18 +401,11 @@ static void _modl_cleanup(){ _match_recurse=1;}
 static int release(_threadargsprotocomma_ double);
 static int rates(_threadargsprotocomma_ double);
  
-#pragma acc routine seq
-extern int sparse_thread(void*, int, int*, int*, double*, double, int, int, _threadargsproto_);
- 
-#pragma acc routine seq
-extern double *_nrn_thread_getelm(void*, int, int, int);
- 
 #define _MATELM1(_row,_col) _nrn_thread_getelm((SparseObj*)_so, _row + 1, _col + 1, _iml)[_iml]
  
 #define _RHS1(_arg) _rhs[(_arg+1)*_STRIDE]
   
 #define _linmat1  1
- extern void* nrn_cons_sparseobj(int, int, _Memb_list*, _threadargsproto_);
  static int _spth1 = 1;
  static int _cvspth1 = 0;
  
