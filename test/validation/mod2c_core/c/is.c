@@ -483,7 +483,7 @@ static void _thread_mem_init(ThreadDatum* _thread) {
  }
  
 static void _thread_cleanup(ThreadDatum* _thread) {
-   free((void*)((NewtonSpace*) _thread[_dith1]._pval));
+   free( _thread[_dith1]._pval);
    nrn_destroy_newtonspace(_newtonspace1);
   if (_thread[_gth]._pval == _thread1data) {
    _thread1data_inuse = 0;

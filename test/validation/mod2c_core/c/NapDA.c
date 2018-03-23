@@ -449,7 +449,7 @@ static void _thread_mem_init(ThreadDatum* _thread) {
    _thread[_dith1]._pval = NULL; }
  
 static void _thread_cleanup(ThreadDatum* _thread) {
-   free((void*)((NewtonSpace*) _thread[_dith1]._pval));
+   free( _thread[_dith1]._pval);
    nrn_destroy_newtonspace(_newtonspace1);
  }
  static void _update_ion_pointer(Datum* _ppvar) {
