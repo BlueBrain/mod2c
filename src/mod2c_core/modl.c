@@ -62,6 +62,7 @@ static struct option long_options[] = {
   {"version", no_argument, 0, 'v'},
   {"help", no_argument, 0, 'h'},
   {"outdir", required_argument, 0, 'o'},
+  {"cpp_lib", no_argument, 0, 'c'},
   {0,0,0,0}
 };
 
@@ -81,7 +82,7 @@ extern int   usederivstatearray;
 extern int yyparse();
 extern int mkdir_p();
 
-static void openfiles(char* given_filename, char* output_dir) {
+static void openfiles(char* given_filename, char* output_dir, int as_cpp) {
   char  output_filename [NRN_BUFSIZE];
   char  input_filename  [NRN_BUFSIZE];
   modprefix = strdup (given_filename);                      // we want to keep original string to open input file
@@ -101,11 +102,17 @@ static void openfiles(char* given_filename, char* output_dir) {
         exit(1);
       }
       char* basename = strrchr(modprefix,'/');
-      Sprintf(output_filename, "%s%s.c", output_dir, basename);
+      if (as_cpp)
+        Sprintf(output_filename, "%s%s.cpp", output_dir, basename);
+      else
+        Sprintf(output_filename, "%s%s.c", output_dir, basename);
   }
-  else
-    Sprintf(output_filename, "%s.c", modprefix);
-
+  else {
+      if (as_cpp)
+        Sprintf(output_filename, "%s.cpp", modprefix);
+     else
+        Sprintf(output_filename, "%s.c", modprefix);
+  }
   if ((fcout = fopen(output_filename, "w")) == (FILE *) 0) {
   diag("Can't create C file: ", output_filename);
   }
@@ -119,13 +126,14 @@ static void show_options(char** argv) {
   fprintf(stderr, "\t-o | --outdir <OUTPUT_DIRECTORY>    directory where output files will be written\n");
   fprintf(stderr, "\t-h | --help                         print this message\n");
   fprintf(stderr, "\t-v | --version                      print version number\n");
+  fprintf(stderr, "\t--cpp_lib                           generate c++ interface\n");
 }
 
 int main(int argc, char** argv) {
   int option        = -1;
   int option_index  = 0;
   char* output_dir = NULL;
-
+  int as_cpp = 0;
   if (argc < 2) {
     show_options(argv);
     exit(1);
@@ -140,7 +148,9 @@ int main(int argc, char** argv) {
       case 'o':
         output_dir = strdup(optarg);
         break;
-
+      case 'c':
+        as_cpp = 1;
+        break;
       case 'h':
         show_options(argv);
         exit(0);
@@ -161,7 +171,7 @@ int main(int argc, char** argv) {
 
   init(); /* keywords into symbol table, initialize lists, etc. */
   finname = argv[optind];
-  openfiles(finname, output_dir); /* .mrg else .mod,  .var, .c */
+  openfiles(finname, output_dir, as_cpp); /* .mrg else .mod,  .var, .c */
   IGNORE(yyparse());
 /*
  * At this point all blocks are fully processed except the kinetic
@@ -183,8 +193,8 @@ int main(int argc, char** argv) {
  */
   consistency();
   chk_thread_safe();
-  parout();
-  c_out();   /* print .c file */
+  parout(as_cpp);
+  c_out(as_cpp);   /* print .c file */
 
   IGNORE(fclose(fcout));
 

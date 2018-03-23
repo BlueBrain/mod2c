@@ -291,7 +291,7 @@ void nrninit() {
 	newtonspace_list = newlist();
 }
 
-void parout() {
+void parout(int as_cpp_lib) {
 	int i, j, ioncount, pointercount, gind, emit_check_table_thread;
 	Item *q, *q1, *extra_pragma_loop_arg;
 	Symbol *s, *sion;
