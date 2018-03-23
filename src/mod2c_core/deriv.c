@@ -143,7 +143,7 @@ if (deriv_imp_list) {	/* make sure deriv block translation matches method */
 	  , listnum, listnum, numeqn, thread_data_index+2, listnum
 	  );
 	lappendstr(newtonspace_list, buf);
-	Sprintf(buf, "  free((void*)(_thread[_dith%d]._pval));\n", listnum);
+	Sprintf(buf, "  free( _thread[_dith%d]._pval);\n", listnum);
 	lappendstr(thread_cleanup_list, buf);
 	Sprintf(buf, "  nrn_destroy_newtonspace(_newtonspace%d);\n", listnum);
 	lappendstr(thread_cleanup_list, buf);

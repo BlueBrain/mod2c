@@ -159,7 +159,7 @@ extern "C" {
  
 #endif /*BBCORE*/
  static int _mechtype;
- extern int nrn_get_mechtype();
+ extern int nrn_get_mechtype(const char*);
 extern void hoc_register_prop_size(int, int, int);
 extern Memb_func* memb_func;
  

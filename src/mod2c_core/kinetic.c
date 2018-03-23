@@ -768,7 +768,7 @@ void kinetic_implicit(fun, dt, mname)
 	q = linsertstr(procfunc, buf);
 	sprintf(buf, "static int _cvspth%d = %d;\n", fun->u.i, thread_data_index++);
 	vectorize_substitute(q, buf);
-	sprintf(buf, "  _nrn_destroy_sparseobj_thread(_thread[_cvspth%d]._pvoid);\n", fun->u.i);
+	sprintf(buf, "  _nrn_destroy_sparseobj_thread((SparseObj*)_thread[_cvspth%d]._pvoid);\n", fun->u.i);
 	lappendstr(thread_cleanup_list, buf);
     }else{
 
@@ -795,7 +795,7 @@ void kinetic_implicit(fun, dt, mname)
 		q = linsertstr(procfunc, buf);
 		sprintf(buf, "static int _spth%d = %d;\n", fun->u.i, thread_data_index++);
 		vectorize_substitute(q, buf);
-		sprintf(buf, "  _nrn_destroy_sparseobj_thread(_thread[_spth%d]._pvoid);\n", fun->u.i);
+		sprintf(buf, "  _nrn_destroy_sparseobj_thread((SparseObj*)_thread[_spth%d]._pvoid);\n", fun->u.i);
 		lappendstr(thread_cleanup_list, buf);
 #if 0
 		Sprintf(buf, "extern void* nrn_cons_sparseobj(int(*)(void*, double*, _threadargsproto_), int, _Memb_list*, _threadargsproto_);\n");
@@ -973,7 +973,7 @@ Insertstr(rlst->position, "}");
 	*(_getelm(_row + 1, _col + 1))\n", fun->u.i);
 	qv = linsertstr(procfunc, buf);
 #if VECTORIZE
-	Sprintf(buf, "\n#define _MATELM%d(_row,_col) _nrn_thread_getelm(_so, _row + 1, _col + 1, _iml)[_iml]\n", fun->u.i);
+	Sprintf(buf, "\n#define _MATELM%d(_row,_col) _nrn_thread_getelm((SparseObj*)_so, _row + 1, _col + 1, _iml)[_iml]\n", fun->u.i);
 	vectorize_substitute(qv, buf);
 #endif
 	{static int first = 1; if (first) {
