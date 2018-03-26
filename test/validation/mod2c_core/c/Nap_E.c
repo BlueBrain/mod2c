@@ -147,6 +147,7 @@ extern "C" {
 #endif
  static int hoc_nrnpointerindex =  -1;
  static ThreadDatum* _extcall_thread;
+ /* external NEURON variables */
  
 #if 0 /*BBCORE*/
  /* declaration of user functions */
