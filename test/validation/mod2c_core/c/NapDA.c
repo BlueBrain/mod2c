@@ -274,6 +274,7 @@ static int _ode_spec1(_threadargsproto_);
 #define INSIDE_NMODL
 #endif
 #include "_kinderiv.h"
+ int _newton_states_NapDA(_threadargsproto_);
  
 #define _slist2 _slist2_NapDA
 int* _slist2;
