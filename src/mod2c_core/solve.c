@@ -309,13 +309,11 @@ fprintf(stderr, "Notice: DISCRETE is not thread safe.\n");
 				cvode_interface(fun, listnum, 0);
 				insertstr(qsol, "if (!cvode_active_)");
 				cvode_nrn_cur_solve_ = fun;
-				linsertstr(procfunc, "extern int cvode_active_;\n");
 	}
 	if (cvodemethod_ == 3) { /*cvode_t_v*/
 				cvode_interface(fun, listnum, 0);
 				insertstr(qsol, "if (!cvode_active_)");
 				cvode_nrn_current_solve_ = fun;
-				linsertstr(procfunc, "extern int cvode_active_;\n");
 	}
 #endif
 			}

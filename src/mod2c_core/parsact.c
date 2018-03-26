@@ -1103,7 +1103,6 @@ Fprintf(stderr, "Notice: Use of state_discontinuity in a NET_RECEIVE block is un
 			}
 			if (!state_discon_list_) {
 				state_discon_list_ = newlist();
-				Linsertstr(procfunc, "extern int state_discon_flag_;\n");
 			}
 			lappenditem(state_discon_list_, qpar1->next);
 #endif

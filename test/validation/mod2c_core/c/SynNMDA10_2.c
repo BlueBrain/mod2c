@@ -9,21 +9,18 @@
 #include "coreneuron/utils/randoms/nrnran123.h"
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
+#include "coreneuron/nrnoc/membfunc.h"
 #include "coreneuron/nrnoc/multicore.h"
 #include "coreneuron/nrniv/nrn_acc_manager.h"
 #include "coreneuron/mech/cfile/scoplib.h"
 
+#include "coreneuron/scopmath_core/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
-#if METHOD3
-extern int _method3;
-#endif
-
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
 #define exp hoc_Exp
 #endif
-extern double hoc_Exp(double);
 #endif
  
 #undef LAYOUT
@@ -62,8 +59,7 @@ static void _net_buf_receive(_NrnThread*);
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
 	/*SUPPRESS 765*/
-	 extern double *getarg();
- static double *_p; static Datum *_ppvar;
+	 static double *_p; static Datum *_ppvar;
  
 #define t nrn_threads->_t
 #define dt nrn_threads->_dt
@@ -127,9 +123,6 @@ extern "C" {
  
 #endif /*BBCORE*/
  static int _mechtype;
- extern int nrn_get_mechtype(const char*);
-extern void hoc_register_prop_size(int, int, int);
-extern Memb_func* memb_func;
  static int _pointtype;
  
 #if 0 /*BBCORE*/
@@ -315,11 +308,6 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  
 #define _psize 36
 #define _ppsize 2
- extern Symbol* hoc_lookup(const char*);
-extern void _nrn_thread_reg(int, int, void(*f)(Datum*));
-extern void _nrn_thread_table_reg(int, void(*)(_threadargsproto_, int));
-extern void _cvode_abstol( Symbol**, double*, int);
-
  void _SynNMDA10_2_reg() {
 	int _vectorized = 0;
   _initlists();
@@ -355,7 +343,6 @@ static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
 static int release(double);
 static int rates(double);
- extern double *_getelm();
  
 #define _MATELM1(_row,_col)	*(_getelm(_row + 1, _col + 1))
  
@@ -363,7 +350,6 @@ static int rates(double);
  static double *_coef1;
  
 #define _linmat1  1
- extern void* nrn_cons_sparseobj(int, int, _Memb_list*, _threadargsproto_);
  static void* _sparseobj1;
  static void* _cvsparseobj1;
  

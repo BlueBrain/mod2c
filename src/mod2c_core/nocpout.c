@@ -338,17 +338,17 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/utils/randoms/nrnran123.h\"\
 \n#include \"coreneuron/nrnoc/md1redef.h\"\
 \n#include \"coreneuron/nrnconf.h\"\
+\n#include \"coreneuron/nrnoc/membfunc.h\"\
 \n#include \"coreneuron/nrnoc/multicore.h\"\
 \n#include \"coreneuron/nrniv/nrn_acc_manager.h\"\
 \n#include \"coreneuron/mech/cfile/scoplib.h\"\n\
+\n#include \"coreneuron/scopmath_core/newton_struct.h\"\
 \n#include \"coreneuron/nrnoc/md2redef.h\"\
-\n#if METHOD3\nextern int _method3;\n#endif\n\
 \n#if !NRNGPU\
 \n#if !defined(DISABLE_HOC_EXP)\
 \n#undef exp\
 \n#define exp hoc_Exp\
 \n#endif\
-\nextern double hoc_Exp(double);\
 \n#endif\n\
 ");
 	if (protect_include_) {
@@ -487,7 +487,6 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	/*SUPPRESS 763*/\n\
 	/*SUPPRESS 765*/\n\
 	");
-	Lappendstr(defs_list, "extern double *getarg();\n");
 #if VECTORIZE
     if (vectorize) {
 	Sprintf(buf, "/* Thread safe. No static _p or _ppvar. */\n");
@@ -537,31 +536,15 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 		if (s->nrntype & NRNEXTRN) {
 			if (strcmp(s->name, "dt") == 0) { continue; }
 			if (strcmp(s->name, "t") == 0) { continue; }
+			if (strcmp(s->name, "celsius") == 0) {continue;}
 			if (s->subtype & ARRAY) {
 				Sprintf(buf, "extern double* %s;\n", s->name);
 			}else{
 				Sprintf(buf, "extern double %s;\n", s->name);
 			}
 			Lappendstr(defs_list, buf);
-            /* temp fix for PGI compiler where extern variable need copyin definition */
-			if (strcmp(s->name, "celsius") == 0) {
-				Sprintf(buf,
-#if 0
-				"#if defined(PG_ACC_BUGS)\n"
-				"#pragma acc declare copyin(celsius)\n"
-				"#endif\n");
-#else /* work around for weird pg16.3 bug */
-				"#if defined(PG_ACC_BUGS)\n"
-				"#define _celsius_ _celsius_%s\n"
-				"double _celsius_;\n"
-				"#pragma acc declare copyin(_celsius_)\n"
-				"#define celsius _celsius_\n"
-				"#endif\n", suffix);
-#endif
-			    Lappendstr(defs_list, buf);
             }
 		}
-	}
 	
 #if BBCORE
 	Lappendstr(defs_list, "\n#if 0 /*BBCORE*/\n");
@@ -591,11 +574,6 @@ Sprintf(buf, "static void _hoc_%s(void);\n", s->name);
 		  , suffix);
 		replacstr(q, buf);
 	}
-	Lappendstr(defs_list, "\
-extern int nrn_get_mechtype(const char*);\n\
-extern void hoc_register_prop_size(int, int, int);\n\
-extern Memb_func* memb_func;\n\
-"	);
 
 	/**** create special point process functions */
 	if (point_process) {
@@ -1233,9 +1211,6 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 	}
 	if (net_receive_) {
 		Lappendstr(defs_list, "static void _net_receive(Point_process*, int, double);\n");
-		if (for_netcons_) {
-			Lappendstr(defs_list, "extern int _nrn_netcon_args(void*, double***);\n");
-		}
 		if (net_init_q1_) {
 			Lappendstr(defs_list, "static void _net_init(Point_process*, int, double);\n");
 		}
@@ -1255,16 +1230,8 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 
 	if (use_bbcorepointer) {
 		lappendstr(defs_list, "static void bbcore_read(double *, int*, int*, int*, _threadargsproto_);\n");
-		lappendstr(defs_list, "extern void hoc_reg_bbcore_read(int, void(*)(double *, int*, int*, int*, _threadargsproto_));\n");
 		lappendstr(defs_list, "static void bbcore_write(double *, int*, int*, int*, _threadargsproto_);\n");
-		lappendstr(defs_list, "extern void hoc_reg_bbcore_write(int, void(*)(double *, int*, int*, int*, _threadargsproto_));\n");
 	}
-	Lappendstr(defs_list, "\
-extern Symbol* hoc_lookup(const char*);\n\
-extern void _nrn_thread_reg(int, int, void(*f)(Datum*));\n\
-extern void _nrn_thread_table_reg(int, void(*)(_threadargsproto_, int));\n\
-extern void _cvode_abstol( Symbol**, double*, int);\n\n\
-");        
 	Sprintf(buf, "void _%s_reg() {\n\
 	int _vectorized = %d;\n", modbase, vectorize);
 	Lappendstr(defs_list, buf);

@@ -9,21 +9,18 @@
 #include "coreneuron/utils/randoms/nrnran123.h"
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
+#include "coreneuron/nrnoc/membfunc.h"
 #include "coreneuron/nrnoc/multicore.h"
 #include "coreneuron/nrniv/nrn_acc_manager.h"
 #include "coreneuron/mech/cfile/scoplib.h"
 
+#include "coreneuron/scopmath_core/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
-#if METHOD3
-extern int _method3;
-#endif
-
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
 #define exp hoc_Exp
 #endif
-extern double hoc_Exp(double);
 #endif
  
 #undef LAYOUT
@@ -51,8 +48,7 @@ extern double hoc_Exp(double);
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
 	/*SUPPRESS 765*/
-	 extern double *getarg();
- static double *_p; static Datum *_ppvar;
+	 static double *_p; static Datum *_ppvar;
  
 #define t nrn_threads->_t
 #define dt nrn_threads->_dt
@@ -84,13 +80,6 @@ extern "C" {
 #endif
  static int hoc_nrnpointerindex =  -1;
  /* external NEURON variables */
- extern double celsius;
- #if defined(PG_ACC_BUGS)
-#define _celsius_ _celsius__napIn
-double _celsius_;
-#pragma acc declare copyin(_celsius_)
-#define celsius _celsius_
-#endif
  
 #if 0 /*BBCORE*/
  /* declaration of user functions */
@@ -98,9 +87,6 @@ double _celsius_;
  
 #endif /*BBCORE*/
  static int _mechtype;
- extern int nrn_get_mechtype(const char*);
-extern void hoc_register_prop_size(int, int, int);
-extern Memb_func* memb_func;
  
 #if 0 /*BBCORE*/
  /* connect user functions to hoc names */
@@ -203,11 +189,6 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  
 #define _psize 10
 #define _ppsize 3
- extern Symbol* hoc_lookup(const char*);
-extern void _nrn_thread_reg(int, int, void(*f)(Datum*));
-extern void _nrn_thread_table_reg(int, void(*)(_threadargsproto_, int));
-extern void _cvode_abstol( Symbol**, double*, int);
-
  void _NapIn_reg() {
 	int _vectorized = 0;
   _initlists();
