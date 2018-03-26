@@ -16,12 +16,14 @@
 
 #include "coreneuron/scopmath_core/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
+#include "coreneuron/nrnoc/register_mech.hpp"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
 #define exp hoc_Exp
 #endif
 #endif
+ namespace coreneuron {
  
 #undef LAYOUT
 #define LAYOUT 1
@@ -44,16 +46,16 @@
 #define nrn_jacob_launcher nrn_jacob_NMDA10_1_launcher 
 #if NET_RECEIVE_BUFFERING
 #define _net_buf_receive _net_buf_receive_NMDA10_1
-static void _net_buf_receive(_NrnThread*);
+static void _net_buf_receive(NrnThread*);
 #endif
  
 #define kstates kstates_NMDA10_1 
 #define release release_NMDA10_1 
  
-#define _threadargscomma_ /**/
-#define _threadargsprotocomma_ /**/
-#define _threadargs_ /**/
-#define _threadargsproto_ /**/
+#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
+#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -111,10 +113,6 @@ static void _net_buf_receive(_NrnThread*);
 #if !defined(h)
 #define h _mlhh
 #endif
-#endif
- 
-#if defined(__cplusplus)
-extern "C" {
 #endif
  static int hoc_nrnpointerindex =  -1;
  /* external NEURON variables */
@@ -407,10 +405,10 @@ static void _acc_globals_update() {
 };
  static double _sav_indep;
  static void nrn_alloc(double*, Datum*, int);
-void nrn_init(_NrnThread*, _Memb_list*, int);
-void nrn_state(_NrnThread*, _Memb_list*, int);
- void nrn_cur(_NrnThread*, _Memb_list*, int);
- void nrn_jacob(_NrnThread*, _Memb_list*, int);
+void nrn_init(NrnThread*, Memb_list*, int);
+void nrn_state(NrnThread*, Memb_list*, int);
+ void nrn_cur(NrnThread*, Memb_list*, int);
+ void nrn_jacob(NrnThread*, Memb_list*, int);
  
 #if 0 /*BBCORE*/
  static void _hoc_destroy_pnt(_vptr) void* _vptr; {
@@ -748,9 +746,9 @@ for(_i=1;_i<10;_i++){
 #undef t
 #define t _nrb_t
 static void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
-static void _net_buf_receive(_NrnThread* _nt) {
+static void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
-  _Memb_list* _ml = _nt->_ml_list[_mechtype];
+  Memb_list* _ml = _nt->_ml_list[_mechtype];
   if (!_ml) { return; }
   NetReceiveBuffer_t* _nrb = _ml->_net_receive_buffer; 
   int _di;
@@ -780,7 +778,7 @@ static void _net_buf_receive(_NrnThread* _nt) {
 }
  
 static void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {
-  _NrnThread* _nt = nrn_threads + _pnt->_tid;
+  NrnThread* _nt = nrn_threads + _pnt->_tid;
   NetReceiveBuffer_t* _nrb = _nt->_ml_list[_mechtype]->_net_receive_buffer;
   if (_nrb->_cnt >= _nrb->_size){
     realloc_net_receive_buffer(_nt, _nt->_ml_list[_mechtype]);
@@ -799,7 +797,7 @@ static void _net_receive (Point_process* _pnt, int _weight_index, double _lflag)
 #endif
  
 { 
-   _NrnThread* _nt;
+   NrnThread* _nt;
    int _tid = _pnt->_tid; 
    _nt = nrn_threads + _tid;
    _thread = (ThreadDatum*)0; 
@@ -1123,7 +1121,7 @@ static void initmodel() {
 }
 }
 
-static void nrn_init(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_init(NrnThread* _nt, Memb_list* _ml, int _type){
 double _v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -1148,7 +1146,7 @@ static double _nrn_current(double _v){double _current=0.;v=_v;{ {
 } return _current;
 }
 
-static void nrn_cur(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type){
 int* _ni; double _rhs, _v; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -1169,7 +1167,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  
 }}
 
-static void nrn_jacob(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_jacob(NrnThread* _nt, Memb_list* _ml, int _type){
 int* _ni; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -1182,7 +1180,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  
 }}
 
-static void nrn_state(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type){
 double _v = 0.0; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -1197,7 +1195,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  _PRCELLSTATE_V
 {
  { error = sparse(&_sparseobj1, 10, _slist1, _dlist1, _p, &t, dt, kstates,&_coef1, _linmat1);
- if(error){fprintf(stderr,"at line 184 in file SynNMDA10_1.mod:\n\n"); nrn_complain(_p); abort_run(error);}
+ if(error){fprintf(stderr,"at line 184 in file mod/SynNMDA10_1.mod:\n\n"); nrn_complain(_p); abort_run(error);}
  }}}
 
 }
@@ -1228,3 +1226,4 @@ static void _initlists() {
 
 _first = 0;
 }
+ } // namespace coreneuron

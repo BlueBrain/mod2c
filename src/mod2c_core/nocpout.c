@@ -344,6 +344,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/mech/cfile/scoplib.h\"\n\
 \n#include \"coreneuron/scopmath_core/newton_struct.h\"\
 \n#include \"coreneuron/nrnoc/md2redef.h\"\
+\n#include \"coreneuron/nrnoc/register_mech.hpp\"\
 \n#if !NRNGPU\
 \n#if !defined(DISABLE_HOC_EXP)\
 \n#undef exp\
@@ -354,7 +355,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	if (protect_include_) {
 		Lappendstr(defs_list, "\n#include \"nmodlmutex.h\"");
 	}
-
+	Lappendstr(defs_list, "namespace coreneuron {\n");
 	if (vectorize) {
         /* macros for compiler dependent ivdep like pragma and memory layout. INIT and STATE pragma are same
          * except that sync clause absent because we saw issue only in CaDynamics_E2 */
@@ -443,7 +444,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 		sprintf(buf, "\
 \n#if NET_RECEIVE_BUFFERING\
 \n#define _net_buf_receive _net_buf_receive%s\
-\nstatic void _net_buf_receive(_NrnThread*);\
+\nstatic void _net_buf_receive(NrnThread*);\
 \n#endif\
 \n", suffix);
 		Lappendstr(defs_list, buf);
@@ -466,21 +467,23 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	Lappendstr(defs_list, "\n");
 #endif /* distinct names for easier profiling */
 
-	if (vectorize) {
+
+//	if (vectorize) {
 		Lappendstr(defs_list, "\n\
 #define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,\n\
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, _NrnThread* _nt, double v,\n\
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,\n\
 #define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v\n\
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, _NrnThread* _nt, double v\n\
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v\n\
 ");
-	}else{
-		Lappendstr(defs_list, "\n\
-#define _threadargscomma_ /**/\n\
-#define _threadargsprotocomma_ /**/\n\
-#define _threadargs_ /**/\n\
-#define _threadargsproto_ /**/\n\
-");
-	}
+//	}else{
+//		Lappendstr(defs_list, "\n\
+//#define _threadargscomma_ /**/\n\
+//#define _threadargsprotocomma_ /**/\n\
+//#define _threadargs_ /**/\n\
+//#define _threadargsproto_ /**/\n\
+//");
+//	}
+
 	Lappendstr(defs_list, "\
 	/*SUPPRESS 761*/\n\
 	/*SUPPRESS 762*/\n\
@@ -502,7 +505,6 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	declare_p();
 	ioncount = iondef(&pointercount); /* first is _nd_area if point process */
 	Lappendstr(defs_list, "\n#if MAC\n#if !defined(v)\n#define v _mlhv\n#endif\n#if !defined(h)\n#define h _mlhh\n#endif\n#endif\n");
-	Lappendstr(defs_list, "\n#if defined(__cplusplus)\nextern \"C\" {\n#endif\n");
 	Lappendstr(defs_list, "static int hoc_nrnpointerindex = ");
 	if (pointercount) {
 		q = nrnpointers->next;
@@ -859,9 +861,9 @@ diag("No statics allowed for thread safe models:", s->name);
 
 	Lappendstr(defs_list, "static double _sav_indep;\n");
 	if (ba_index_ > 0) {
-		Lappendstr(defs_list, "static void _ba1(_NrnThread*, _Memb_list*, int)");
+		Lappendstr(defs_list, "static void _ba1(NrnThread*, Memb_list*, int)");
 		for (i=2; i <= ba_index_; ++i) {
-			sprintf(buf, ", _ba%d(_NrnThread*, _Memb_list*, int)", i);
+			sprintf(buf, ", _ba%d(NrnThread*, Memb_list*, int)", i);
 			Lappendstr(defs_list, buf);
 		}
 		Lappendstr(defs_list, ";\n");
@@ -870,16 +872,16 @@ diag("No statics allowed for thread safe models:", s->name);
 	/******** what normally goes into cabvars.h structures */
 	
 	/*declaration of the range variables names to HOC */
-	Lappendstr(defs_list, "static void nrn_alloc(double*, Datum*, int);\nvoid nrn_init(_NrnThread*, _Memb_list*, int);\nvoid nrn_state(_NrnThread*, _Memb_list*, int);\n\
+	Lappendstr(defs_list, "static void nrn_alloc(double*, Datum*, int);\nvoid nrn_init(NrnThread*, Memb_list*, int);\nvoid nrn_state(NrnThread*, Memb_list*, int);\n\
 ");
 	if (brkpnt_exists) {
-		Lappendstr(defs_list, "void nrn_cur(_NrnThread*, _Memb_list*, int);\n");
+		Lappendstr(defs_list, "void nrn_cur(NrnThread*, Memb_list*, int);\n");
 	    if (!vectorize) {
-		Lappendstr(defs_list, "void nrn_jacob(_NrnThread*, _Memb_list*, int);\n");
+		Lappendstr(defs_list, "void nrn_jacob(NrnThread*, Memb_list*, int);\n");
 	    }
 	}
 	if (watch_seen_) {
-		Lappendstr(defs_list, "void _nrn_watch_check(_NrnThread*, _Memb_list*);\n");
+		Lappendstr(defs_list, "void _nrn_watch_check(NrnThread*, Memb_list*);\n");
 	}
 	/* count the number of pointers needed */
 	ppvar_cnt = ioncount + diamdec + pointercount + areadec;
@@ -1462,7 +1464,7 @@ if (_nd->_extnode) {\n\
 	}
 	if (ldifuslist) {
 		Lappendstr(defs_list, "\thoc_register_ldifus1(_difusfunc);\n");
-		Linsertstr(defs_list, "static void _difusfunc(ldifusfunc2_t, _NrnThread*);\n");
+		Linsertstr(defs_list, "static void _difusfunc(ldifusfunc2_t, NrnThread*);\n");
 	}
     } /* end of not "nothing" */
 #if BBCORE
@@ -1573,7 +1575,7 @@ void ldifusreg() {
 		dfdcur = STR(q);
 		++n;
 sprintf(buf, "static void* _difspace%d;\nextern double nrn_nernst_coef();\n\
-static double _difcoef%d(int _i, double* _p, Datum* _ppvar, double* _pdvol, double* _pdfcdc, ThreadDatum* _thread, _NrnThread* _nt) {\n  \
+static double _difcoef%d(int _i, double* _p, Datum* _ppvar, double* _pdvol, double* _pdfcdc, ThreadDatum* _thread, NrnThread* _nt) {\n  \
  *_pdvol = ", n, n);
 		lappendstr(procfunc, buf);
 		for (q1 = qvexp; q1 != qb2; q1 = q1->next) {
@@ -1593,9 +1595,9 @@ static double _difcoef%d(int _i, double* _p, Datum* _ppvar, double* _pdvol, doub
 		lappendstr(procfunc, ";\n}\n");
 	}
 #if MAC
-	lappendstr(procfunc, "static void _difusfunc(_f, _nt) void *_f; _NrnThread* _nt; {int _i;\n");
+	lappendstr(procfunc, "static void _difusfunc(_f, _nt) void *_f; NrnThread* _nt; {int _i;\n");
 #else
-	lappendstr(procfunc, "static void _difusfunc(_f, _nt) void(*_f)(); _NrnThread* _nt; {int _i;\n");
+	lappendstr(procfunc, "static void _difusfunc(_f, _nt) void(*_f)(); NrnThread* _nt; {int _i;\n");
 #endif
 	n = 0;
 	ITERATE(q, ldifuslist) {
@@ -1907,7 +1909,7 @@ void bablk(ba, type, q1, q2)
 	if (!ba_list_) {
 		ba_list_ = newlist();
 	}
-	sprintf(buf, "static void _ba%d(_NrnThread* _nt, _Memb_list* _ml, int _type) ", ++ba_index_);
+	sprintf(buf, "static void _ba%d(NrnThread* _nt, Memb_list* _ml, int _type) ", ++ba_index_);
 	insertstr(q1, buf);
 	q = q1->next;
 
@@ -2270,7 +2272,7 @@ Sprintf(buf, " _ion_%s = %s;\n", SYM(q1)->name, SYM(q1)->name);
              */
 			Sprintf(buf, "    %s _pe = (&(_ion_%s));\n", declared ? "" : "double*", SYM(qconc)->name);
 			Lappendstr(l, buf);
-			Sprintf(buf, "    _Memb_list* _%s_ml;\n", in);
+			Sprintf(buf, "    Memb_list* _%s_ml;\n", in);
 			Lappendstr(l, buf);
 			Sprintf(buf, "    _%s_ml = _nt->_ml_list[_%s_type];\n", in, in);
 			Lappendstr(l, buf);
@@ -2730,8 +2732,8 @@ static int _ode_count(int _type){ hoc_execerror(\"%s\", \"cannot be used with CV
 		Lappendstr(defs_list, "\n\
 static int _ode_count(int);\n\
 static void _ode_map(int, double**, double**, double*, Datum*, double*, int);\n\
-static void _ode_spec(_NrnThread*, _Memb_list*, int);\n\
-static void _ode_matsol(_NrnThread*, _Memb_list*, int);\n\
+static void _ode_spec(NrnThread*, Memb_list*, int);\n\
+static void _ode_matsol(NrnThread*, Memb_list*, int);\n\
 ");
 		sprintf(buf, "\n\
 static int _ode_count(int _type){ return %d;}\n",
@@ -2743,7 +2745,7 @@ static int _ode_count(int _type){ return %d;}\n",
    if (cvode_fun_->subtype == PROCED) {
 	cvode_proced_emit();
    }else{
-		Lappendstr(procfunc, "\nstatic void _ode_spec(_NrnThread* _nt, _Memb_list* _ml, int _type) {\n");
+		Lappendstr(procfunc, "\nstatic void _ode_spec(NrnThread* _nt, Memb_list* _ml, int _type) {\n");
 		out_nt_ml_frag(procfunc);
 		lst = get_ion_variables(1);
 		if (lst->next->itemtype) movelist(lst->next, lst->prev, procfunc);
@@ -2784,7 +2786,7 @@ static void _ode_synonym(int _cnt, double** _pp, Datum** _ppd) {");
 			Lappendstr(procfunc, "}}\n");
 		}
 
-		Lappendstr(procfunc, "\nstatic void _ode_matsol(_NrnThread* _nt, _Memb_list* _ml, int _type) {\n");
+		Lappendstr(procfunc, "\nstatic void _ode_matsol(NrnThread* _nt, Memb_list* _ml, int _type) {\n");
 		out_nt_ml_frag(procfunc);
 		lst = get_ion_variables(1);
 		if (lst->next->itemtype) movelist(lst->next, lst->prev, procfunc);
@@ -2897,7 +2899,7 @@ const char* net_boilerplate(int flag) {
 	b[0] = '\0';
 	
 	sprintf(buf, "\n\
-   _NrnThread* _nt;\n\
+   NrnThread* _nt;\n\
    int _tid = _pnt->_tid; \n\
    _nt = nrn_threads + _tid;\n\
 ");
@@ -2935,9 +2937,9 @@ void emit_net_receive_buffering_code() {
 \n#undef t\
 \n#define t _nrb_t\
 \nstatic void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);\
-\nstatic void _net_buf_receive(_NrnThread* _nt) {\
+\nstatic void _net_buf_receive(NrnThread* _nt) {\
 \n  if (!_nt->_ml_list) { return; }\
-\n  _Memb_list* _ml = _nt->_ml_list[_mechtype];\
+\n  Memb_list* _ml = _nt->_ml_list[_mechtype];\
 \n  if (!_ml) { return; }\
 \n  NetReceiveBuffer_t* _nrb = _ml->_net_receive_buffer;\
 ");
@@ -3016,7 +3018,7 @@ sprintf(buf, "\
 
 	sprintf(buf, "\
 \nstatic void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {\
-\n  _NrnThread* _nt = nrn_threads + _pnt->_tid;\
+\n  NrnThread* _nt = nrn_threads + _pnt->_tid;\
 \n  NetReceiveBuffer_t* _nrb = _nt->_ml_list[_mechtype]->_net_receive_buffer;\
 \n  if (_nrb->_cnt >= _nrb->_size){\
 \n    realloc_net_receive_buffer(_nt, _nt->_ml_list[_mechtype]);\
@@ -3046,7 +3048,7 @@ static void emit_nrn_watch_check_code() {
 	int iw;
 	char* par2par;
 	Lappendstr(procfunc, "\n"
-"void _nrn_watch_check(_NrnThread* _nt, _Memb_list* _ml) {\n"
+"void _nrn_watch_check(NrnThread* _nt, Memb_list* _ml) {\n"
 "  double* _p; Datum* _ppvar; ThreadDatum* _thread;\n"
 "  int* _ni; double v; int _iml, _cntml_padded, _cntml_actual;\n"
 "  _cntml_actual = _ml->_nodecount;\n"
@@ -3163,7 +3165,7 @@ void net_receive(qblk, qarg, qp1, qp2, qstmt, qend)
 	net_receive_block_open_brace_ = q;
 	vectorize_substitute(q, "\n\
 {  double* _p; Datum* _ppvar; ThreadDatum* _thread; double v;\n\
-   _Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
+   Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
 ");
 
 	if (watch_seen_) {
@@ -3254,7 +3256,7 @@ void net_init(qinit, qp2)
 	replacstr(qinit, "\nstatic void _net_init(Point_process* _pnt, int _weight_index, double _lflag)");
 	vectorize_substitute(insertstr(qinit->next->next, ""), "\n\
    double* _p; Datum* _ppvar; ThreadDatum* _thread; \n\
-   _Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
+   Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
 ");
 	vectorize_substitute(insertstr(qinit->next->next->next, ""), net_boilerplate(0));
 	if (net_init_q1_) {

@@ -16,12 +16,14 @@
 
 #include "coreneuron/scopmath_core/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
+#include "coreneuron/nrnoc/register_mech.hpp"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
 #define exp hoc_Exp
 #endif
 #endif
+ namespace coreneuron {
  
 #undef LAYOUT
 #define LAYOUT 1
@@ -40,10 +42,10 @@
 #define states states_napIn 
 #define trates trates_napIn 
  
-#define _threadargscomma_ /**/
-#define _threadargsprotocomma_ /**/
-#define _threadargs_ /**/
-#define _threadargsproto_ /**/
+#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
+#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -73,10 +75,6 @@
 #if !defined(h)
 #define h _mlhh
 #endif
-#endif
- 
-#if defined(__cplusplus)
-extern "C" {
 #endif
  static int hoc_nrnpointerindex =  -1;
  /* external NEURON variables */
@@ -150,10 +148,10 @@ static void _acc_globals_update() {
 };
  static double _sav_indep;
  static void nrn_alloc(double*, Datum*, int);
-void nrn_init(_NrnThread*, _Memb_list*, int);
-void nrn_state(_NrnThread*, _Memb_list*, int);
- void nrn_cur(_NrnThread*, _Memb_list*, int);
- void nrn_jacob(_NrnThread*, _Memb_list*, int);
+void nrn_init(NrnThread*, Memb_list*, int);
+void nrn_state(NrnThread*, Memb_list*, int);
+ void nrn_cur(NrnThread*, Memb_list*, int);
+ void nrn_jacob(NrnThread*, Memb_list*, int);
  /* connect range variables in _p that hoc is supposed to know about */
  static const char *_mechanism[] = {
  "6.2.0",
@@ -290,7 +288,7 @@ static void initmodel() {
 }
 }
 
-static void nrn_init(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_init(NrnThread* _nt, Memb_list* _ml, int _type){
 double _v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -316,7 +314,7 @@ static double _nrn_current(double _v){double _current=0.;v=_v;{ {
 } return _current;
 }
 
-static void nrn_cur(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type){
 int* _ni; double _rhs, _v; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -340,7 +338,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  
 }}
 
-static void nrn_jacob(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_jacob(NrnThread* _nt, Memb_list* _ml, int _type){
 int* _ni; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -353,7 +351,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  
 }}
 
-static void nrn_state(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type){
 double _v = 0.0; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -369,7 +367,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
 {
   ena = _ion_ena;
  { error =  states();
- if(error){fprintf(stderr,"at line 43 in file NapIn.mod:\n    		\n"); nrn_complain(_p); abort_run(error);}
+ if(error){fprintf(stderr,"at line 43 in file mod/NapIn.mod:\n    		\n"); nrn_complain(_p); abort_run(error);}
  } }}
 
 }
@@ -392,3 +390,4 @@ static void _initlists() {
 
 _first = 0;
 }
+ } // namespace coreneuron

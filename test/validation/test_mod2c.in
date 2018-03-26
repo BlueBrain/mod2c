@@ -39,12 +39,12 @@ modpfx=$(basename "$modinput" .mod)
 mod2c="$(realpath "$mod2c")"
 ( cd "$tmpdir"; "$mod2c" "$modpfx" )
 
-if [ ! -e "$tmpdir/$modpfx".c ]; then
+if [ ! -e "$tmpdir/$modpfx".cpp ]; then
     echo "no output file generated" >&2
     exit 2
 fi
 
-@MOD2CFILTER@ < "$tmpdir/$modpfx".c > "$tmpdir/_out"
+@MOD2CFILTER@ < "$tmpdir/$modpfx".cpp > "$tmpdir/_out"
 ntok=$(wc -l < "$tmpdir/_out")
 echo "comparing $ntok tokens:"
 if diff "$tmpdir/_out" "$tmpdir/_check"; then

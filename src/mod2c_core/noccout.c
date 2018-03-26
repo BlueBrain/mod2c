@@ -265,7 +265,7 @@ void c_out()
 #if NMODL
 	/* generation of initmodel interface */
 #if VECTORIZE
-	P("\nstatic void nrn_init(_NrnThread* _nt, _Memb_list* _ml, int _type){\n");
+	P("\nstatic void nrn_init(NrnThread* _nt, Memb_list* _ml, int _type){\n");
 	  P("double _v; int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
 	  P("#if CACHEVEC\n");
 	  P("    _ni = _ml->_nodeindices;\n");
@@ -313,7 +313,7 @@ void c_out()
 	   as make sure all currents accumulated properly (currents list) */
 
     if (brkpnt_exists) {
-	P("\nstatic void nrn_cur(_NrnThread* _nt, _Memb_list* _ml, int _type){\n");
+	P("\nstatic void nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type){\n");
 	  P("int* _ni; double _rhs, _v; int _iml, _cntml_padded, _cntml_actual;\n");
 	  P("#if CACHEVEC\n");
 	  P("    _ni = _ml->_nodeindices;\n");
@@ -372,7 +372,7 @@ void c_out()
 
 	/* for the classic breakpoint block, nrn_cur computed the conductance, _g,
 	   and now the jacobian calculation merely returns that */
-	P("\nstatic void nrn_jacob(_NrnThread* _nt, _Memb_list* _ml, int _type){\n");
+	P("\nstatic void nrn_jacob(NrnThread* _nt, Memb_list* _ml, int _type){\n");
 	  P("int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
 	  P("#if CACHEVEC\n");
 	  P("    _ni = _ml->_nodeindices;\n");
@@ -405,7 +405,7 @@ void c_out()
 	/* nrnstate list contains the EQUATION solve statement so this
 	   advances states by dt */
 #if VECTORIZE
-	P("\nstatic void nrn_state(_NrnThread* _nt, _Memb_list* _ml, int _type){\n");
+	P("\nstatic void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type){\n");
 #else
 	P("\nstatic nrn_state(_prop, _v) Prop *_prop; double _v; {\n");
 #endif
@@ -487,6 +487,7 @@ void c_out()
 	P("  if (!_first) return;\n");
 	printlist(initlist);
 	P("_first = 0;\n}\n");
+        P(" } // namespace coreneuron\n");
 }
 
 /*
@@ -688,8 +689,8 @@ static void pr_layout_for_p(int ivdep, int fun_type) {
 
 static void print_cuda_launcher_call(char *name) {
     P("\n#if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)\n");
-    P("  _NrnThread* d_nt = acc_deviceptr(_nt);\n");
-    P("  _Memb_list* d_ml = acc_deviceptr(_ml);\n");
+    P("  NrnThread* d_nt = acc_deviceptr(_nt);\n");
+    P("  Memb_list* d_ml = acc_deviceptr(_ml);\n");
     Fprintf(fcout, "  nrn_%s_launcher(d_nt, d_ml, _type, _cntml_actual);\n", name);
     P("  return;\n");
     P("#endif\n\n");
@@ -733,7 +734,7 @@ void c_out_vectorize()
 	P("\nstatic void initmodel(_threadargsproto_) {\n  int _i; double _save;");
 	P("{\n");
 	if (net_send_seen_ && !artificial_cell) {
-	  P("  _Memb_list* _ml = _nt->_ml_list[_mechtype];\n");
+	  P("  Memb_list* _ml = _nt->_ml_list[_mechtype];\n");
 	}
 	initstates();
 	printlist(initfunc);
@@ -745,7 +746,7 @@ void c_out_vectorize()
 	Fflush(fcout);
 
 	/* generation of initmodel interface */
-	P("\nvoid nrn_init(_NrnThread* _nt, _Memb_list* _ml, int _type){\n");
+	P("\nvoid nrn_init(NrnThread* _nt, Memb_list* _ml, int _type){\n");
 	  P("double* _p; Datum* _ppvar; ThreadDatum* _thread;\n");
 	  P("double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
 	  P("    _ni = _ml->_nodeindices;\n");
@@ -868,16 +869,16 @@ void c_out_vectorize()
 
     /* cuda interface */
     P("\n#if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC)\n");
-    P("  void nrn_state_launcher(_NrnThread*, _Memb_list*, int, int);\n");
-    P("  void nrn_jacob_launcher(_NrnThread*, _Memb_list*, int, int);\n");
-    P("  void nrn_cur_launcher(_NrnThread*, _Memb_list*, int, int);\n");
+    P("  void nrn_state_launcher(NrnThread*, Memb_list*, int, int);\n");
+    P("  void nrn_jacob_launcher(NrnThread*, Memb_list*, int, int);\n");
+    P("  void nrn_cur_launcher(NrnThread*, Memb_list*, int, int);\n");
     P("#endif\n\n");
 
 	/* For the classic BREAKPOINT block, the neuron current also has to compute the dcurrent/dv as well
 	   as make sure all currents accumulated properly (currents list) */
 
     if (brkpnt_exists) {
-	P("\nvoid nrn_cur(_NrnThread* _nt, _Memb_list* _ml, int _type) {\n");
+	P("\nvoid nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type) {\n");
 	  P("double* _p; Datum* _ppvar; ThreadDatum* _thread;\n");
 	  P("int* _ni; double _rhs, _g, _v, v; int _iml, _cntml_padded, _cntml_actual;\n");
 	  P("    _ni = _ml->_nodeindices;\n");
@@ -971,7 +972,7 @@ void c_out_vectorize()
   if (0) { /* instead, jacobian handled in nrn_cur */
 	/* for the classic breakpoint block, nrn_cur computed the conductance, _g,
 	   and now the jacobian calculation merely returns that */
-	P("\nvoid nrn_jacob(_NrnThread* _nt, _Memb_list* _ml, int _type) {\n");
+	P("\nvoid nrn_jacob(NrnThread* _nt, Memb_list* _ml, int _type) {\n");
 	  P("double* _p; Datum* _ppvar; ThreadDatum* _thread;\n");
 	  P("int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
 	  P("    _ni = _ml->_nodeindices;\n");
@@ -1005,7 +1006,7 @@ void c_out_vectorize()
 
 	/* nrnstate list contains the EQUATION solve statement so this
 	   advances states by dt */
-	P("\nvoid nrn_state(_NrnThread* _nt, _Memb_list* _ml, int _type) {\n");
+	P("\nvoid nrn_state(NrnThread* _nt, Memb_list* _ml, int _type) {\n");
 	if (nrnstate || currents->next == currents) {
 	  P("double* _p; Datum* _ppvar; ThreadDatum* _thread;\n");
 	  P("double v, _v = 0.0; int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
@@ -1047,7 +1048,7 @@ void c_out_vectorize()
 	P("  if (!_first) return;\n");
 	printlist(initlist);
 	P("_first = 0;\n}\n");
-	P("\n#if defined(__cplusplus)\n} /* extern \"C\" */\n#endif\n");
+    P("} // namespace coreneuron_lib\n");
 }
 
 void vectorize_substitute(q, str)

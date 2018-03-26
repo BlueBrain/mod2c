@@ -994,14 +994,14 @@ void hocfunchack(Symbol* n, Item* qpar1, Item* qpar2, int hack)
    }
 	Lappendstr(procfunc, buf);
 	vectorize_substitute(lappendstr(procfunc, ""), "\
-  double* _p; Datum* _ppvar; ThreadDatum* _thread; _NrnThread* _nt;\n\
+  double* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;\n\
 ");
 	if (point_process) {
 		vectorize_substitute(lappendstr(procfunc, "  _hoc_setdata(_vptr);\n"), "\
   _p = ((Point_process*)_vptr)->_prop->param;\n\
   _ppvar = ((Point_process*)_vptr)->_prop->dparam;\n\
   _thread = _extcall_thread;\n\
-  _nt = (_NrnThread*)((Point_process*)_vptr)->_vnt;\n\
+  _nt = (NrnThread*)((Point_process*)_vptr)->_vnt;\n\
 ");
 	}else{
 		vectorize_substitute(lappendstr(procfunc, ""), "\
@@ -1118,7 +1118,7 @@ acc_net_add(qname, qpar1, qexpr, qpar2, "0, _tqitem, _weight_index, _ppvar[1*_ST
 				Insertstr(qpar1->next, "_tqitem, _weight_index, _pnt,");
 			}else if (blocktype == INITIAL1){
 			  net_send_buffer_in_initial = 1;
-acc_net_add(qname, qpar1, qexpr, qpar2, "0, _tqitem, 0, _ppvar[1*_STRIDE],", "");
+acc_net_add(qname, qpar1, qexpr, qpar2, "0, _tqitem, 0,  _ppvar[1*_STRIDE],", "");
 				Insertstr(qpar1->next, "_tqitem, -1, (Point_process*) _nt->_vdata[_ppvar[1*_STRIDE]],");
 			}else{
 diag("net_send allowed only in INITIAL and NET_RECEIVE blocks", (char*)0);
@@ -1126,7 +1126,7 @@ diag("net_send allowed only in INITIAL and NET_RECEIVE blocks", (char*)0);
 		}else if (strcmp(SYM(qname)->name, "net_event") == 0) {
 			net_event_seen_ = 1;
 			if (blocktype == NETRECEIVE) {
-acc_net_add(qname, qpar1, qexpr, qpar2, "1, -1, -1, _ppvar[1*_STRIDE],", ", 0.");
+acc_net_add(qname, qpar1, qexpr, qpar2, "1, -1, -1,  _ppvar[1*_STRIDE],", ", 0.");
 				Insertstr(qpar1->next, "_pnt,");
 			}else{
 diag("net_event", " only allowed in NET_RECEIVE block");
@@ -1136,7 +1136,7 @@ diag("net_event", " only allowed in NET_RECEIVE block");
 				replacstr(qname, "artcell_net_move");
 			}
 			if (blocktype == NETRECEIVE) {
-acc_net_add(qname, qpar1, qexpr, qpar2, "2, _tqitem, -1, _ppvar[1*_STRIDE],", ", 0.");
+acc_net_add(qname, qpar1, qexpr, qpar2, "2, _tqitem, -1, (Point_process*)_ppvar[1*_STRIDE],", ", 0.");
 				Insertstr(qpar1->next, "_tqitem, _pnt,");
 			}else{
 diag("net_move", " only allowed in NET_RECEIVE block");
@@ -1224,7 +1224,7 @@ void watchstmt(par1, dir, par2, flag, blocktype )Item *par1, *dir, *par2, *flag;
 	sprintf(buf, "\nstatic double _watch%d_cond(_pnt) Point_process* _pnt; {\n",
 		watch_seen_);
 	lappendstr(procfunc, buf);
-	vectorize_substitute(lappendstr(procfunc, ""),"\tdouble* _p; Datum* _ppvar; ThreadDatum* _thread; _NrnThread* _nt;\n\t_thread= (Datum*)0; _nt = (_NrnThread*)_pnt->_vnt;\n");
+	vectorize_substitute(lappendstr(procfunc, ""),"\tdouble* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;\n\t_thread= (Datum*)0; _nt = (NrnThread*)_pnt->_vnt;\n");
 	sprintf(buf, "\t_p = _pnt->_prop->param; _ppvar = _pnt->_prop->dparam;\n\tv = VEC_V(_ml->_nodeindices[_iml]));\n	return ");
 	lappendstr(procfunc, buf);
 	movelist(par1, par2, procfunc);

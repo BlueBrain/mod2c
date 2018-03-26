@@ -15,12 +15,14 @@
 
 #include "coreneuron/scopmath_core/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
+#include "coreneuron/nrnoc/register_mech.hpp"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
 #define exp hoc_Exp
 #endif
 #endif
+ namespace coreneuron {
  
 #define _thread_present_ /**/ 
  
@@ -88,14 +90,14 @@
 #define nrn_jacob_launcher nrn_jacob_ZoidSyn_launcher 
 #if NET_RECEIVE_BUFFERING
 #define _net_buf_receive _net_buf_receive_ZoidSyn
-static void _net_buf_receive(_NrnThread*);
+static void _net_buf_receive(NrnThread*);
 #endif
  
  
 #define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, _NrnThread* _nt, double v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
 #define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, _NrnThread* _nt, double v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -142,10 +144,6 @@ static void _net_buf_receive(_NrnThread*);
 #if !defined(h)
 #define h _mlhh
 #endif
-#endif
- 
-#if defined(__cplusplus)
-extern "C" {
 #endif
  static int hoc_nrnpointerindex =  -1;
  static ThreadDatum* _extcall_thread;
@@ -228,9 +226,9 @@ static void _acc_globals_update() {
 };
  static double _sav_indep;
  static void nrn_alloc(double*, Datum*, int);
-void nrn_init(_NrnThread*, _Memb_list*, int);
-void nrn_state(_NrnThread*, _Memb_list*, int);
- void nrn_cur(_NrnThread*, _Memb_list*, int);
+void nrn_init(NrnThread*, Memb_list*, int);
+void nrn_state(NrnThread*, Memb_list*, int);
+ void nrn_cur(NrnThread*, Memb_list*, int);
  
 #if 0 /*BBCORE*/
  static void _hoc_destroy_pnt(_vptr) void* _vptr; {
@@ -326,9 +324,9 @@ static void _modl_cleanup(){ _match_recurse=1;}
 #undef t
 #define t _nrb_t
 static void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
-static void _net_buf_receive(_NrnThread* _nt) {
+static void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
-  _Memb_list* _ml = _nt->_ml_list[_mechtype];
+  Memb_list* _ml = _nt->_ml_list[_mechtype];
   if (!_ml) { return; }
   NetReceiveBuffer_t* _nrb = _ml->_net_receive_buffer; 
   int _di;
@@ -391,7 +389,7 @@ static void _net_send_buffering(NetSendBuffer_t* _nsb, int _sendtype, int _i_vda
 }
  
 static void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {
-  _NrnThread* _nt = nrn_threads + _pnt->_tid;
+  NrnThread* _nt = nrn_threads + _pnt->_tid;
   NetReceiveBuffer_t* _nrb = _nt->_ml_list[_mechtype]->_net_receive_buffer;
   if (_nrb->_cnt >= _nrb->_size){
     realloc_net_receive_buffer(_nt, _nt->_ml_list[_mechtype]);
@@ -410,9 +408,9 @@ static void _net_receive (Point_process* _pnt, int _weight_index, double _lflag)
 #endif
  
 {  double* _p; Datum* _ppvar; ThreadDatum* _thread; double v;
-   _Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;
+   Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;
  
-   _NrnThread* _nt;
+   NrnThread* _nt;
    int _tid = _pnt->_tid; 
    _nt = nrn_threads + _tid;
    _thread = (ThreadDatum*)0; 
@@ -499,7 +497,7 @@ static void _net_receive (Point_process* _pnt, int _weight_index, double _lflag)
 
 static void initmodel(_threadargsproto_) {
   int _i; double _save;{
-  _Memb_list* _ml = _nt->_ml_list[_mechtype];
+  Memb_list* _ml = _nt->_ml_list[_mechtype];
  {
    if ( trf <= 0.0 ) {
      trf = 1.0 ;
@@ -524,7 +522,7 @@ static void initmodel(_threadargsproto_) {
    if ( tally > 0.0 ) {
      
 #if NET_RECEIVE_BUFFERING
-    _net_send_buffering(_ml->_net_send_buffer, 0, _tqitem, 0, _ppvar[1*_STRIDE], t +  start , 1.0 );
+    _net_send_buffering(_ml->_net_send_buffer, 0, _tqitem, 0,  _ppvar[1*_STRIDE], t +  start , 1.0 );
 #else
  net_send ( _tqitem, -1, (Point_process*) _nt->_vdata[_ppvar[1*_STRIDE]], t +  start , 1.0 ) ;
      
@@ -536,7 +534,7 @@ static void initmodel(_threadargsproto_) {
 }
 }
 
-void nrn_init(_NrnThread* _nt, _Memb_list* _ml, int _type){
+void nrn_init(NrnThread* _nt, Memb_list* _ml, int _type){
 double* _p; Datum* _ppvar; ThreadDatum* _thread;
 double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
     _ni = _ml->_nodeindices;
@@ -611,13 +609,13 @@ static double _nrn_current(_threadargsproto_, double _v){double _current=0.;v=_v
 }
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC)
-  void nrn_state_launcher(_NrnThread*, _Memb_list*, int, int);
-  void nrn_jacob_launcher(_NrnThread*, _Memb_list*, int, int);
-  void nrn_cur_launcher(_NrnThread*, _Memb_list*, int, int);
+  void nrn_state_launcher(NrnThread*, Memb_list*, int, int);
+  void nrn_jacob_launcher(NrnThread*, Memb_list*, int, int);
+  void nrn_cur_launcher(NrnThread*, Memb_list*, int, int);
 #endif
 
 
-void nrn_cur(_NrnThread* _nt, _Memb_list* _ml, int _type) {
+void nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type) {
 double* _p; Datum* _ppvar; ThreadDatum* _thread;
 int* _ni; double _rhs, _g, _v, v; int _iml, _cntml_padded, _cntml_actual;
     _ni = _ml->_nodeindices;
@@ -630,8 +628,8 @@ double * _vec_shadow_rhs = _nt->_shadow_rhs;
 double * _vec_shadow_d = _nt->_shadow_d;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  _NrnThread* d_nt = acc_deviceptr(_nt);
-  _Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = acc_deviceptr(_nt);
+  Memb_list* d_ml = acc_deviceptr(_ml);
   nrn_cur_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif
@@ -698,7 +696,7 @@ for (;;) { /* help clang-format properly indent */
  
 }
 
-void nrn_state(_NrnThread* _nt, _Memb_list* _ml, int _type) {
+void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type) {
 
 }
 
@@ -713,7 +711,4 @@ static void _initlists(){
   if (!_first) return;
 _first = 0;
 }
-
-#if defined(__cplusplus)
-} /* extern "C" */
-#endif
+} // namespace coreneuron_lib

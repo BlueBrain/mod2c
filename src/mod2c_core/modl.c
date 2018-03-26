@@ -101,10 +101,10 @@ static void openfiles(char* given_filename, char* output_dir) {
         exit(1);
       }
       char* basename = strrchr(modprefix,'/');
-      Sprintf(output_filename, "%s%s.c", output_dir, basename);
+      Sprintf(output_filename, "%s%s.cpp", output_dir, basename);
   }
   else
-    Sprintf(output_filename, "%s.c", modprefix);
+    Sprintf(output_filename, "%s.cpp", modprefix);
 
   if ((fcout = fopen(output_filename, "w")) == (FILE *) 0) {
   diag("Can't create C file: ", output_filename);

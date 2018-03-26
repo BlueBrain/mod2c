@@ -145,7 +145,7 @@ if (deriv_imp_list) {	/* make sure deriv block translation matches method */
 	lappendstr(newtonspace_list, buf);
 	Sprintf(buf, "  free( _thread[_dith%d]._pval);\n", listnum);
 	lappendstr(thread_cleanup_list, buf);
-	Sprintf(buf, "  nrn_destroy_newtonspace(_newtonspace%d);\n", listnum);
+        Sprintf(buf, "  nrn_destroy_newtonspace((NewtonSpace*) _newtonspace%d);\n", listnum);
 	lappendstr(thread_cleanup_list, buf);
 	thread_data_index += 3;
 }
@@ -209,7 +209,7 @@ Sprintf(buf,
 "  #if !defined(_kinetic_%s%s)\n"
 "    #define _kinetic_%s%s 0\n"
 "  #endif\n"
-"  %s%s_thread(_thread[_spth%d]._pvoid, %d, _slist%d, _dlist%d, &%s, %s, _kinetic_%s%s, _linmat%d, _threadargs_);\n",
+"  %s%s_thread((SparseObj*)_thread[_spth%d]._pvoid, %d, _slist%d, _dlist%d, &%s, %s, _kinetic_%s%s, _linmat%d, _threadargs_);\n",
 fun->name, suffix, fun->name, suffix,
 ssprefix, method->name, listnum, numeqn, listnum, listnum, indepsym->name,
 dindepname, fun->name, suffix, listnum);
