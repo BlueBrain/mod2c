@@ -529,6 +529,22 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 		Sprintf(buf, "#define %s %s%s\n", STR(q), STR(q), suffix);
 		Lappendstr(defs_list, buf);
 	}
+
+	Lappendstr(defs_list, "/* external NEURON variables */\n");
+	SYMLISTITER {
+		s = SYM(q);
+		if (s->nrntype & NRNEXTRN) {
+			if (strcmp(s->name, "dt") == 0) { continue; }
+			if (strcmp(s->name, "t") == 0) { continue; }
+			if (strcmp(s->name, "celsius") == 0) {continue;}
+			if (s->subtype & ARRAY) {
+				Sprintf(buf, "extern double* %s;\n", s->name);
+			}else{
+				Sprintf(buf, "extern double %s;\n", s->name);
+			}
+			Lappendstr(defs_list, buf);
+            }
+		}
 	
 #if BBCORE
 	Lappendstr(defs_list, "\n#if 0 /*BBCORE*/\n");
