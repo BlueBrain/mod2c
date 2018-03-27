@@ -921,7 +921,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  _PRCELLSTATE_V
 {
  { error = sparse(&_sparseobj1, 10, _slist1, _dlist1, _p, &t, dt, kstates,&_coef1, _linmat1);
- if(error){fprintf(stderr,"at line 142 in file mod/SynNMDA10_2.mod:\n\n"); nrn_complain(_p); abort_run(error);}
+ if(error){fprintf(stderr,"at line 142 in file SynNMDA10_2.mod:\n\n"); nrn_complain(_p); abort_run(error);}
  }}}
 
 }

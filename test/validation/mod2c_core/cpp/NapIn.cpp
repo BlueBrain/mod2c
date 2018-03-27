@@ -367,7 +367,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
 {
   ena = _ion_ena;
  { error =  states();
- if(error){fprintf(stderr,"at line 43 in file mod/NapIn.mod:\n    		\n"); nrn_complain(_p); abort_run(error);}
+ if(error){fprintf(stderr,"at line 43 in file NapIn.mod:\n    		\n"); nrn_complain(_p); abort_run(error);}
  } }}
 
 }

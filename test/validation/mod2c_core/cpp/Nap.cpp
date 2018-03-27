@@ -363,7 +363,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
 {
   ena = _ion_ena;
  { error =  states();
- if(error){fprintf(stderr,"at line 52 in file mod/Nap.mod:\n        SOLVE states METHOD cnexp\n"); nrn_complain(_p); abort_run(error);}
+ if(error){fprintf(stderr,"at line 52 in file Nap.mod:\n        SOLVE states METHOD cnexp\n"); nrn_complain(_p); abort_run(error);}
  } }}
 
 }
