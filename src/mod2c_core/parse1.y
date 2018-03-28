@@ -161,13 +161,17 @@ all:	/*nothing*/
 	    proc
 	| all VERBATIM 
 		/* read everything and move as is to end of procfunc */
-		{inblock(SYM($2)->name); replacstr($2, "\n/*VERBATIM*/\n");
+		{
+        Lappendstr(procfunc, "} using namespace coreneuron;");
+        inblock(SYM($2)->name); replacstr($2, "\n/*VERBATIM*/\n");
 		if (!assert_threadsafe && !saw_verbatim_) {
  		 fprintf(stderr, "Notice: VERBATIM blocks are not thread safe\n");
 		 saw_verbatim_ = 1;
 		 vectorize = 0;
 		}
-		movelist($2,intoken->prev, procfunc);}
+		movelist($2,intoken->prev, procfunc);
+        Lappendstr(procfunc, "namespace coreneuron {");
+        }
 	| all COMMENT
 		/* read everything and delete */
 		{
