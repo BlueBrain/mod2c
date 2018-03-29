@@ -1136,7 +1136,7 @@ diag("net_event", " only allowed in NET_RECEIVE block");
 				replacstr(qname, "artcell_net_move");
 			}
 			if (blocktype == NETRECEIVE) {
-acc_net_add(qname, qpar1, qexpr, qpar2, "2, _tqitem, -1, (Point_process*)_ppvar[1*_STRIDE],", ", 0.");
+acc_net_add(qname, qpar1, qexpr, qpar2, "2, _tqitem, -1, _ppvar[1*_STRIDE],", ", 0.");
 				Insertstr(qpar1->next, "_tqitem, _pnt,");
 			}else{
 diag("net_move", " only allowed in NET_RECEIVE block");

@@ -340,6 +340,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/nrnconf.h\"\
 \n#include \"coreneuron/nrnoc/membfunc.h\"\
 \n#include \"coreneuron/nrnoc/multicore.h\"\
+\n#include \"coreneuron/nrniv/nrniv_decl.h\"\
 \n#include \"coreneuron/nrniv/nrn_acc_manager.h\"\
 \n#include \"coreneuron/mech/cfile/scoplib.h\"\n\
 \n#include \"coreneuron/scopmath_core/newton_struct.h\"\
@@ -355,6 +356,13 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	if (protect_include_) {
 		Lappendstr(defs_list, "\n#include \"nmodlmutex.h\"");
 	}
+	if (use_bbcorepointer) {
+        Lappendstr(defs_list, "#define _threadargsproto_namespace int _iml, int _cntml_padded, double* _p, coreneuron::Datum* _ppvar, coreneuron::ThreadDatum* _thread, coreneuron::NrnThread* _nt, double v\n");
+
+		lappendstr(defs_list, "static void bbcore_read(double *, int*, int*, int*, _threadargsproto_namespace);\n");
+		lappendstr(defs_list, "static void bbcore_write(double *, int*, int*, int*, _threadargsproto_namespace);\n");
+	}
+
 	Lappendstr(defs_list, "namespace coreneuron {\n");
 	if (vectorize) {
         /* macros for compiler dependent ivdep like pragma and memory layout. INIT and STATE pragma are same
@@ -1230,10 +1238,6 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 	sprintf(buf, "\n#define _psize %d\n#define _ppsize %d\n", parraycount, ppvar_cnt);
 	Lappendstr(defs_list, buf);
 
-	if (use_bbcorepointer) {
-		lappendstr(defs_list, "static void bbcore_read(double *, int*, int*, int*, _threadargsproto_);\n");
-		lappendstr(defs_list, "static void bbcore_write(double *, int*, int*, int*, _threadargsproto_);\n");
-	}
 	Sprintf(buf, "void _%s_reg() {\n\
 	int _vectorized = %d;\n", modbase, vectorize);
 	Lappendstr(defs_list, buf);
