@@ -341,6 +341,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/nrnoc/membfunc.h\"\
 \n#include \"coreneuron/nrnoc/multicore.h\"\
 \n#include \"coreneuron/nrniv/nrniv_decl.h\"\
+\n#include \"coreneuron/nrniv/ivocvect.h\"\
 \n#include \"coreneuron/nrniv/nrn_acc_manager.h\"\
 \n#include \"coreneuron/mech/cfile/scoplib.h\"\n\
 \n#include \"coreneuron/scopmath_core/newton_struct.h\"\
