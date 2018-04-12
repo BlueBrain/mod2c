@@ -347,6 +347,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/scopmath_core/newton_struct.h\"\
 \n#include \"coreneuron/nrnoc/md2redef.h\"\
 \n#include \"coreneuron/nrnoc/register_mech.hpp\"\
+\n#include \"_kinderiv.h\"\
 \n#if !NRNGPU\
 \n#if !defined(DISABLE_HOC_EXP)\
 \n#undef exp\

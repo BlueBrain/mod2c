@@ -18,6 +18,7 @@
 #include "coreneuron/scopmath_core/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
 #include "coreneuron/nrnoc/register_mech.hpp"
+#include "_kinderiv.h"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
@@ -313,7 +314,6 @@ static int _ode_spec1(_threadargsproto_);
 #ifndef INSIDE_NMODL
 #define INSIDE_NMODL
 #endif
-#include "_kinderiv.h"
  int _newton_states_Is(_threadargsproto_);
  
 #define _slist2 _slist2_Is

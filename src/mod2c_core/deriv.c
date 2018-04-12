@@ -197,7 +197,6 @@ numeqn, listnum, listnum, method->name, fun->name, suffix);
           "#ifndef INSIDE_NMODL\n"
           "#define INSIDE_NMODL\n"
           "#endif\n"
-          "#include \"_kinderiv.h\"\n"
           , fun->name, suffix);
         Linsertstr(procfunc, buf);
     }
