@@ -84,6 +84,11 @@
 #define rates rates_Is 
 #define states states_Is 
  
+#undef _threadargscomma_
+#undef _threadargsprotocomma_
+#undef _threadargs_
+#undef _threadargsproto_
+ 
 #define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
 #define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, _NrnThread* _nt, double v,
 #define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v

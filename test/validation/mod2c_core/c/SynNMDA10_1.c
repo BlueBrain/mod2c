@@ -50,6 +50,11 @@ static void _net_buf_receive(_NrnThread*);
 #define kstates kstates_NMDA10_1 
 #define release release_NMDA10_1 
  
+#undef _threadargscomma_
+#undef _threadargsprotocomma_
+#undef _threadargs_
+#undef _threadargsproto_
+ 
 #define _threadargscomma_ /**/
 #define _threadargsprotocomma_ /**/
 #define _threadargs_ /**/
