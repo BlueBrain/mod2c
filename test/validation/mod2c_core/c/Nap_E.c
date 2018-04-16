@@ -402,10 +402,10 @@ _celsius_ = celsius;
 #endif
 #endif
 _ACC_GLOBALS_UPDATE_
-  if (_nrn_skip_initmodel == 0) {
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
+  if (_nrn_skip_initmodel == 0) {
 #if LAYOUT == 1 /*AoS*/
 for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  _p = _ml->_data + _iml*_psize; _ppvar = _ml->_pdata + _iml*_ppsize;
