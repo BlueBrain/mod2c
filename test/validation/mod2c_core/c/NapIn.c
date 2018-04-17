@@ -40,6 +40,11 @@
 #define states states_napIn 
 #define trates trates_napIn 
  
+#undef _threadargscomma_
+#undef _threadargsprotocomma_
+#undef _threadargs_
+#undef _threadargsproto_
+ 
 #define _threadargscomma_ /**/
 #define _threadargsprotocomma_ /**/
 #define _threadargs_ /**/
