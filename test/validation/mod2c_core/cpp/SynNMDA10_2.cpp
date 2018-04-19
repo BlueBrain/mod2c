@@ -56,10 +56,15 @@ static void _net_buf_receive(NrnThread*);
 #define release release_NMDA10_2 
 #define rates rates_NMDA10_2 
  
-#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
-#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
+#undef _threadargscomma_
+#undef _threadargsprotocomma_
+#undef _threadargs_
+#undef _threadargsproto_
+ 
+#define _threadargscomma_ /**/
+#define _threadargsprotocomma_ /**/
+#define _threadargs_ /**/
+#define _threadargsproto_ /**/
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/

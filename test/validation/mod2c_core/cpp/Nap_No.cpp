@@ -89,6 +89,11 @@
 #define rates rates_Nap_No 
 #define states states_Nap_No 
  
+#undef _threadargscomma_
+#undef _threadargsprotocomma_
+#undef _threadargs_
+#undef _threadargsproto_
+ 
 #define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
 #define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
 #define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
@@ -364,10 +369,10 @@ _celsius_ = celsius;
 #endif
 #endif
 _ACC_GLOBALS_UPDATE_
-  if (_nrn_skip_initmodel == 0) {
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
+  if (_nrn_skip_initmodel == 0) {
 #if LAYOUT == 1 /*AoS*/
 for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  _p = _ml->_data + _iml*_psize; _ppvar = _ml->_pdata + _iml*_ppsize;

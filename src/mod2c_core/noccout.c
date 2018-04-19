@@ -653,6 +653,10 @@ static void pr_layout_for_p(int ivdep, int fun_type) {
 	P("double * _vec_v = _nt->_actual_v;\n");
         P("int stream_id = _nt->stream_id;\n");
 
+	if (fun_type == NRN_INIT) {
+		P("  if (_nrn_skip_initmodel == 0) {\n");
+	}
+
 	P("#if LAYOUT == 1 /*AoS*/\n");
 	P("for (_iml = 0; _iml < _cntml_actual; ++_iml) {\n");
 	P(" _p = _ml->_data + _iml*_psize; _ppvar = _ml->_pdata + _iml*_ppsize;\n");
@@ -795,7 +799,6 @@ void c_out_vectorize()
 #endif
         P("#endif\n");
 	P("_ACC_GLOBALS_UPDATE_\n");
-	P("  if (_nrn_skip_initmodel == 0) {\n");
 
 	 pr_layout_for_p(1, NRN_INIT);
 
@@ -810,7 +813,7 @@ void c_out_vectorize()
 	printlist(set_ion_variables(2));
 
 	P("}\n");
-	P("  }\n");
+	P("  }\n"); /* end of the _nrn_skip_initmodel conditional */
 
 	if (derivimplic_listnum) {
 	  sprintf(buf,

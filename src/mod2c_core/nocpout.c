@@ -477,7 +477,12 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	Lappendstr(defs_list, "\n");
 #endif /* distinct names for easier profiling */
 
-
+	Lappendstr(defs_list, "\n\
+#undef _threadargscomma_\n\
+#undef _threadargsprotocomma_\n\
+#undef _threadargs_\n\
+#undef _threadargsproto_\n\
+");
 	if (vectorize) {
 		Lappendstr(defs_list, "\n\
 #define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,\n\
