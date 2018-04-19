@@ -478,21 +478,21 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 #endif /* distinct names for easier profiling */
 
 
-//	if (vectorize) {
+	if (vectorize) {
 		Lappendstr(defs_list, "\n\
 #define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,\n\
 #define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,\n\
 #define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v\n\
 #define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v\n\
 ");
-//	}else{
-//		Lappendstr(defs_list, "\n\
-//#define _threadargscomma_ /**/\n\
-//#define _threadargsprotocomma_ /**/\n\
-//#define _threadargs_ /**/\n\
-//#define _threadargsproto_ /**/\n\
-//");
-//	}
+}else{
+		Lappendstr(defs_list, "\n\
+#define _threadargscomma_ /**/\n\
+#define _threadargsprotocomma_ /**/\n\
+#define _threadargs_ /**/\n\
+#define _threadargsproto_ /**/\n\
+");
+}
 
 	Lappendstr(defs_list, "\
 	/*SUPPRESS 761*/\n\
