@@ -616,12 +616,12 @@ static void funcdec()
 #define GLOBFUNCT 1
 #if GLOBFUNCT && NMODL
 #else
-			Fprintf(fcout, "static double %s(", s->name);
+			Fprintf(fcout, "static inline double %s(", s->name);
 			more = 1;
 #endif
 		}
 		if (s->subtype & PROCED) {
-			Fprintf(fcout, "static int %s(", s->name);
+			Fprintf(fcout, "static inline int %s(", s->name);
 			more = 1;
 		}
 		if (more) {
@@ -735,7 +735,7 @@ void c_out_vectorize()
 
 	/* Initialization function must always be present */
 
-	P("\nstatic void initmodel(_threadargsproto_) {\n  int _i; double _save;");
+	P("\nstatic inline void initmodel(_threadargsproto_) {\n  int _i; double _save;");
 	P("{\n");
 	if (net_send_seen_ && !artificial_cell) {
 	  P("  Memb_list* _ml = _nt->_ml_list[_mechtype];\n");
