@@ -161,6 +161,7 @@ extern "C" {
  
 #endif /*BBCORE*/
 #define vtrap vtrap_Nap_No
+ #pragma acc routine seq
  inline double vtrap( _threadargsprotocomma_ double , double );
  /* declare global and static user variables */
  
@@ -266,6 +267,7 @@ int* _slist1;
 #define _dlist1 _dlist1_Nap_No
 int* _dlist1;
 #pragma acc declare create(_dlist1)
+ #pragma acc routine seq
  static inline int states(_threadargsproto_);
  
 /*CVODE*/
