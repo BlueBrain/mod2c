@@ -232,6 +232,7 @@ int* _slist1;
 #define _dlist1 _dlist1_napIn
 int* _dlist1;
 #pragma acc declare create(_dlist1)
+ #pragma acc routine seq
  static inline int states(_threadargsproto_);
  
 /*CVODE*/

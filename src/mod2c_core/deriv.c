@@ -535,9 +535,9 @@ void massagederiv(q1, q2, q3, q4, sensused)
 	}
 
 	/* all this junk is still in the intoken list */
-	Sprintf(buf, "static inline int %s(_threadargsproto_);\n", SYM(q2)->name);
+	Sprintf(buf, "#pragma acc routine seq\n static inline int %s(_threadargsproto_);\n", SYM(q2)->name);
 	if (deriv_implicit_really == 1) {
-	  Sprintf(buf, "extern int %s(_threadargsproto_);\n", SYM(q2)->name);
+	  Sprintf(buf, "#pragma acc routine seq\n extern int %s(_threadargsproto_);\n", SYM(q2)->name);
 	}
 	Linsertstr(procfunc, buf);
 	if (deriv_implicit_really == 1) {

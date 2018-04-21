@@ -166,9 +166,13 @@ extern "C" {
 #define half half_NapDA
 #define mbet mbet_NapDA
 #define malf malf_NapDA
+ #pragma acc routine seq
  inline double hbet( _threadargsprotocomma_ double );
+ #pragma acc routine seq
  inline double half( _threadargsprotocomma_ double );
+ #pragma acc routine seq
  inline double mbet( _threadargsprotocomma_ double );
+ #pragma acc routine seq
  inline double malf( _threadargsprotocomma_ double );
  /* declare global and static user variables */
  
@@ -293,6 +297,7 @@ int* _slist1;
 #define _dlist1 _dlist1_NapDA
 int* _dlist1;
 #pragma acc declare create(_dlist1)
+ #pragma acc routine seq
  extern int states(_threadargsproto_);
  
 /*CVODE*/

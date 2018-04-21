@@ -170,7 +170,9 @@ extern "C" {
 #endif /*BBCORE*/
 #define alp alp_Is
 #define bet bet_Is
+ #pragma acc routine seq
  inline double alp( _threadargsprotocomma_ double , double );
+ #pragma acc routine seq
  inline double bet( _threadargsprotocomma_ double , double );
  /* declare global and static user variables */
  static int _thread1data_inuse = 0;
@@ -332,6 +334,7 @@ int* _slist1;
 #define _dlist1 _dlist1_Is
 int* _dlist1;
 #pragma acc declare create(_dlist1)
+ #pragma acc routine seq
  extern int states(_threadargsproto_);
  
 /*CVODE*/
