@@ -41,6 +41,7 @@ static char Derivimplicit[] = "derivimplicit";
 extern Symbol *indepsym;
 extern List *indeplist;
 extern int sens_parm, numlist;
+extern int artificial_cell;
 static void copylist();
 List* massage_list_;
 
@@ -534,10 +535,14 @@ void massagederiv(q1, q2, q3, q4, sensused)
 		}
 	}
 
+    char *acc_routine_seq = "#pragma acc routine seq\n";
+    if (artificial_cell) {
+        acc_routine_seq = "";
+    }
 	/* all this junk is still in the intoken list */
-	Sprintf(buf, "#pragma acc routine seq\n static inline int %s(_threadargsproto_);\n", SYM(q2)->name);
+	Sprintf(buf, "%s static inline int %s(_threadargsproto_);\n", acc_routine_seq, SYM(q2)->name);
 	if (deriv_implicit_really == 1) {
-	  Sprintf(buf, "#pragma acc routine seq\n extern int %s(_threadargsproto_);\n", SYM(q2)->name);
+	  Sprintf(buf, "%s extern int %s(_threadargsproto_);\n", acc_routine_seq, SYM(q2)->name);
 	}
 	Linsertstr(procfunc, buf);
 	if (deriv_implicit_really == 1) {

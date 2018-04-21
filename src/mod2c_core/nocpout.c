@@ -649,7 +649,9 @@ Sprintf(buf, "\"%s%s\", _hoc_%s,\n", s->name, rsuffix, s->name);
 		int j;
 		s = SYM(q);
 		if ((s->subtype & FUNCT)) {
-			Lappendstr(defs_list, "#pragma acc routine seq\n");
+            if (!artificial_cell) {
+			    Lappendstr(defs_list, "#pragma acc routine seq\n");
+            }
 			Sprintf(buf, "inline double %s(", s->name);
 			Lappendstr(defs_list, buf);
 			if (vectorize && !s->no_threadargs) {
