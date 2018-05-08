@@ -10,17 +10,22 @@
 #include "coreneuron/nrnconf.h"
 #include "coreneuron/nrnoc/membfunc.h"
 #include "coreneuron/nrnoc/multicore.h"
+#include "coreneuron/nrniv/nrniv_decl.h"
+#include "coreneuron/nrniv/ivocvect.h"
 #include "coreneuron/nrniv/nrn_acc_manager.h"
 #include "coreneuron/mech/cfile/scoplib.h"
 
 #include "coreneuron/scopmath_core/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
+#include "coreneuron/nrnoc/register_mech.hpp"
+#include "_kinderiv.h"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
 #define exp hoc_Exp
 #endif
 #endif
+ namespace coreneuron {
  
 #define _thread_present_ /**/ , _slist1[0:2], _dlist1[0:2] 
  
@@ -90,9 +95,9 @@
 #undef _threadargsproto_
  
 #define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, _NrnThread* _nt, double v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
 #define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, _NrnThread* _nt, double v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -146,10 +151,6 @@
 #define h _mlhh
 #endif
 #endif
- 
-#if defined(__cplusplus)
-extern "C" {
-#endif
  static int hoc_nrnpointerindex =  -1;
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
@@ -200,9 +201,9 @@ static void _acc_globals_update() {
 };
  static double _sav_indep;
  static void nrn_alloc(double*, Datum*, int);
-void nrn_init(_NrnThread*, _Memb_list*, int);
-void nrn_state(_NrnThread*, _Memb_list*, int);
- void nrn_cur(_NrnThread*, _Memb_list*, int);
+void nrn_init(NrnThread*, Memb_list*, int);
+void nrn_state(NrnThread*, Memb_list*, int);
+ void nrn_cur(NrnThread*, Memb_list*, int);
  /* connect range variables in _p that hoc is supposed to know about */
  static const char *_mechanism[] = {
  "6.2.0",
@@ -271,7 +272,7 @@ static int error;
 static int _ninits = 0;
 static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
-static int rates(_threadargsproto_);
+static inline int rates(_threadargsproto_);
  
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
@@ -356,7 +357,7 @@ static int  rates ( _threadargsproto_ ) {
  
 static void _hoc_rates(void) {
   double _r;
-   double* _p; Datum* _ppvar; ThreadDatum* _thread; _NrnThread* _nt;
+   double* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;
    if (_extcall_prop) {_p = _extcall_prop->param; _ppvar = _extcall_prop->dparam;}else{ _p = (double*)0; _ppvar = (Datum*)0; }
   _thread = _extcall_thread;
   _nt = nrn_threads;
@@ -369,7 +370,7 @@ static void _hoc_rates(void) {
  static void _update_ion_pointer(Datum* _ppvar) {
  }
 
-static void initmodel(_threadargsproto_) {
+static inline void initmodel(_threadargsproto_) {
   int _i; double _save;{
   h = h0;
   m = m0;
@@ -390,7 +391,7 @@ static void initmodel(_threadargsproto_) {
 }
 }
 
-void nrn_init(_NrnThread* _nt, _Memb_list* _ml, int _type){
+void nrn_init(NrnThread* _nt, Memb_list* _ml, int _type){
 double* _p; Datum* _ppvar; ThreadDatum* _thread;
 double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
     _ni = _ml->_nodeindices;
@@ -447,13 +448,13 @@ static double _nrn_current(_threadargsproto_, double _v){double _current=0.;v=_v
 }
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC)
-  void nrn_state_launcher(_NrnThread*, _Memb_list*, int, int);
-  void nrn_jacob_launcher(_NrnThread*, _Memb_list*, int, int);
-  void nrn_cur_launcher(_NrnThread*, _Memb_list*, int, int);
+  void nrn_state_launcher(NrnThread*, Memb_list*, int, int);
+  void nrn_jacob_launcher(NrnThread*, Memb_list*, int, int);
+  void nrn_cur_launcher(NrnThread*, Memb_list*, int, int);
 #endif
 
 
-void nrn_cur(_NrnThread* _nt, _Memb_list* _ml, int _type) {
+void nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type) {
 double* _p; Datum* _ppvar; ThreadDatum* _thread;
 int* _ni; double _rhs, _g, _v, v; int _iml, _cntml_padded, _cntml_actual;
     _ni = _ml->_nodeindices;
@@ -464,8 +465,8 @@ double * _vec_rhs = _nt->_actual_rhs;
 double * _vec_d = _nt->_actual_d;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  _NrnThread* d_nt = acc_deviceptr(_nt);
-  _Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = acc_deviceptr(_nt);
+  Memb_list* d_ml = acc_deviceptr(_ml);
   nrn_cur_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif
@@ -508,7 +509,7 @@ for (;;) { /* help clang-format properly indent */
  
 }
 
-void nrn_state(_NrnThread* _nt, _Memb_list* _ml, int _type) {
+void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type) {
 double* _p; Datum* _ppvar; ThreadDatum* _thread;
 double v, _v = 0.0; int* _ni; int _iml, _cntml_padded, _cntml_actual;
     _ni = _ml->_nodeindices;
@@ -517,8 +518,8 @@ _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  _NrnThread* d_nt = acc_deviceptr(_nt);
-  _Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = acc_deviceptr(_nt);
+  Memb_list* d_ml = acc_deviceptr(_ml);
   nrn_state_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif
@@ -571,7 +572,4 @@ static void _initlists(){
 
 _first = 0;
 }
-
-#if defined(__cplusplus)
-} /* extern "C" */
-#endif
+} // namespace coreneuron_lib

@@ -355,7 +355,6 @@ void massagekinetic(q1, q2, q3, q4, sensused) /*KINETIC NAME stmtlist '}'*/
 	  "#ifndef INSIDE_NMODL\n"
 	  "#define INSIDE_NMODL\n"
 	  "#endif\n"
-	  "#include \"_kinderiv.h\"\n"
 	  , SYM(q2)->name, suffix);
 	Linsertstr(procfunc, buf);
 	replacstr(q1, "\nint");

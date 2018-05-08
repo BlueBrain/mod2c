@@ -11,17 +11,22 @@
 #include "coreneuron/nrnconf.h"
 #include "coreneuron/nrnoc/membfunc.h"
 #include "coreneuron/nrnoc/multicore.h"
+#include "coreneuron/nrniv/nrniv_decl.h"
+#include "coreneuron/nrniv/ivocvect.h"
 #include "coreneuron/nrniv/nrn_acc_manager.h"
 #include "coreneuron/mech/cfile/scoplib.h"
 
 #include "coreneuron/scopmath_core/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
+#include "coreneuron/nrnoc/register_mech.hpp"
+#include "_kinderiv.h"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
 #define exp hoc_Exp
 #endif
 #endif
+ namespace coreneuron {
  
 #undef LAYOUT
 #define LAYOUT 1
@@ -79,10 +84,6 @@
 #if !defined(h)
 #define h _mlhh
 #endif
-#endif
- 
-#if defined(__cplusplus)
-extern "C" {
 #endif
  static int hoc_nrnpointerindex =  -1;
  /* external NEURON variables */
@@ -149,10 +150,10 @@ static void _acc_globals_update() {
 };
  static double _sav_indep;
  static void nrn_alloc(double*, Datum*, int);
-void nrn_init(_NrnThread*, _Memb_list*, int);
-void nrn_state(_NrnThread*, _Memb_list*, int);
- void nrn_cur(_NrnThread*, _Memb_list*, int);
- void nrn_jacob(_NrnThread*, _Memb_list*, int);
+void nrn_init(NrnThread*, Memb_list*, int);
+void nrn_state(NrnThread*, Memb_list*, int);
+ void nrn_cur(NrnThread*, Memb_list*, int);
+ void nrn_jacob(NrnThread*, Memb_list*, int);
  /* connect range variables in _p that hoc is supposed to know about */
  static const char *_mechanism[] = {
  "6.2.0",
@@ -219,7 +220,7 @@ static int error;
 static int _ninits = 0;
 static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
-static int trates(double);
+static inline int trates(double);
  
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
@@ -290,7 +291,7 @@ static void initmodel() {
 }
 }
 
-static void nrn_init(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_init(NrnThread* _nt, Memb_list* _ml, int _type){
 double _v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -317,7 +318,7 @@ static double _nrn_current(double _v){double _current=0.;v=_v;{ {
 } return _current;
 }
 
-static void nrn_cur(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type){
 int* _ni; double _rhs, _v; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -341,7 +342,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  
 }}
 
-static void nrn_jacob(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_jacob(NrnThread* _nt, Memb_list* _ml, int _type){
 int* _ni; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -354,7 +355,7 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  
 }}
 
-static void nrn_state(_NrnThread* _nt, _Memb_list* _ml, int _type){
+static void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type){
 double _v = 0.0; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 #if CACHEVEC
     _ni = _ml->_nodeindices;
@@ -392,3 +393,4 @@ static void _initlists() {
 
 _first = 0;
 }
+ } // namespace coreneuron
