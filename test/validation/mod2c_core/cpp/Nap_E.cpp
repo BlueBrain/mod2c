@@ -272,7 +272,7 @@ static int error;
 static int _ninits = 0;
 static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
-static int rates(_threadargsproto_);
+static inline int rates(_threadargsproto_);
  
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
@@ -370,7 +370,7 @@ static void _hoc_rates(void) {
  static void _update_ion_pointer(Datum* _ppvar) {
  }
 
-static void initmodel(_threadargsproto_) {
+static inline void initmodel(_threadargsproto_) {
   int _i; double _save;{
   h = h0;
   m = m0;

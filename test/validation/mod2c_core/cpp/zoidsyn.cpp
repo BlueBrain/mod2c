@@ -331,7 +331,7 @@ static void _modl_cleanup(){ _match_recurse=1;}
 #if NET_RECEIVE_BUFFERING 
 #undef t
 #define t _nrb_t
-static void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
+static inline void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
 static void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
   Memb_list* _ml = _nt->_ml_list[_mechtype];
@@ -503,7 +503,7 @@ static void _net_receive (Point_process* _pnt, int _weight_index, double _lflag)
 #endif
  }
 
-static void initmodel(_threadargsproto_) {
+static inline void initmodel(_threadargsproto_) {
   int _i; double _save;{
   Memb_list* _ml = _nt->_ml_list[_mechtype];
  {

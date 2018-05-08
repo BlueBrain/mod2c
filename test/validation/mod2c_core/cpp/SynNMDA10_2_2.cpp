@@ -405,8 +405,8 @@ static int error;
 static int _ninits = 0;
 static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
-static int release(_threadargsprotocomma_ double);
-static int rates(_threadargsprotocomma_ double);
+static inline int release(_threadargsprotocomma_ double);
+static inline int rates(_threadargsprotocomma_ double);
  
 #define _MATELM1(_row,_col) _nrn_thread_getelm((SparseObj*)_so, _row + 1, _col + 1, _iml)[_iml]
  
@@ -585,7 +585,7 @@ for(_i=1;_i<10;_i++){
 #if NET_RECEIVE_BUFFERING 
 #undef t
 #define t _nrb_t
-static void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
+static inline void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
 static void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
   Memb_list* _ml = _nt->_ml_list[_mechtype];
@@ -936,7 +936,7 @@ static void _thread_cleanup(ThreadDatum* _thread) {
    _nrn_destroy_sparseobj_thread((SparseObj*)_thread[_spth1]._pvoid);
  }
 
-static void initmodel(_threadargsproto_) {
+static inline void initmodel(_threadargsproto_) {
   int _i; double _save;{
   Memb_list* _ml = _nt->_ml_list[_mechtype];
   CB2 = CB20;

@@ -347,8 +347,8 @@ static int error;
 static int _ninits = 0;
 static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
-static int release(double);
-static int rates(double);
+static inline int release(double);
+static inline int rates(double);
  
 #define _MATELM1(_row,_col)	*(_getelm(_row + 1, _col + 1))
  
@@ -528,7 +528,7 @@ for(_i=1;_i<10;_i++){
 #if NET_RECEIVE_BUFFERING 
 #undef t
 #define t _nrb_t
-static void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
+static inline void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
 static void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
   Memb_list* _ml = _nt->_ml_list[_mechtype];

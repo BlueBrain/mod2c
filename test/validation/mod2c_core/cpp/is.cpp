@@ -306,7 +306,7 @@ static int error;
 static int _ninits = 0;
 static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
-static int rates(_threadargsprotocomma_ double);
+static inline int rates(_threadargsprotocomma_ double);
  
 #define _deriv1_advance _thread[0]._i
 #define _dith1 1
@@ -476,7 +476,7 @@ static void _thread_cleanup(ThreadDatum* _thread) {
  static void _update_ion_pointer(Datum* _ppvar) {
  }
 
-static void initmodel(_threadargsproto_) {
+static inline void initmodel(_threadargsproto_) {
   int _i; double _save;{
   m = m0;
   n = n0;

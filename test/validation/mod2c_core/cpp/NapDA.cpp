@@ -444,7 +444,7 @@ static void _thread_cleanup(ThreadDatum* _thread) {
  static void _update_ion_pointer(Datum* _ppvar) {
  }
 
-static void initmodel(_threadargsproto_) {
+static inline void initmodel(_threadargsproto_) {
   int _i; double _save;{
   h = h0;
   m = m0;
