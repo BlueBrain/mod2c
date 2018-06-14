@@ -810,15 +810,16 @@ void c_out_vectorize()
 	if (!artificial_cell) {P(" v = _v;\n _PRCELLSTATE_V\n");}
 	printlist(get_ion_variables(1));
 	P(" initmodel(_threadargs_);\n");
+	printlist(set_ion_variables(2));
+
+	P("}\n");
+	P("  }\n"); /* end of the _nrn_skip_initmodel conditional */
+
 	P("\n //populate offsets arrays for graph-parallelism use case\n");
 	P(" if (_ml->_shadow_didv_offsets) {\n");
 	P("   _ml->_shadow_i_offsets[_iml] = _ppvar[1*_STRIDE];\n");
 	P("   _ml->_shadow_didv_offsets[_iml] = _ppvar[2*_STRIDE];\n");
 	P(" }\n");
-	printlist(set_ion_variables(2));
-
-	P("}\n");
-	P("  }\n"); /* end of the _nrn_skip_initmodel conditional */
 
 	if (derivimplic_listnum) {
 	  sprintf(buf,
@@ -886,7 +887,14 @@ void c_out_vectorize()
 	   as make sure all currents accumulated properly (currents list) */
 
     if (brkpnt_exists) {
-	P("\nvoid nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type) {\n");
+	P("\nvoid nrn_cur_parallel(NrnThread* _nt, Memb_list* _ml, int _type,\n");
+	P("                      const mod_acc_f_t acc_rhs_d, const mod_acc_f_t acc_i_didv, void *args);\n");
+	P("\n");
+	P("void nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type) {\n");
+	P("  nrn_cur_parallel(_nt, _ml, _type, NULL, NULL, NULL);\n");  
+	P("}\n");
+	P("\nvoid nrn_cur_parallel(NrnThread* _nt, Memb_list* _ml, int _type,\n");
+	P("                      const mod_acc_f_t acc_rhs_d, const mod_acc_f_t acc_i_didv, void *args){\n");
 	  P("double* _p; Datum* _ppvar; ThreadDatum* _thread;\n");
 	  P("int* _ni; double _rhs, _g, _v, v; int _iml, _cntml_padded, _cntml_actual;\n");
 	  P("    _ni = _ml->_nodeindices;\n");
@@ -895,10 +903,10 @@ void c_out_vectorize()
 	  P("_thread = _ml->_thread;\n");
 	  P("double * _vec_rhs = _nt->_actual_rhs;\n");
 	  P("double * _vec_d = _nt->_actual_d;\n");
-	  if (point_process) {
-	    P("double * _vec_shadow_rhs = _nt->_shadow_rhs;\n");
-	    P("double * _vec_shadow_d = _nt->_shadow_d;\n");
-      }
+    	  P("double * _vec_shadow_rhs = _ml->_shadow_rhs;\n");
+          P("double * _vec_shadow_d = _ml->_shadow_d;\n");
+          P("double * _vec_shadow_i = _ml->_shadow_i;\n");
+          P("double * _vec_shadow_didv = _ml->_shadow_didv;\n");
 
       print_cuda_launcher_call("cur");
 
@@ -953,11 +961,16 @@ void c_out_vectorize()
 		P("	NODERHS(_nd) += _rhs;\n");
 		P("	NODED(_nd) -= _g;\n");
 #else
-		if (point_process) {
+		/*if (point_process) {
 			rhs_d_pnt_race("+=", "-=");
-		}else{
-			P("	_vec_rhs[_nd_idx] += _rhs;\n");
-			P("	_vec_d[_nd_idx] -= _g;\n");
+		}else*/{
+	           P(" if (acc_rhs_d) {\n");
+		   P("  _vec_shadow_rhs[_iml] = +_rhs;\n");
+		   P("  _vec_shadow_d[_iml] = -_g;\n");
+		   P("  } else {\n");
+		   P("  _vec_rhs[_nd_idx] += _rhs;\n");
+		   P("  _vec_d[_nd_idx] -= _g;\n");
+		   P(" }\n");
 		}
 #endif
 	}else{
@@ -965,17 +978,26 @@ void c_out_vectorize()
 		P("	NODERHS(_nd) -= _rhs;\n");
 		P("	NODED(_nd) += _g;\n");
 #else
+		/*
 		if (point_process) {
 			rhs_d_pnt_race("-=", "+=");
-		}else{
-			P("	_vec_rhs[_nd_idx] -= _rhs;\n");
-			P("	_vec_d[_nd_idx] += _g;\n");
+		}else*/{
+	           P(" if (acc_rhs_d) {\n");
+		   P("  _vec_shadow_rhs[_iml] = -_rhs;\n");
+		   P("  _vec_shadow_d[_iml] = +_g;\n");
+		   P("  } else {\n");
+		   P("  _vec_rhs[_nd_idx] -= _rhs;\n");
+		   P("  _vec_d[_nd_idx] += _g;\n");
+		   P(" }");
 		}
 #endif
 	}
    }
 	P(" \n}\n");
-	P(" \n}\n");
+	P("\n //accumulation of individual contributions, for graph-parallel use case\n");
+        P(" if (acc_rhs_d)  (*acc_rhs_d) (_nt, _ml, _type, args);\n");
+	P(" if (acc_i_didv) (*acc_i_didv)(_nt, _ml, _type, args);\n");
+	P(" }\n");
 
   if (0) { /* instead, jacobian handled in nrn_cur */
 	/* for the classic breakpoint block, nrn_cur computed the conductance, _g,
