@@ -439,6 +439,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	sprintf(buf, "\n\
 #define nrn_init _nrn_init_%s\n\
 #define nrn_cur _nrn_cur_%s\n\
+#define nrn_cur_parallel _nrn_cur_parallel_%s\n\
 #define _nrn_current _nrn_current_%s\n\
 #define nrn_jacob _nrn_jacob_%s\n\
 #define nrn_state _nrn_state_%s\n\
@@ -447,9 +448,9 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 #define nrn_state_launcher nrn_state%s_launcher\n\
 #define nrn_cur_launcher nrn_cur%s_launcher\n\
 #define nrn_jacob_launcher nrn_jacob%s_launcher\n\
-#define _ode_matsol1 _nrn_ode_matsol1__%s\n\
+#define _ode_matsol1 _nrn_ode_matsol1_%s\n\
 #define _ode_spec1 _nrn_ode_spec1_%s\n\
-", suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix);
+", suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix);
 	Lappendstr(defs_list, buf);
 
 	if (net_receive_buffering_) {

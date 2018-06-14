@@ -810,6 +810,11 @@ void c_out_vectorize()
 	if (!artificial_cell) {P(" v = _v;\n _PRCELLSTATE_V\n");}
 	printlist(get_ion_variables(1));
 	P(" initmodel(_threadargs_);\n");
+	P("\n //populate offsets arrays for graph-parallelism use case\n");
+	P(" if (_ml->_shadow_didv_offsets) {\n");
+	P("   _ml->_shadow_i_offsets[_iml] = _ppvar[1*_STRIDE];\n");
+	P("   _ml->_shadow_didv_offsets[_iml] = _ppvar[2*_STRIDE];\n");
+	P(" }\n");
 	printlist(set_ion_variables(2));
 
 	P("}\n");
