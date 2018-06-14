@@ -1585,16 +1585,16 @@ void cvode_kinetic(qsol, fun, numeqn, listnum)
 	}
 	kinetic_intmethod(fun, "NEURON's CVode");
 	Lappendstr(procfunc, "\n/*CVODE ode begin*/\n");
-	sprintf(buf, "static int _ode_spec%d() {_reset=0;{\n", fun->u.i);
+	sprintf(buf, "int _ode_spec%d() {_reset=0;{\n", fun->u.i);
 	Lappendstr(procfunc, buf);
-	sprintf(buf, "static int _ode_spec%d(_threadargsproto_) {int _reset=0;{\n", fun->u.i);
+	sprintf(buf, "int _ode_spec%d(_threadargsproto_) {int _reset=0;{\n", fun->u.i);
 	vectorize_substitute(procfunc->prev, buf);
 	copyitems(cvode_sbegin, cvode_send, procfunc->prev);
 
 	Lappendstr(procfunc, "\n/*CVODE matsol*/\n");
-	sprintf(buf, "static int _ode_matsol%d() {_reset=0;{\n", fun->u.i);
+	sprintf(buf, "int _ode_matsol%d() {_reset=0;{\n", fun->u.i);
 	Lappendstr(procfunc, buf);
-	sprintf(buf, "static int _ode_matsol%d(void* _so, double* _rhs, _threadargsproto_) {int _reset=0;{\n", fun->u.i);
+	sprintf(buf, "int _ode_matsol%d(void* _so, double* _rhs, _threadargsproto_) {int _reset=0;{\n", fun->u.i);
 	vectorize_substitute(procfunc->prev, buf);
 	cvode_flag = 1;
 	kinetic_implicit(fun, "dt", "ZZZ");

@@ -446,8 +446,10 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 #define _net_receive _net_receive_%s\n\
 #define nrn_state_launcher nrn_state%s_launcher\n\
 #define nrn_cur_launcher nrn_cur%s_launcher\n\
-#define nrn_jacob_launcher nrn_jacob%s_launcher\
-", suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix);
+#define nrn_jacob_launcher nrn_jacob%s_launcher\n\
+#define _ode_matsol1 _nrn_ode_matsol1__%s\n\
+#define _ode_spec1 _nrn_ode_spec1_%s\n\
+", suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix);
 	Lappendstr(defs_list, buf);
 
 	if (net_receive_buffering_) {
@@ -2743,8 +2745,8 @@ static int _ode_count(int _type){ hoc_execerror(\"%s\", \"cannot be used with CV
 		Lappendstr(defs_list, "\n\
 static int _ode_count(int);\n\
 static void _ode_map(int, double**, double**, double*, Datum*, double*, int);\n\
-static void _ode_spec(NrnThread*, Memb_list*, int);\n\
-static void _ode_matsol(NrnThread*, Memb_list*, int);\n\
+void _ode_spec(NrnThread*, Memb_list*, int);\n\
+void _ode_matsol(NrnThread*, Memb_list*, int);\n\
 ");
 		sprintf(buf, "\n\
 static int _ode_count(int _type){ return %d;}\n",
@@ -2861,8 +2863,8 @@ void cvode_interface(fun, num, neq) Symbol* fun; int num, neq; {
 		return;
 	}
 	Sprintf(buf, "\n\
-static int _ode_spec%d(_threadargsproto_);\n\
-/*static int _ode_matsol%d(_threadargsproto_);*/\n\
+int _ode_spec%d(_threadargsproto_);\n\
+/*int _ode_matsol%d(_threadargsproto_);*/\n\
 ", num, num);
 	Linsertstr(procfunc, buf);
 }

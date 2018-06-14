@@ -646,7 +646,7 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 	
 #if CVODE
 	Lappendstr(procfunc, "\n/*CVODE*/\n");
-	Sprintf(buf, "static int _ode_spec%d", numlist);
+	Sprintf(buf, "int _ode_spec%d", numlist);
 	Lappendstr(procfunc, buf);
 	{Item* qq = procfunc->prev;
 	copyitems(q1->next, q4, procfunc->prev);
@@ -659,7 +659,7 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
   if (!lookup("cvodematsol")) {
 	Item* qq;
 	Item* qextra = q1->next->next->next->next;
-	Sprintf(buf, "static int _ode_matsol%d", numlist);
+	Sprintf(buf, "int _ode_matsol%d", numlist);
 	Lappendstr(procfunc, buf);
 	vectorize_substitute(lappendstr(procfunc, "() {\n"), "(_threadargsproto_) {\n");
 	qq = procfunc->next;
