@@ -196,6 +196,7 @@ void c_out()
 	printlist(defs_list);
 	printlist(firstlist);
 	P("static int _reset;\n");
+    P("static double refresh_period = dt;\n");
 #if NMODL
 	P("static ");
 #endif	
@@ -410,6 +411,7 @@ void c_out()
 	P("\nstatic nrn_state(_prop, _v) Prop *_prop; double _v; {\n");
 #endif
 	if (nrnstate || currents->next == currents) {
+      P("if ( t % refresh_period) return 0;\n");
 #if VECTORIZE
 	  P("double _v = 0.0; int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
 	  P("#if CACHEVEC\n");
