@@ -635,11 +635,13 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 
 	  "\n#define _slist%d _slist%d%s\n"
 	  "int* _slist%d;\n"
+	  "#define _cvode_neq _cvode_neq_%s\n"
+	  "int _cvode_neq;\n"
 	  "#pragma acc declare create(_slist%d)\n"
 	  "\n#define _dlist%d _dlist%d%s\n"
 	  "int* _dlist%d;\n"
 	  "#pragma acc declare create(_dlist%d)\n"
-	  , numlist, numlist, suffix, numlist, numlist
+	  , numlist, numlist, suffix, numlist, suffix, numlist
 	  , numlist, numlist, suffix, numlist, numlist
 	  );
 		Linsertstr(procfunc, buf);
@@ -686,6 +688,14 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 	Lappendstr(procfunc, ";\n return 0;\n}\n");
 	vectorize_scan_for_func(qq, procfunc);
   }
+
+        Lappendstr(procfunc,
+			"\n\
+void nrn_ode_state_vars(int * var_count, int ** var_offsets, int ** dv_offsets) {\n\
+  *var_count = _cvode_neq;\n\
+  *var_offsets = _slist1;\n\
+  *dv_offsets = _dlist1;\n\
+}\n");
 
 	Lappendstr(procfunc, "/*END CVODE*/\n");
 	if (cvode_cnexp_solve && cvode_cnexp_success(q1, q4)) {

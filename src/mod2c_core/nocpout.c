@@ -445,12 +445,14 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 #define nrn_state _nrn_state_%s\n\
 #define initmodel initmodel_%s\n\
 #define _net_receive _net_receive_%s\n\
+#define _net_receive2 _net_receive2_%s\n\
 #define nrn_state_launcher nrn_state%s_launcher\n\
 #define nrn_cur_launcher nrn_cur%s_launcher\n\
 #define nrn_jacob_launcher nrn_jacob%s_launcher\n\
 #define _ode_matsol1 _nrn_ode_matsol1_%s\n\
 #define _ode_spec1 _nrn_ode_spec1_%s\n\
-", suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix);
+#define nrn_ode_state_vars _nrn_ode_state_vars_%s\n\
+", suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix);
 	Lappendstr(defs_list, buf);
 
 	if (net_receive_buffering_) {
@@ -2777,11 +2779,12 @@ static void _ode_map(int _ieq, double** _pv, double** _pvdot, double* _pp, Datum
 		sprintf(buf, "\
 	int _i; _p = _pp; _ppvar = _ppd;\n\
 	_cvode_ieq = _ieq;\n\
+	_cvode_neq = %d;\n\
 	for (_i=0; _i < %d; ++_i) {\n\
 		_pv[_i] = _pp + _slist%d[_i];  _pvdot[_i] = _pp + _dlist%d[_i];\n\
 		_cvode_abstol(_atollist, _atol, _i);\n\
 	}\n",
-			cvode_neq_, cvode_num_, cvode_num_);
+			cvode_neq_, cvode_neq_, cvode_num_, cvode_num_);
 		Lappendstr(procfunc, buf);
 /* need to take care of case where a state is an ion concentration. Replace
 the _pp pointer with a pointer to the actual ion model's concentration */
@@ -3031,6 +3034,8 @@ sprintf(buf, "\
 	}
 
 	sprintf(buf, "\
+\nvoid _net_receive2 (NrnThread * _nt, Memb_list* _ml, int _iml, int _weight_index, double _lflag, double _nrb_t);\
+\n\
 \nstatic void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {\
 \n  NrnThread* _nt = nrn_threads + _pnt->_tid;\
 \n  NetReceiveBuffer_t* _nrb = _nt->_ml_list[_mechtype]->_net_receive_buffer;\
