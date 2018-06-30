@@ -887,14 +887,8 @@ void c_out_vectorize()
 	   as make sure all currents accumulated properly (currents list) */
 
     if (brkpnt_exists) {
-	P("\nvoid nrn_cur_parallel(NrnThread* _nt, Memb_list* _ml, int _type,\n");
-	P("                      const mod_acc_f_t acc_rhs_d, const mod_acc_f_t acc_i_didv, void *args);\n");
-	P("\n");
-	P("void nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type) {\n");
-	P("  nrn_cur_parallel(_nt, _ml, _type, NULL, NULL, NULL);\n");  
-	P("}\n");
-	P("\nvoid nrn_cur_parallel(NrnThread* _nt, Memb_list* _ml, int _type,\n");
-	P("                      const mod_acc_f_t acc_rhs_d, const mod_acc_f_t acc_i_didv, void *args){\n");
+	P("\nvoid nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type,\n"
+          "               mod_acc_f_t acc_rhs_d, mod_acc_f_t acc_i_didv, void *args) {\n");
 	  P("double* _p; Datum* _ppvar; ThreadDatum* _thread;\n");
 	  P("int* _ni; double _rhs, _g, _v, v; int _iml, _cntml_padded, _cntml_actual;\n");
 	  P("    _ni = _ml->_nodeindices;\n");

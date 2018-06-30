@@ -235,7 +235,7 @@ int watch_seen_; /* number of WATCH statements + 1*/
 List* watch_data_; /* triples of par1, par2, flag */
 static Item* net_send_delivered_; /* location for if flag is 1 then clear the
 				tqitem_ to allow  an error message for net_move */
-static Item* net_receive_block_begin_; /* the "static void _net_receive" line */
+static Item* net_receive_block_begin_; /* the "void _net_receive" line */
 static Item* net_receive_block_open_brace_; /* the "{" line */
 #endif
 
@@ -439,13 +439,11 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	sprintf(buf, "\n\
 #define nrn_init _nrn_init_%s\n\
 #define nrn_cur _nrn_cur_%s\n\
-#define nrn_cur_parallel _nrn_cur_parallel_%s\n\
 #define _nrn_current _nrn_current_%s\n\
 #define nrn_jacob _nrn_jacob_%s\n\
 #define nrn_state _nrn_state_%s\n\
 #define initmodel initmodel_%s\n\
 #define _net_receive _net_receive_%s\n\
-#define _net_receive2 _net_receive2_%s\n\
 #define nrn_state_launcher nrn_state%s_launcher\n\
 #define nrn_cur_launcher nrn_cur%s_launcher\n\
 #define nrn_jacob_launcher nrn_jacob%s_launcher\n\
@@ -895,7 +893,8 @@ diag("No statics allowed for thread safe models:", s->name);
 	Lappendstr(defs_list, "static void nrn_alloc(double*, Datum*, int);\nvoid nrn_init(NrnThread*, Memb_list*, int);\nvoid nrn_state(NrnThread*, Memb_list*, int);\n\
 ");
 	if (brkpnt_exists) {
-		Lappendstr(defs_list, "void nrn_cur(NrnThread*, Memb_list*, int);\n");
+		Lappendstr(defs_list, "void nrn_cur(NrnThread*, Memb_list*, int, \n"\
+			              "             mod_acc_f_t acc_rhs_d=NULL, mod_acc_f_t acc_i_didv=NULL, void *args=NULL);\n");
 	    if (!vectorize) {
 		Lappendstr(defs_list, "void nrn_jacob(NrnThread*, Memb_list*, int);\n");
 	    }
@@ -1232,9 +1231,9 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 		}
 	}
 	if (net_receive_) {
-		Lappendstr(defs_list, "static void _net_receive(Point_process*, int, double);\n");
+		Lappendstr(defs_list, "void _net_receive(NrnThread * _nt, Memb_list* _ml, int _iml, int _weight_index, double _lflag);\n");
 		if (net_init_q1_) {
-			Lappendstr(defs_list, "static void _net_init(Point_process*, int, double);\n");
+			Lappendstr(defs_list, "static void _net_init(NrnThread * _nt, Memb_list* _ml, int _iml, int _weight_index, double _lflag);\n");
 		}
 	}
 	if (vectorize && thread_mem_init_list->next != thread_mem_init_list) {
@@ -2914,23 +2913,13 @@ sprintf(b, "if (_nt->_vcv) { _ode_spec%d(); }\n", cvode_num_);
 const char* net_boilerplate(int flag) {
 	char b[1000];
 	b[0] = '\0';
-	
-	sprintf(buf, "\n\
-   NrnThread* _nt;\n\
-   int _tid = _pnt->_tid; \n\
-   _nt = nrn_threads + _tid;\n\
-");
-
-	sprintf(b, "%s", buf);
 
 	sprintf(buf, "%s\
    _thread = (ThreadDatum*)0; \n\
    double *_weights = _nt->_weights;\n\
    _args = _weights + _weight_index;\n\
-   _ml = _nt->_ml_list[_pnt->_type];\n\
    _cntml_actual = _ml->_nodecount;\n\
    _cntml_padded = _ml->_nodecount_padded;\n\
-   _iml = _pnt->_i_instance;\n\
 #if LAYOUT == 1 /*AoS*/\n\
    _p = _ml->_data + _iml*_psize; _ppvar = _ml->_pdata + _iml*_ppsize;\n\
 #endif\n\
@@ -3034,10 +3023,7 @@ sprintf(buf, "\
 	}
 
 	sprintf(buf, "\
-\nvoid _net_receive2 (NrnThread * _nt, Memb_list* _ml, int _iml, int _weight_index, double _lflag, double _nrb_t);\
-\n\
-\nstatic void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {\
-\n  NrnThread* _nt = nrn_threads + _pnt->_tid;\
+\nvoid _net_receive (NrnThread * _nt, Memb_list * _ml, int _iml, int _weight_index, double _lflag) {\
 \n  NetReceiveBuffer_t* _nrb = _nt->_ml_list[_mechtype]->_net_receive_buffer;\
 \n  if (_nrb->_cnt >= _nrb->_size){\
 \n    realloc_net_receive_buffer(_nt, _nt->_ml_list[_mechtype]);\
@@ -3167,7 +3153,7 @@ void net_receive(qblk, qarg, qp1, qp2, qstmt, qend)
 	net_receive_ = 1;
 	net_receive_block_begin_ = qblk;
 	deltokens(qp1, qp2);
-	insertstr(qstmt, "(Point_process* _pnt, int _weight_index, double _lflag)");
+	insertstr(qstmt, "(NrnThread * _nt, Memb_list * _ml, int _iml, int _weight_index, double _lflag)");
 	i = 0;
 	ITERATE(q1, qarg) if (q1->next != qarg) { /* skip last "flag" arg */
 		s = SYM(q1);
@@ -3184,7 +3170,7 @@ void net_receive(qblk, qarg, qp1, qp2, qstmt, qend)
 	net_receive_block_open_brace_ = q;
 	vectorize_substitute(q, "\n\
 {  double* _p; Datum* _ppvar; ThreadDatum* _thread; double v;\n\
-   Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
+   int _cntml_padded, _cntml_actual; double* _args;\n\
 ");
 
 	if (watch_seen_) {
@@ -3272,7 +3258,7 @@ void net_init(qinit, qp2)
 	Item* qinit, *qp2;
 {
 	/* qinit=INITIAL { stmtlist qp2=} */
-	replacstr(qinit, "\nstatic void _net_init(Point_process* _pnt, int _weight_index, double _lflag)");
+	replacstr(qinit, "\nstatic void _net_init(NrnThread * _nt, Memb_list *_ml, int _iml, int _weight_index, double _lflag)");
 	vectorize_substitute(insertstr(qinit->next->next, ""), "\n\
    double* _p; Datum* _ppvar; ThreadDatum* _thread; \n\
    Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
