@@ -1109,11 +1109,9 @@ Fprintf(stderr, "Notice: Use of state_discontinuity in a NET_RECEIVE block is un
 			Insertstr(qpar1->next, "-1, &");
 		}else if (strcmp(SYM(qname)->name, "net_send") == 0) {
 			net_send_seen_ = 1;
-			if (artificial_cell) {
-				replacstr(qname, "net_send");
-			}
 			Insertstr(qexpr, "t + ");
 			if (blocktype == NETRECEIVE) {
+			  replacstr(qname, "(*net_send_f)");
 acc_net_add(qname, qpar1, qexpr, qpar2, "0, _tqitem, _weight_index, _ppvar[1*_STRIDE],", "");
 				Insertstr(qpar1->next, "_tqitem, _weight_index, _nt, _type, _iml,");
 			}else if (blocktype == INITIAL1){
@@ -1126,6 +1124,7 @@ diag("net_send allowed only in INITIAL and NET_RECEIVE blocks", (char*)0);
 		}else if (strcmp(SYM(qname)->name, "net_event") == 0) {
 			net_event_seen_ = 1;
 			if (blocktype == NETRECEIVE) {
+			  replacstr(qname, "(*net_event_f)");
 acc_net_add(qname, qpar1, qexpr, qpar2, "1, -1, -1,  _ppvar[1*_STRIDE],", ", 0.");
 				Insertstr(qpar1->next, "_nt, _type, _iml,");
 			}else{
