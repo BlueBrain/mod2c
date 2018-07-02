@@ -1231,9 +1231,9 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 		}
 	}
 	if (net_receive_) {
-		Lappendstr(defs_list, "void _net_receive(NrnThread * _nt, Memb_list* _ml, int _iml, int _weight_index, double _lflag);\n");
+		Lappendstr(defs_list, "void _net_receive(NrnThread * _nt, int _type, int _iml, int _weight_index, double _lflag);\n");
 		if (net_init_q1_) {
-			Lappendstr(defs_list, "static void _net_init(NrnThread * _nt, Memb_list* _ml, int _iml, int _weight_index, double _lflag);\n");
+			Lappendstr(defs_list, "static void _net_init(NrnThread * _nt, int _type, int _iml, int _weight_index, double _lflag);\n");
 		}
 	}
 	if (vectorize && thread_mem_init_list->next != thread_mem_init_list) {
@@ -2918,6 +2918,7 @@ const char* net_boilerplate(int flag) {
    _thread = (ThreadDatum*)0; \n\
    double *_weights = _nt->_weights;\n\
    _args = _weights + _weight_index;\n\
+   _ml = _nt->_ml_list[_type];\n\
    _cntml_actual = _ml->_nodecount;\n\
    _cntml_padded = _ml->_nodecount_padded;\n\
 #if LAYOUT == 1 /*AoS*/\n\
@@ -3023,7 +3024,7 @@ sprintf(buf, "\
 	}
 
 	sprintf(buf, "\
-\nvoid _net_receive (NrnThread * _nt, Memb_list * _ml, int _iml, int _weight_index, double _lflag) {\
+\nvoid _net_receive (NrnThread* _nt, int _type, int _iml, int _weight_index, double _lflag) {\
 \n  NetReceiveBuffer_t* _nrb = _nt->_ml_list[_mechtype]->_net_receive_buffer;\
 \n  if (_nrb->_cnt >= _nrb->_size){\
 \n    realloc_net_receive_buffer(_nt, _nt->_ml_list[_mechtype]);\
@@ -3153,7 +3154,7 @@ void net_receive(qblk, qarg, qp1, qp2, qstmt, qend)
 	net_receive_ = 1;
 	net_receive_block_begin_ = qblk;
 	deltokens(qp1, qp2);
-	insertstr(qstmt, "(NrnThread * _nt, Memb_list * _ml, int _iml, int _weight_index, double _lflag)");
+	insertstr(qstmt, "(NrnThread * _nt, int _type, int _iml, int _weight_index, double _lflag)");
 	i = 0;
 	ITERATE(q1, qarg) if (q1->next != qarg) { /* skip last "flag" arg */
 		s = SYM(q1);
@@ -3169,7 +3170,7 @@ void net_receive(qblk, qarg, qp1, qp2, qstmt, qend)
 	q = insertstr(qstmt, "\n{");
 	net_receive_block_open_brace_ = q;
 	vectorize_substitute(q, "\n\
-{  double* _p; Datum* _ppvar; ThreadDatum* _thread; double v;\n\
+{  double* _p; Memb_list* _ml; Datum* _ppvar; ThreadDatum* _thread; double v;\n\
    int _cntml_padded, _cntml_actual; double* _args;\n\
 ");
 
@@ -3258,10 +3259,10 @@ void net_init(qinit, qp2)
 	Item* qinit, *qp2;
 {
 	/* qinit=INITIAL { stmtlist qp2=} */
-	replacstr(qinit, "\nstatic void _net_init(NrnThread * _nt, Memb_list *_ml, int _iml, int _weight_index, double _lflag)");
+	replacstr(qinit, "\nstatic void _net_init(NrnThread * _nt, int _type, int _iml, int _weight_index, double _lflag)");
 	vectorize_substitute(insertstr(qinit->next->next, ""), "\n\
    double* _p; Datum* _ppvar; ThreadDatum* _thread; \n\
-   Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
+   Memb_list* _ml; int _cntml_padded, _cntml_actual; double* _args;\n\
 ");
 	vectorize_substitute(insertstr(qinit->next->next->next, ""), net_boilerplate(0));
 	if (net_init_q1_) {

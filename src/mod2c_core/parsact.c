@@ -1110,12 +1110,12 @@ Fprintf(stderr, "Notice: Use of state_discontinuity in a NET_RECEIVE block is un
 		}else if (strcmp(SYM(qname)->name, "net_send") == 0) {
 			net_send_seen_ = 1;
 			if (artificial_cell) {
-				replacstr(qname, "artcell_net_send");
+				replacstr(qname, "net_send");
 			}
 			Insertstr(qexpr, "t + ");
 			if (blocktype == NETRECEIVE) {
 acc_net_add(qname, qpar1, qexpr, qpar2, "0, _tqitem, _weight_index, _ppvar[1*_STRIDE],", "");
-				Insertstr(qpar1->next, "_tqitem, _weight_index, _pnt,");
+				Insertstr(qpar1->next, "_tqitem, _weight_index, _nt, _type, _iml,");
 			}else if (blocktype == INITIAL1){
 			  net_send_buffer_in_initial = 1;
 acc_net_add(qname, qpar1, qexpr, qpar2, "0, _tqitem, 0,  _ppvar[1*_STRIDE],", "");
@@ -1127,17 +1127,17 @@ diag("net_send allowed only in INITIAL and NET_RECEIVE blocks", (char*)0);
 			net_event_seen_ = 1;
 			if (blocktype == NETRECEIVE) {
 acc_net_add(qname, qpar1, qexpr, qpar2, "1, -1, -1,  _ppvar[1*_STRIDE],", ", 0.");
-				Insertstr(qpar1->next, "_pnt,");
+				Insertstr(qpar1->next, "_nt, _type, _iml,");
 			}else{
 diag("net_event", " only allowed in NET_RECEIVE block");
 			}
 		}else if (strcmp(SYM(qname)->name, "net_move") == 0) {
 			if (artificial_cell) {
-				replacstr(qname, "artcell_net_move");
+				replacstr(qname, "net_move");
 			}
 			if (blocktype == NETRECEIVE) {
 acc_net_add(qname, qpar1, qexpr, qpar2, "2, _tqitem, -1, _ppvar[1*_STRIDE],", ", 0.");
-				Insertstr(qpar1->next, "_tqitem, _pnt,");
+				Insertstr(qpar1->next, "_tqitem, _nt, _type, _iml,");
 			}else{
 diag("net_move", " only allowed in NET_RECEIVE block");
 			}
