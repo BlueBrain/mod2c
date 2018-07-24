@@ -812,14 +812,14 @@ void c_out_vectorize()
 	P(" initmodel(_threadargs_);\n");
 	printlist(set_ion_variables(2));
 
-	P("}\n");
-	P("  }\n"); /* end of the _nrn_skip_initmodel conditional */
-
 	P("\n //populate offsets arrays for graph-parallelism use case\n");
 	P(" if (_ml->_shadow_didv_offsets) {\n");
 	P("   _ml->_shadow_i_offsets[_iml] = _ppvar[1*_STRIDE];\n");
 	P("   _ml->_shadow_didv_offsets[_iml] = _ppvar[2*_STRIDE];\n");
 	P(" }\n");
+
+	P("}\n");
+	P("  }\n"); /* end of the _nrn_skip_initmodel conditional */
 
 	if (derivimplic_listnum) {
 	  sprintf(buf,
