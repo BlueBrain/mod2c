@@ -196,7 +196,6 @@ void c_out()
 	printlist(defs_list);
 	printlist(firstlist);
 	P("static int _reset;\n");
-    P("static double refresh_period = dt;\n");
 #if NMODL
 	P("static ");
 #endif	
@@ -1012,6 +1011,8 @@ void c_out_vectorize()
 	/* nrnstate list contains the EQUATION solve statement so this
 	   advances states by dt */
 	P("\nvoid nrn_state(NrnThread* _nt, Memb_list* _ml, int _type) {\n");
+    P("tick = (tick+1) % refresh_period;\n");
+    P("if (tick) return;\n");
 	if (nrnstate || currents->next == currents) {
 	  P("double* _p; Datum* _ppvar; ThreadDatum* _thread;\n");
 	  P("double v, _v = 0.0; int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
