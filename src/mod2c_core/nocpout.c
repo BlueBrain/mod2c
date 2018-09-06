@@ -660,6 +660,9 @@ Sprintf(buf, "\"%s%s\", _hoc_%s,\n", s->name, rsuffix, s->name);
 		int j;
 		s = SYM(q);
 		if ((s->subtype & FUNCT)) {
+            if(!artificial_cell) {
+                Lappendstr(defs_list, "#pragma acc routine seq\n");
+            }
 			Sprintf(buf, "inline double %s(", s->name);
 			Lappendstr(defs_list, buf);
 			if (vectorize && !s->no_threadargs) {
@@ -844,9 +847,13 @@ diag("No statics allowed for thread safe models:", s->name);
 #endif
 			decode_ustr(s, &d1, &d2, buf);
 			if (s->subtype & ARRAY) {
-				Sprintf(buf, "static double %s[%d];\n", s->name, s->araydim);
+				Sprintf(buf, "static double %s[%d];\n"
+                             "#pragma acc declare create(%s)\n",
+                             s->name, s->araydim, s->name);
 			}else{
-				Sprintf(buf, "static double %s = %g;\n", s->name, d1);
+				Sprintf(buf, "static double %s = %g;\n"
+                             "#pragma acc declare copyin(%s)\n",
+                             s->name, d1, s->name);
 			}
 			Lappendstr(defs_list, buf);
 		}
