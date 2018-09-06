@@ -40,14 +40,12 @@
 #define _PRAGMA_FOR_CUR_ACC_LOOP_ _Pragma("acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], _vec_d[0:_nt->end], _vec_rhs[0:_nt->end], _nt[0:1] _thread_present_) if(_nt->compute_gpu) async(stream_id)")
 #define _PRAGMA_FOR_CUR_SYN_ACC_LOOP_ _Pragma("acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], _vec_shadow_rhs[0:_nt->shadow_rhs_cnt], _vec_shadow_d[0:_nt->shadow_rhs_cnt], _vec_d[0:_nt->end], _vec_rhs[0:_nt->end], _nt[0:1]) if(_nt->compute_gpu) async(stream_id)")
 #define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma("acc parallel loop present(_pnt[0:_pnt_length], _nrb[0:1], _nt[0:1], nrn_threads[0:nrn_nthread]) if(_nt->compute_gpu) async(stream_id)")
-#define _ACC_GLOBALS_UPDATE_ if (_nt->compute_gpu) {_acc_globals_update();}
 #else
 #define _PRAGMA_FOR_INIT_ACC_LOOP_ _Pragma("")
 #define _PRAGMA_FOR_STATE_ACC_LOOP_ _Pragma("")
 #define _PRAGMA_FOR_CUR_ACC_LOOP_ _Pragma("")
 #define _PRAGMA_FOR_CUR_SYN_ACC_LOOP_ _Pragma("")
 #define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma("")
-#define _ACC_GLOBALS_UPDATE_ ;
 #endif
  
 #if defined(__clang__)
@@ -140,6 +138,10 @@
  static int hoc_nrnpointerindex =  -1;
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
+ extern double celsius;
+ #define _celsius_ _celsius__NaSm
+double _celsius_;
+#pragma acc declare copyin(_celsius_)
  
 #if 0 /*BBCORE*/
  /* declaration of user functions */
@@ -188,7 +190,11 @@ static void _acc_globals_update() {
  #pragma acc update device (ktm) if(nrn_threads->compute_gpu)
  #pragma acc update device (ksm) if(nrn_threads->compute_gpu)
  #pragma acc update device (tom) if(nrn_threads->compute_gpu)
+ _celsius_ = celsius;
+ #pragma acc update device(_celsius_)
  }
+
+ #define celsius _celsius_
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -203,7 +209,9 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double delta_t = 1;
+#pragma acc declare copyin(delta_t)
  static double m0 = 0;
+#pragma acc declare copyin(m0)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
  "ena_NaSm", &ena_NaSm,
@@ -356,16 +364,7 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-
-#if defined(PG_ACC_BUGS)
-#if defined(celsius)
-#undef celsius;
-_celsius_ = celsius;
-#pragma acc update device (_celsius_) if(_nt->compute_gpu)
-#define celsius _celsius_
-#endif
-#endif
-_ACC_GLOBALS_UPDATE_
+_acc_globals_update();
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;

@@ -87,6 +87,10 @@
 #endif
  static int hoc_nrnpointerindex =  -1;
  /* external NEURON variables */
+ extern double celsius;
+ #define _celsius_ _celsius__nap
+double _celsius_;
+#pragma acc declare copyin(_celsius_)
  
 #if 0 /*BBCORE*/
  /* declaration of user functions */
@@ -119,7 +123,11 @@ static void _acc_globals_update() {
  #pragma acc update device (eNa) if(nrn_threads->compute_gpu)
  #pragma acc update device (mtau) if(nrn_threads->compute_gpu)
  #pragma acc update device (minf) if(nrn_threads->compute_gpu)
+ _celsius_ = celsius;
+ #pragma acc update device(_celsius_)
  }
+
+ #define celsius _celsius_
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -136,8 +144,11 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double delta_t = 0.01;
+#pragma acc declare copyin(delta_t)
  static double m0 = 0;
+#pragma acc declare copyin(m0)
  static double v = 0;
+#pragma acc declare copyin(v)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
  "eNa_nap", &eNa_nap,

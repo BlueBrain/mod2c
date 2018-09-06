@@ -195,6 +195,7 @@ static void _acc_globals_update() {
  #pragma acc update device (Rb) if(nrn_threads->compute_gpu)
  #pragma acc update device (mg) if(nrn_threads->compute_gpu)
  }
+
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -227,17 +228,29 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double CB20 = 0;
+#pragma acc declare copyin(CB20)
  static double CB10 = 0;
+#pragma acc declare copyin(CB10)
  static double CB00 = 0;
+#pragma acc declare copyin(CB00)
  static double C20 = 0;
+#pragma acc declare copyin(C20)
  static double C10 = 0;
+#pragma acc declare copyin(C10)
  static double C00 = 0;
+#pragma acc declare copyin(C00)
  static double DB0 = 0;
+#pragma acc declare copyin(DB0)
  static double D0 = 0;
+#pragma acc declare copyin(D0)
  static double OB0 = 0;
+#pragma acc declare copyin(OB0)
  static double O0 = 0;
+#pragma acc declare copyin(O0)
  static double delta_t = 1;
+#pragma acc declare copyin(delta_t)
  static double v = 0;
+#pragma acc declare copyin(v)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
  "mg_NMDA10_2", &mg_NMDA10_2,

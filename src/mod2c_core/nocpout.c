@@ -819,11 +819,10 @@ s->name, suffix, gind, s->name, gind);
             Lappendstr(defs_list, "#pragma acc update device(_celsius_)\n");
         }
 		Lappendstr(defs_list, "}\n\n");
-        Lappendstr(defs_list, "\n");
 	}
 
     if (use_celsius) {
-        Lappendstr(defs_list, "\n#define celsius _celsius_\n");
+        Lappendstr(defs_list, "#define celsius _celsius_\n");
     }
 
 	Lappendstr(defs_list, "\n#if 0 /*BBCORE*/\n");
