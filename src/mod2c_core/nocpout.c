@@ -200,7 +200,7 @@ int artificial_cell; /* 1 if also explicitly declared an ARTIFICIAL_CELL */
 static int diamdec = 0;	/*1 if diam is declared*/
 static int areadec = 0;
 static int use_bbcorepointer = 0;
-
+static int use_celsius = 0; /* celsius is used */
 static void defs_h();
 static int iontype();
 static void nrndeclare();
@@ -381,14 +381,12 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#define _PRAGMA_FOR_CUR_ACC_LOOP_ _Pragma(\"acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], _vec_d[0:_nt->end], _vec_rhs[0:_nt->end], _nt[0:1] _thread_present_) if(_nt->compute_gpu) async(stream_id)\")\
 \n#define _PRAGMA_FOR_CUR_SYN_ACC_LOOP_ _Pragma(\"acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], _vec_shadow_rhs[0:_nt->shadow_rhs_cnt], _vec_shadow_d[0:_nt->shadow_rhs_cnt], _vec_d[0:_nt->end], _vec_rhs[0:_nt->end], _nt[0:1]) if(_nt->compute_gpu) async(stream_id)\")\
 \n#define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma(\"acc parallel loop present(_pnt[0:_pnt_length], _nrb[0:1], _nt[0:1], nrn_threads[0:nrn_nthread]) if(_nt->compute_gpu) async(stream_id)\")\
-\n#define _ACC_GLOBALS_UPDATE_ if (_nt->compute_gpu) {_acc_globals_update();}\
 \n#else\
 \n#define _PRAGMA_FOR_INIT_ACC_LOOP_ _Pragma(\"\")\
 \n#define _PRAGMA_FOR_STATE_ACC_LOOP_ _Pragma(\"\")\
 \n#define _PRAGMA_FOR_CUR_ACC_LOOP_ _Pragma(\"\")\
 \n#define _PRAGMA_FOR_CUR_SYN_ACC_LOOP_ _Pragma(\"\")\
 \n#define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma(\"\")\
-\n#define _ACC_GLOBALS_UPDATE_ ;\
 \n#endif\
 \n \
 \n#if defined(__clang__)\
@@ -553,15 +551,22 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 		if (s->nrntype & NRNEXTRN) {
 			if (strcmp(s->name, "dt") == 0) { continue; }
 			if (strcmp(s->name, "t") == 0) { continue; }
-			if (strcmp(s->name, "celsius") == 0) {continue;}
 			if (s->subtype & ARRAY) {
 				Sprintf(buf, "extern double* %s;\n", s->name);
 			}else{
 				Sprintf(buf, "extern double %s;\n", s->name);
 			}
 			Lappendstr(defs_list, buf);
+			if (strcmp(s->name, "celsius") == 0) {
+                use_celsius = 1;
+                Sprintf(buf,
+                "#define _celsius_ _celsius_%s\n"
+                "double _celsius_;\n"
+                "#pragma acc declare copyin(_celsius_)\n", suffix);
+                Lappendstr(defs_list, buf);
             }
-		}
+        }
+    }
 	
 #if BBCORE
 	Lappendstr(defs_list, "\n#if 0 /*BBCORE*/\n");
@@ -660,6 +665,9 @@ Sprintf(buf, "\"%s%s\", _hoc_%s,\n", s->name, rsuffix, s->name);
 		int j;
 		s = SYM(q);
 		if ((s->subtype & FUNCT)) {
+            if(!artificial_cell) {
+                Lappendstr(defs_list, "#pragma acc routine seq\n");
+            }
 			Sprintf(buf, "inline double %s(", s->name);
 			Lappendstr(defs_list, buf);
 			if (vectorize && !s->no_threadargs) {
@@ -806,8 +814,16 @@ s->name, suffix, gind, s->name, gind);
 		if (acc_globals_update_list->next != acc_globals_update_list) {
 			movelist(acc_globals_update_list->next, acc_globals_update_list->prev, defs_list);
 		}
-		Lappendstr(defs_list, "}\n");
+        if (use_celsius) {
+            Lappendstr(defs_list, "_celsius_ = celsius;\n");
+            Lappendstr(defs_list, "#pragma acc update device(_celsius_)\n");
+        }
+		Lappendstr(defs_list, "}\n\n");
 	}
+
+    if (use_celsius) {
+        Lappendstr(defs_list, "#define celsius _celsius_\n");
+    }
 
 	Lappendstr(defs_list, "\n#if 0 /*BBCORE*/\n");
 #endif
@@ -844,9 +860,13 @@ diag("No statics allowed for thread safe models:", s->name);
 #endif
 			decode_ustr(s, &d1, &d2, buf);
 			if (s->subtype & ARRAY) {
-				Sprintf(buf, "static double %s[%d];\n", s->name, s->araydim);
+				Sprintf(buf, "static double %s[%d];\n"
+                             "#pragma acc declare create(%s)\n",
+                             s->name, s->araydim, s->name);
 			}else{
-				Sprintf(buf, "static double %s = %g;\n", s->name, d1);
+				Sprintf(buf, "static double %s = %g;\n"
+                             "#pragma acc declare copyin(%s)\n",
+                             s->name, d1, s->name);
 			}
 			Lappendstr(defs_list, buf);
 		}
