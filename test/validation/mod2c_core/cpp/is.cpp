@@ -311,7 +311,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   hoc_register_dparam_semantics(_mechtype, 6, "ns_ion");
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
-static char *modelname = "Cardiac L-type Calcium channel";
+static const char *modelname = "Cardiac L-type Calcium channel";
 
 static int error;
 static int _ninits = 0;

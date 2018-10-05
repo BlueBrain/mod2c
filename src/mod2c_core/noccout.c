@@ -200,9 +200,9 @@ void c_out()
 	P("static ");
 #endif	
 	if (modelline) {
-		Fprintf(fcout, "char *modelname = \"%s\";\n\n", modelline);
+		Fprintf(fcout, "const char *modelname = \"%s\";\n\n", modelline);
 	} else {
-		Fprintf(fcout, "char *modelname = \"\";\n\n");
+		Fprintf(fcout, "const char *modelname = \"\";\n\n");
 	}
 	Fflush(fcout);		/* on certain internal errors partial output
 				 * is helpful */
@@ -712,9 +712,9 @@ void c_out_vectorize()
 	printlist(defs_list);
 	printlist(firstlist);
 	if (modelline) {
-		Fprintf(fcout, "static char *modelname = \"%s\";\n\n", modelline);
+		Fprintf(fcout, "static const char *modelname = \"%s\";\n\n", modelline);
 	} else {
-		Fprintf(fcout, "static char *modelname = \"\";\n\n");
+		Fprintf(fcout, "static const char *modelname = \"\";\n\n");
 	}
 	Fflush(fcout);		/* on certain internal errors partial output
 				 * is helpful */

@@ -354,7 +354,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
 static int _reset;
-static char *modelname = "detailed model of glutamate NMDA receptors";
+static const char *modelname = "detailed model of glutamate NMDA receptors";
 
 static int error;
 static int _ninits = 0;
