@@ -320,7 +320,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  pnt_receive_size[_mechtype] = 1;
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
-static char *modelname = "";
+static const char *modelname = "";
 
 static int error;
 static int _ninits = 0;
