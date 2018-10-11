@@ -235,7 +235,7 @@ int watch_seen_; /* number of WATCH statements + 1*/
 List* watch_data_; /* triples of par1, par2, flag */
 static Item* net_send_delivered_; /* location for if flag is 1 then clear the
 				tqitem_ to allow  an error message for net_move */
-static Item* net_receive_block_begin_; /* the "static void _net_receive" line */
+static Item* net_receive_block_begin_; /* the "void _net_receive" line */
 static Item* net_receive_block_open_brace_; /* the "{" line */
 #endif
 
@@ -442,17 +442,18 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 #define nrn_state _nrn_state_%s\n\
 #define initmodel initmodel_%s\n\
 #define _net_receive _net_receive_%s\n\
+#define _net_init _net_init_%s\n\
 #define nrn_state_launcher nrn_state%s_launcher\n\
 #define nrn_cur_launcher nrn_cur%s_launcher\n\
 #define nrn_jacob_launcher nrn_jacob%s_launcher\
-", suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix);
+", suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix, suffix);
 	Lappendstr(defs_list, buf);
 
 	if (net_receive_buffering_) {
 		sprintf(buf, "\
 \n#if NET_RECEIVE_BUFFERING\
 \n#define _net_buf_receive _net_buf_receive%s\
-\nstatic void _net_buf_receive(NrnThread*);\
+\nvoid _net_buf_receive(NrnThread*);\
 \n#endif\
 \n", suffix);
 		Lappendstr(defs_list, buf);
@@ -1247,9 +1248,9 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 		}
 	}
 	if (net_receive_) {
-		Lappendstr(defs_list, "static void _net_receive(Point_process*, int, double);\n");
+		Lappendstr(defs_list, "void _net_receive(Point_process*, int, double);\n");
 		if (net_init_q1_) {
-			Lappendstr(defs_list, "static void _net_init(Point_process*, int, double);\n");
+			Lappendstr(defs_list, "void _net_init(Point_process*, int, double);\n");
 		}
 	}
 	if (vectorize && thread_mem_init_list->next != thread_mem_init_list) {
@@ -2968,7 +2969,7 @@ void emit_net_receive_buffering_code() {
 \n#undef t\
 \n#define t _nrb_t\
 \nstatic inline void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);\
-\nstatic void _net_buf_receive(NrnThread* _nt) {\
+\nvoid _net_buf_receive(NrnThread* _nt) {\
 \n  if (!_nt->_ml_list) { return; }\
 \n  Memb_list* _ml = _nt->_ml_list[_mechtype];\
 \n  if (!_ml) { return; }\
@@ -3048,7 +3049,7 @@ sprintf(buf, "\
 	}
 
 	sprintf(buf, "\
-\nstatic void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {\
+\nvoid _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {\
 \n  NrnThread* _nt = nrn_threads + _pnt->_tid;\
 \n  NetReceiveBuffer_t* _nrb = _nt->_ml_list[_mechtype]->_net_receive_buffer;\
 \n  if (_nrb->_cnt >= _nrb->_size){\
@@ -3284,7 +3285,7 @@ void net_init(qinit, qp2)
 	Item* qinit, *qp2;
 {
 	/* qinit=INITIAL { stmtlist qp2=} */
-	replacstr(qinit, "\nstatic void _net_init(Point_process* _pnt, int _weight_index, double _lflag)");
+	replacstr(qinit, "\nvoid _net_init(Point_process* _pnt, int _weight_index, double _lflag)");
 	vectorize_substitute(insertstr(qinit->next->next, ""), "\n\
    double* _p; Datum* _ppvar; ThreadDatum* _thread; \n\
    Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
