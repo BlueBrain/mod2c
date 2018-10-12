@@ -44,12 +44,13 @@
 #define nrn_state _nrn_state__NMDA10_1
 #define initmodel initmodel__NMDA10_1
 #define _net_receive _net_receive__NMDA10_1
+#define _net_init _net_init__NMDA10_1
 #define nrn_state_launcher nrn_state_NMDA10_1_launcher
 #define nrn_cur_launcher nrn_cur_NMDA10_1_launcher
 #define nrn_jacob_launcher nrn_jacob_NMDA10_1_launcher 
 #if NET_RECEIVE_BUFFERING
 #define _net_buf_receive _net_buf_receive_NMDA10_1
-static void _net_buf_receive(NrnThread*);
+void _net_buf_receive(NrnThread*);
 #endif
  
 #define kstates kstates_NMDA10_1 
@@ -486,7 +487,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  
 }
  static void _initlists();
- static void _net_receive(Point_process*, int, double);
+ void _net_receive(Point_process*, int, double);
  
 #define _psize 40
 #define _ppsize 2
@@ -766,7 +767,7 @@ for(_i=1;_i<10;_i++){
 #undef t
 #define t _nrb_t
 static inline void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
-static void _net_buf_receive(NrnThread* _nt) {
+void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
   Memb_list* _ml = _nt->_ml_list[_mechtype];
   if (!_ml) { return; }
@@ -797,7 +798,7 @@ static void _net_buf_receive(NrnThread* _nt) {
  
 }
  
-static void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {
+void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {
   NrnThread* _nt = nrn_threads + _pnt->_tid;
   NetReceiveBuffer_t* _nrb = _nt->_ml_list[_mechtype]->_net_receive_buffer;
   if (_nrb->_cnt >= _nrb->_size){
@@ -813,7 +814,7 @@ static void _net_receive (Point_process* _pnt, int _weight_index, double _lflag)
 static void _net_receive_kernel(double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
 #else
  
-static void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) 
+void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) 
 #endif
  
 { 

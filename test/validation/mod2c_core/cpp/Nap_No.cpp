@@ -81,6 +81,7 @@
 #define nrn_state _nrn_state__Nap_No
 #define initmodel initmodel__Nap_No
 #define _net_receive _net_receive__Nap_No
+#define _net_init _net_init__Nap_No
 #define nrn_state_launcher nrn_state_Nap_No_launcher
 #define nrn_cur_launcher nrn_cur_Nap_No_launcher
 #define nrn_jacob_launcher nrn_jacob_Nap_No_launcher 

@@ -81,6 +81,7 @@
 #define nrn_state _nrn_state__NapDA
 #define initmodel initmodel__NapDA
 #define _net_receive _net_receive__NapDA
+#define _net_init _net_init__NapDA
 #define nrn_state_launcher nrn_state_NapDA_launcher
 #define nrn_cur_launcher nrn_cur_NapDA_launcher
 #define nrn_jacob_launcher nrn_jacob_NapDA_launcher 
