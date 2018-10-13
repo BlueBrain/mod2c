@@ -912,7 +912,7 @@ diag("NET_RECEIVE block"," must have at least one argument");
 		}
 	     stmtlist '}'
 		{
-		replacstr($1, "\nstatic void _net_receive");
+		replacstr($1, "\nvoid _net_receive");
 		movelist($1, $7, procfunc);
 #if NMODL
 		net_receive($1, $3, $2, $4, $6, $7);

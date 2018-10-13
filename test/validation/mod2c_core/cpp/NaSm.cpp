@@ -81,6 +81,7 @@
 #define nrn_state _nrn_state__NaSm
 #define initmodel initmodel__NaSm
 #define _net_receive _net_receive__NaSm
+#define _net_init _net_init__NaSm
 #define nrn_state_launcher nrn_state_NaSm_launcher
 #define nrn_cur_launcher nrn_cur_NaSm_launcher
 #define nrn_jacob_launcher nrn_jacob_NaSm_launcher 
