@@ -566,9 +566,10 @@ void massagederiv(q1, q2, q3, q4, sensused)
 	}
 	Sprintf(buf,
 	  "\n"
-	  " _slist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  " _dlist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  , numlist, count, numlist, count
+	  " _cvode_neq = %d;\n"
+	  " _slist%d = (int*)malloc(sizeof(int)*_cvode_neq);\n"
+	  " _dlist%d = (int*)malloc(sizeof(int)*_cvode_neq);\n"
+	  , count, numlist, numlist
 	);
 	Lappendstr(initlist, buf);
 
