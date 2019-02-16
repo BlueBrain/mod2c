@@ -1956,6 +1956,7 @@ void bablk(ba, type, q1, q2)
 "  double * _vec_v = _nt->_actual_v;\n"
 "  int stream_id = _nt->stream_id;\n"
 "  #if LAYOUT == 1 /*AoS*/\n"
+"  _PRAGMA_FOR_VECTOR_LOOP_\n"
 "  for (_iml = 0; _iml < _cntml_actual; ++_iml) {\n"
 "    _p = _ml->_data + _iml*_psize; _ppvar = _ml->_pdata + _iml*_ppsize;\n"
 "  #elif LAYOUT == 0 /*SoA*/\n"
@@ -3094,6 +3095,7 @@ static void emit_nrn_watch_check_code() {
 	/* for gpu, performance may be better factored into below ITERATE */
 	Lappendstr(procfunc, "\n"
 "  #if LAYOUT == 1 /*AoS*/\n"
+"  _PRAGMA_FOR_VECTOR_LOOP_\n"
 "  for (_iml = 0; _iml < _cntml_actual; ++_iml) {\n"
 "    _p = _ml->_data + _iml*_psize; _ppvar = _ml->_pdata + _iml*_ppsize;\n"
 "  #elif LAYOUT == 0 /*SoA*/\n"
