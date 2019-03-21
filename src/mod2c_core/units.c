@@ -69,6 +69,7 @@ static char *dfilealt = "::lib:nrnunits.lib";
 static char	*dfilealt	= "../../share/lib/nrnunits.lib";
 #endif
 #endif
+// real names of base units
 static char	*unames[NDIM];
 static double	getflt();
 static void fperr();
@@ -83,7 +84,7 @@ static void init();
 static int get();
 
 extern void Unit_push(char*);
-
+// array of structs that stores all the units with their factors and dimensions(relation to base units)
 static struct table
 {
 	double	factor;
@@ -145,6 +146,7 @@ static int Getc(inp)
 }
 
 #define UNIT_STK_SIZE	20
+// unit stack that stores new units in case of install_units, etc
 static struct unit unit_stack[UNIT_STK_SIZE], *usp;
 
 static char* neuronhome() {
@@ -281,9 +283,11 @@ void install_units(s1, s2) /* define s1 as s2 */
 {
 	struct table *tp;
 	int i;
-	
+	//printf("s1 = %s, s2 = %s\n",s1,s2);
 	IFUNITS
+	// push units to the stack
 	Unit_push(s2);
+	// create table entry for the name of the unit we want to add
 	tp = hash(s1);
 	if (tp->name) {
 		printf("Redefinition of units (%s) to:", s1);
@@ -298,6 +302,10 @@ void install_units(s1, s2) /* define s1 as s2 */
 		tp->dim[i] = usp->dim[i];
 	}
 	unit_pop();
+	/*for(int i = 0; i < NTAB; i++){
+		printf("table[%d]->name = %s\n", i, table[i].name);
+		printf("table[%d].factor = %lf\n",i,table[i].factor);
+	}*/
 }
 
 void check_num()
@@ -527,7 +535,7 @@ void modl_units() {
 }
 
 #endif
-
+// reads correct nrnunits.lib file
 void unit_init() {
 	char* s;
 	char buf[256];
@@ -671,7 +679,7 @@ static int pu(u, i, f)
 		return(1);
 	return(0);
 }
-
+// defines factor and dimensions of units
 static int convr(up)
 struct unit *up;
 {
@@ -684,14 +692,18 @@ struct unit *up;
 	p = up;
 	for(c=0; c<NDIM; c++)
 		p->dim[c] = 0;
+	//printf("name = %d, factor = %f\n", p->isnum, p->factor);
+	// reads and calculates number if it exists
 	p->factor = getflt();
+	//printf("name = %d, factor = %f\n", p->isnum, p->factor);
 	if(p->factor == 0.) {
 		p->factor = 1.0;
 	}
 	err = 0;
 	den = 0;
 	cp = name;
-
+    // reads the units of the unit and updates the dimensions
+    // of the unit that is processed to the table
 loop:
 	switch(c=get()) {
 
@@ -712,6 +724,7 @@ loop:
 		if(cp != name) {
 			*cp++ = 0;
 			cp = name;
+			// this function does it all
 			err |= lookup(cp, p, den, c);
 		}
 		if(c == '/')
@@ -724,6 +737,16 @@ loop:
 	goto loop;
 }
 
+// Processes factor by the prefix of the units that describe
+// the processed unit (the one in the beggining of the line)
+// and calculates the dimensions(basic units) that the processed
+// unit is based on
+//
+// name: name of the unit that describes the unit processed
+//       (the one in the beggining of the line)
+// up: processed unit (the one in the beggining of the line)
+// den: 1 if cp is in the denominator, else 0
+// c: processed character
 static int lookup(name, up, den, c)
 char *name;
 struct unit *up;
@@ -736,10 +759,17 @@ struct unit *up;
 
 	p = up;
 	e = 1.0;
+
 loop:
+    // find unit in hash table
 	q = hash(name);
+    // if it already exists
 	if(q->name) {
 		l1:
+	    // if the unit is in the denominator
+	    // substract the units dimensions from
+	    // the vector of dimensions of the
+	    // processed unit else add them
 		if(den) {
 			p->factor /= q->factor*e;
 			for(i=0; i<NDIM; i++)
@@ -755,6 +785,8 @@ loop:
 		}
 		return(0);
 	}
+	// calculate processed unit's factor based on
+	// units it is based on prefixes
 	for(i=0; (cp1 = prefix[i].pname) != 0; i++) {
 		cp2 = name;
 		while(*cp1 == *cp2++)
@@ -796,11 +828,13 @@ char *s1, *s2;
 
 static void init()
 {
+    //printf("init\n");
+    fflush(stdout);
 	register char *cp;
 	register struct table *tp, *lp;
 	int c, i, f, t;
 	char *np;
-
+	// saving dimensions in table
 	cp = names;
 	for(i=0; i<NDIM; i++) {
 		np = cp;
@@ -816,9 +850,13 @@ static void init()
 	lp = hash("");
 	lp->name = cp-1;
 	lp->factor = 1.0;
-
+	/*for(int i = 0; i < NTAB; i++){
+		printf("table[%d]->name = %s\n", i, table[i].name);
+	}*/
+	// Reading line by line the nrnunits.lib file, one character at the time
 l0:
 	c = get();
+	// if file is empty
 	if(c == 0) {
 #if 0
 		printf("%d units; %d bytes\n\n", i, cp-names);
@@ -834,19 +872,25 @@ l0:
 		inpfile = stdin;
 		return;
 	}
+	// if line is commented
 	if(c == '/') {
 		while(c != '\n' && c != 0)
 			c = get();
 		goto l0;
 	}
+	// if line starts with new line char
 	if(c == '\n')
 		goto l0;
+	// start reading units
+	// np saves the name of unit
 	np = cp;
+	// read unit name
 	while(c != ' ' && c != '\t') {
 		*cp++ = c;
 		c = get();
 		if (c==0)
 			goto l0;
+		// simple unit definition simply adds it to the table of units
 		if(c == '\n') {
 			*cp++ = 0;
 			tp = hash(np);
@@ -854,22 +898,46 @@ l0:
 				goto redef;
 			tp->name = np;
 			tp->factor = lp->factor;
-			for(c=0; c<NDIM; c++)
+			for(c=0; c<NDIM; c++) {
 				tp->dim[c] = lp->dim[c];
+				//printf("tp->dim[%d] = %d\n", c, tp->dim[c]);
+			}
 			i++;
 			goto l0;
 		}
 	}
 	*cp++ = 0;
+	/*printf("lp->name = %s\n",np);
+	for(int j = 0; j < NDIM; j++){
+		printf("->dim[%d] = %d ",j,lp->dim[j]);
+	}*/
+	// enter name of the unit in the table
 	lp = hash(np);
+	/*for(int i = 0; i < NTAB; i++){
+		printf("table[%d]->name = %s, ->factor = %f\n", i, table[i].name, table[i].factor);
+		for(int j = 0; j < NDIM; j++){
+			printf("->dim[%d] = %d ",j,table[i].dim[j]);
+		}
+		printf("\n");
+	}
+	printf("np = %s\n",np);*/
+	// if there is the same name nothing happens
 	if(lp->name)
 		goto redef;
+	// makes all the calculations of dimensions(base units) and factor
 	convr((struct unit *)lp);
 	lp->name = np;
+	/*printf("lp->name = %s\n",lp->name);
+	for(int j = 0; j < NDIM; j++){
+		printf("->dim[%d] = %d ",j,lp->dim[j]);
+	}*/
 	f = 0;
 	i++;
 	if(lp->factor != 1.0)
 		goto l0;
+	//printf("lp->name = %s\n",lp->name);
+	// if the first dimension!=0 read is 1 and the unit does not exist in the unit names array
+	// save the name of the unit read in the unames array
 	for(c=0; c<NDIM; c++) {
 		t = lp->dim[c];
 		if(t>1 || (f>0 && t!=0))
@@ -882,6 +950,8 @@ l0:
 	}
 	if(f>0)
 		unames[f-1] = np;
+	/*for(int j = 0; j < NDIM; j++)
+		printf("unames[%d] = %s\n", j, unames[j]);*/
 	goto l0;
 
 redef:
@@ -956,6 +1026,7 @@ static int get()
 		return(c);
 	}
 	c = Getc(inpfile);
+	//printf("c = %c\n", c);
 	if (c == '\r') { c = Getc(inpfile); }
 	if (c == EOF) {
 		if (inpfile == stdin) {
