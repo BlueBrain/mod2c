@@ -952,10 +952,6 @@ void c_out_vectorize()
 		}else{
 			P("	_vec_rhs[_nd_idx] += _rhs;\n");
 			P("	_vec_d[_nd_idx] -= _g;\n");
-/*			P("  if (_nt->_nrn_fast_imem) {\n");
-			P("     _nt->_nrn_fast_imem->_nrn_sav_rhs[_nd_idx] += _rhs;\n");
-			P("     _nt->_nrn_fast_imem->_nrn_sav_d[_nd_idx] -= _g;\n");
-			P(" }\n");*/
 		}
 #endif
 	}else{
