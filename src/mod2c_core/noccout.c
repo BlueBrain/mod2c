@@ -123,6 +123,14 @@ static void ext_vdef() {
 }
 
 static void rhs_d_pnt_race(const char* r, const char* d) {
+    char fast_imem_code[] = "\
+\n   if (_nt->_nrn_fast_imem) {\
+\n     _nt->_nrn_fast_imem->_nrn_sav_rhs[_nd_idx] += _vec_shadow_rhs[_iml];\
+\n     _nt->_nrn_fast_imem->_nrn_sav_d[_nd_idx] -= _vec_shadow_d[_iml];\
+\n   }";
+    if (!electrode_current) {
+        fast_imem_code[0] = '\0';
+    }
     sprintf(buf, "\
 \n\
 \n#ifdef _OPENACC\
@@ -152,8 +160,9 @@ static void rhs_d_pnt_race(const char* r, const char* d) {
 \n   int _nd_idx = _ni[_iml];\
 \n   _vec_rhs[_nd_idx] %s _vec_shadow_rhs[_iml];\
 \n   _vec_d[_nd_idx] %s _vec_shadow_d[_iml];\
+%s\
 \n#endif\
-\n", r, d,  r, d,  r, d);
+\n", r, d,  r, d,  r, d, fast_imem_code);
   P(buf);
 }
 
@@ -943,6 +952,10 @@ void c_out_vectorize()
 		}else{
 			P("	_vec_rhs[_nd_idx] += _rhs;\n");
 			P("	_vec_d[_nd_idx] -= _g;\n");
+/*			P("  if (_nt->_nrn_fast_imem) {\n");
+			P("     _nt->_nrn_fast_imem->_nrn_sav_rhs[_nd_idx] += _rhs;\n");
+			P("     _nt->_nrn_fast_imem->_nrn_sav_d[_nd_idx] -= _g;\n");
+			P(" }\n");*/
 		}
 #endif
 	}else{
