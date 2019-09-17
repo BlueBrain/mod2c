@@ -123,23 +123,23 @@ static void ext_vdef() {
 }
 
 static const char* print_fast_imem_code() {
-    if (electrode_current ) {
-        if (point_process) {
-            return "\n   if (_nt->_nrn_fast_imem) {\
-\n     _nt->_nrn_fast_imem->_nrn_sav_rhs[_nd_idx] += _vec_shadow_rhs[_iml];\
-\n     _nt->_nrn_fast_imem->_nrn_sav_d[_nd_idx] -= _vec_shadow_d[_iml];\
+	if (electrode_current ) {
+		if (point_process) {
+			return "\n   if (_nt->nrn_fast_imem) {\
+\n     _nt->nrn_fast_imem->nrn_sav_rhs[_nd_idx] += _vec_shadow_rhs[_iml];\
+\n     _nt->nrn_fast_imem->nrn_sav_d[_nd_idx] -= _vec_shadow_d[_iml];\
 \n   }";
-        }
-        else {
-            return "\n   if (_nt->_nrn_fast_imem) {\
-\n     _nt->_nrn_fast_imem->_nrn_sav_rhs[_nd_idx] += _rhs;\
-\n     _nt->_nrn_fast_imem->_nrn_sav_d[_nd_idx] -= _g;\
+		}
+		else {
+			return "\n   if (_nt->_nrn_fast_imem_sav_rhs && _nt->_nrn_fast_imem_sav_d) {\
+\n     _nt->nrn_fast_imem->nrn_sav_rhs[_nd_idx] += _rhs;\
+\n     _nt->nrn_fast_imem->nrn_sav_d[_nd_idx] -= _g;\
 \n   }";
-        }
-    }
-    else {
-        return "\0";
-    }
+		}
+	}
+	else {
+		return "\0";
+	}
 }
 
 static void rhs_d_pnt_race(const char* r, const char* d) {
