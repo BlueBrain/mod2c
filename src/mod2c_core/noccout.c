@@ -122,6 +122,26 @@ static void ext_vdef() {
 		}
 }
 
+static const char* print_fast_imem_code() {
+    if (electrode_current ) {
+        if (point_process) {
+            return "\n   if (_nt->nrn_fast_imem) {\
+\n     _nt->nrn_fast_imem->nrn_sav_rhs[_nd_idx] += _vec_shadow_rhs[_iml];\
+\n     _nt->nrn_fast_imem->nrn_sav_d[_nd_idx] -= _vec_shadow_d[_iml];\
+\n   }";
+        }
+        else {
+            return "\n   if (_nt->_nrn_fast_imem_sav_rhs && _nt->_nrn_fast_imem_sav_d) {\
+\n     _nt->nrn_fast_imem->nrn_sav_rhs[_nd_idx] += _rhs;\
+\n     _nt->nrn_fast_imem->nrn_sav_d[_nd_idx] -= _g;\
+\n   }";
+        }
+    }
+    else {
+        return "\0";
+    }
+}
+
 static void rhs_d_pnt_race(const char* r, const char* d) {
     sprintf(buf, "\
 \n\
@@ -152,8 +172,9 @@ static void rhs_d_pnt_race(const char* r, const char* d) {
 \n   int _nd_idx = _ni[_iml];\
 \n   _vec_rhs[_nd_idx] %s _vec_shadow_rhs[_iml];\
 \n   _vec_d[_nd_idx] %s _vec_shadow_d[_iml];\
+%s\
 \n#endif\
-\n", r, d,  r, d,  r, d);
+\n", r, d,  r, d,  r, d, print_fast_imem_code());
   P(buf);
 }
 
@@ -943,6 +964,7 @@ void c_out_vectorize()
 		}else{
 			P("	_vec_rhs[_nd_idx] += _rhs;\n");
 			P("	_vec_d[_nd_idx] -= _g;\n");
+			P(print_fast_imem_code());
 		}
 #endif
 	}else{
