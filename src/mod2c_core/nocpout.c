@@ -338,7 +338,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/utils/randoms/nrnran123.h\"\
 \n#include \"coreneuron/nrnoc/md1redef.h\"\
 \n#include \"coreneuron/nrnconf.h\"\
-\n#include \"coreneuron/nrnoc/membfunc.h\"\
+\n#include \"coreneuron/nrnoc/membfunc.hpp\"\
 \n#include \"coreneuron/nrnoc/multicore.h\"\
 \n#include \"coreneuron/nrniv/nrniv_decl.h\"\
 \n#include \"coreneuron/nrniv/ivocvect.h\"\
