@@ -317,8 +317,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #if NET_RECEIVE_BUFFERING
   hoc_register_net_send_buffering(_mechtype);
 #endif
- pnt_receive[_mechtype] = _net_receive;
- pnt_receive_size[_mechtype] = 1;
+ set_pnt_receive(_mechtype, _net_receive, NULL, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
 static const char *modelname = "";

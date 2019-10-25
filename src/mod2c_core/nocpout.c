@@ -1449,11 +1449,11 @@ located in a section and is not associated with an integrator\n"
 		}
 	}
 	if (net_receive_) {
-		Lappendstr(defs_list, "pnt_receive[_mechtype] = _net_receive;\n");
 		if (net_init_q1_) {
-			Lappendstr(defs_list, "pnt_receive_init[_mechtype] = _net_init;\n");
-		}
-		sprintf(buf, "pnt_receive_size[_mechtype] = %d;\n", net_receive_);
+      sprintf(buf, "set_pnt_receive(_mechtype, _net_receive, _net_init, %d);\n", net_receive_);
+		} else {
+		  sprintf(buf, "set_pnt_receive(_mechtype, _net_receive, NULL, %d);\n", net_receive_);
+    }
 		Lappendstr(defs_list, buf);
 	}
 	if (for_netcons_) {
