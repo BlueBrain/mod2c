@@ -40,6 +40,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #undef METHOD
 #include "parse1.h"
+#include "portability.h"
 
 static int isend();
 static void pop_file_stack();
