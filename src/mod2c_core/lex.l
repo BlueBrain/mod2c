@@ -20,6 +20,7 @@
 
 #include "modl.h"
 #include "parse1.h"
+#include "portability.h"
 
 int lexcontext = 0;
 extern int Getc();
@@ -30,6 +31,10 @@ extern int unput();
 %}
 D	[0-9]
 E	[Ee][-+]?{D}+
+
+/* avoid unistd.h include which will define mkdir */
+%option nounistd
+
 %%
 [a-zA-Z][a-zA-Z0-9_]*'+ { /*PRIME possibly high order*/
 	char *cp, buf[100];
@@ -37,9 +42,6 @@ E	[Ee][-+]?{D}+
 	Symbol *base;
 
 	/* count the primes  and create SCoP name*/
-#if __TURBOC__ || SYSV || VMS || defined(MINGW)
-#define index strchr
-#endif
 	cp = index(yytext, '\'');
 	i = strlen(yytext) - (cp - yytext);
 	*cp = '\0';

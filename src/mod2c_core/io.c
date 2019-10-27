@@ -40,6 +40,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 #undef METHOD
 #include "parse1.h"
+#include "portability.h"
 
 static int isend();
 static void pop_file_stack();
@@ -50,9 +51,6 @@ char *inputline()
 {
 	/* and removes comment, newline, beginning and trailing blanks */
 	/* used to get the TITLE line */
-#if __TURBOC__ || SYSV || VMS || defined(MINGW)
-#define index strchr
-#endif
 	char            *cp;
 	int             i;
 

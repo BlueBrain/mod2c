@@ -52,6 +52,10 @@ include(CTest)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
+if(MINGW)
+  add_definitions("-DMINGW")
+endif()
+
 add_subdirectory(src/mod2c_core)
 add_subdirectory(test/validation)
 
