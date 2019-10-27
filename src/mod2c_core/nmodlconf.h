@@ -379,10 +379,5 @@
 #define CYGWIN
 #endif
 
-#if defined(carbon) && defined(__cplusplus)
-#define MAC 1
-#include <Carbon/Carbon.h>
-#endif
-
 #endif /* H_nrnconf_included */
 

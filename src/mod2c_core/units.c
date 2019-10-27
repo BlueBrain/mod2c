@@ -35,13 +35,6 @@ THE POSSIBILITY OF SUCH DAMAGE.
 #include	"units.h"
 #include	<assert.h>
 
-#if defined(CYGWIN)
-#include "../mswin/extra/d2upath.c"
-#endif
-#if defined(WIN32)
-#include <windows.h>
-#endif
-
 int	unitonflag = 1;
 static int	UnitsOn = 0;
 extern double	fabs();
@@ -147,28 +140,6 @@ static int Getc(inp)
 #define UNIT_STK_SIZE	20
 static struct unit unit_stack[UNIT_STK_SIZE], *usp;
 
-static char* neuronhome() {
-#if defined(WIN32)
-	int i;
-	static char buf[256];
-	GetModuleFileName(NULL, buf, 256);
-	for (i=strlen(buf); i >= 0 && buf[i] != '\\'; --i) {;}
-	buf[i] = '\0'; // /neuron.exe gone
-	//      printf("setneuronhome |%s|\n", buf);
-	for (i=strlen(buf); i >= 0 && buf[i] != '\\'; --i) {;}
-	buf[i] = '\0'; // /bin gone
-#if defined(CYGWIN)
-	{
-	char* u = hoc_dos2unixpath(buf);
-	strcpy(buf, hoc_dos2unixpath(u));
-	free(u);
-	}
-#endif
-	return buf;
-#else
-	return getenv("NEURONHOME");
-#endif
-}
 
 void unit_pop() {
 	IFUNITS
@@ -537,15 +508,6 @@ void unit_init() {
 	if (s) {
 		if ((inpfile = fopen(s, "r")) == (FILE *)0) {
 diag("Bad MODLUNIT environment variable. Cant open:", s);
-		}
-	}
-	if (!inpfile && (inpfile = fopen(dfile, "r")) == (FILE *)0) {
-		if ((inpfile = fopen(dfilealt, "r")) == (FILE *)0) {
-			s = neuronhome();
-			if (s) {
-				sprintf(buf, "%s/lib/nrnunits.lib", s);
-				inpfile = fopen(buf, "r");
-			}
 		}
 	}
 	if (!inpfile) {

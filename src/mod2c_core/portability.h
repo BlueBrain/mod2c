@@ -1,7 +1,7 @@
 #ifndef mod2c_portability_h
 #define mod2c_portability_h
 
-#if (defined(_WIN32) || defined(__WIN32__))
+#ifdef MINGW
 // mkdir doesn't accept permission parameter on mingw
 #define mkdir(directory, permission) mkdir(directory)
 

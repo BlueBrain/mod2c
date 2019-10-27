@@ -51,9 +51,6 @@ char *inputline()
 {
 	/* and removes comment, newline, beginning and trailing blanks */
 	/* used to get the TITLE line */
-#if __TURBOC__ || SYSV || VMS || defined(MINGW)
-#define index strchr
-#endif
 	char            *cp;
 	int             i;
 
