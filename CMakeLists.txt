@@ -45,8 +45,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake
 
 include(DefineInstallationPaths)
 include(ReleaseDebugAutoFlags)
-
-include(FindPkgConfig)
 include(CTest)
 
 find_package(BISON REQUIRED)
