@@ -338,7 +338,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/utils/randoms/nrnran123.h\"\
 \n#include \"coreneuron/nrnoc/md1redef.h\"\
 \n#include \"coreneuron/nrnconf.h\"\
-\n#include \"coreneuron/nrnoc/membfunc.h\"\
+\n#include \"coreneuron/nrnoc/membfunc.hpp\"\
 \n#include \"coreneuron/nrnoc/multicore.h\"\
 \n#include \"coreneuron/nrniv/nrniv_decl.h\"\
 \n#include \"coreneuron/nrniv/ivocvect.h\"\
@@ -1448,14 +1448,14 @@ located in a section and is not associated with an integrator\n"
 \n");
 		}
 	}
-	if (net_receive_) {
-		Lappendstr(defs_list, "pnt_receive[_mechtype] = _net_receive;\n");
-		if (net_init_q1_) {
-			Lappendstr(defs_list, "pnt_receive_init[_mechtype] = _net_init;\n");
-		}
-		sprintf(buf, "pnt_receive_size[_mechtype] = %d;\n", net_receive_);
-		Lappendstr(defs_list, buf);
-	}
+    if (net_receive_) {
+        if (net_init_q1_) {
+            sprintf(buf, "set_pnt_receive(_mechtype, _net_receive, _net_init, %d);\n", net_receive_);
+        } else {
+            sprintf(buf, "set_pnt_receive(_mechtype, _net_receive, nullptr, %d);\n", net_receive_);
+        }
+        Lappendstr(defs_list, buf);
+    }
 	if (for_netcons_) {
 		sprintf(buf, "add_nrn_fornetcons(_mechtype, _fnc_index);\n");
 		Lappendstr(defs_list, buf);

@@ -9,7 +9,7 @@
 #include "coreneuron/utils/randoms/nrnran123.h"
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
-#include "coreneuron/nrnoc/membfunc.h"
+#include "coreneuron/nrnoc/membfunc.hpp"
 #include "coreneuron/nrnoc/multicore.h"
 #include "coreneuron/nrniv/nrniv_decl.h"
 #include "coreneuron/nrniv/ivocvect.h"
@@ -350,8 +350,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #if NET_RECEIVE_BUFFERING
   hoc_register_net_receive_buffering(_net_buf_receive, _mechtype);
 #endif
- pnt_receive[_mechtype] = _net_receive;
- pnt_receive_size[_mechtype] = 1;
+ set_pnt_receive(_mechtype, _net_receive, nullptr, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
 static int _reset;
