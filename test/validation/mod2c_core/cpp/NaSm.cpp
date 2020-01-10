@@ -1,23 +1,22 @@
 /* Created by Language version: 6.2.0 */
 /* VECTORIZED */
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
 #undef PI
  
 #include "coreneuron/utils/randoms/nrnran123.h"
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
-#include "coreneuron/nrnoc/membfunc.hpp"
-#include "coreneuron/nrnoc/multicore.h"
+#include "coreneuron/sim/multicore.h"
 #include "coreneuron/nrniv/nrniv_decl.h"
-#include "coreneuron/nrniv/ivocvect.h"
-#include "coreneuron/nrniv/nrn_acc_manager.h"
-#include "coreneuron/mech/cfile/scoplib.h"
+#include "coreneuron/utils/ivocvect.h"
+#include "coreneuron/gpu/nrn_acc_manager.h"
+#include "coreneuron/mechanism/mech/cfile/scoplib.h"
 
-#include "coreneuron/scopmath_core/newton_struct.h"
+#include "coreneuron/sim/scopmath/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
-#include "coreneuron/nrnoc/register_mech.hpp"
+#include "coreneuron/mechanism/register_mech.hpp"
 #include "_kinderiv.h"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
