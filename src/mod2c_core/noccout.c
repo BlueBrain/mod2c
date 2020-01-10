@@ -211,7 +211,7 @@ void c_out()
 	P("#include \"common.h\"\n#include \"softbus.h\"\n");
 	P("#include \"sbtypes.h\"\n#include \"Solver.h\"\n");
 #else
-	P("#include <cstdio>\n#include <cstdlib>\n#include <cmath>\n#include \"coreneuron/mech/cfile/scoplib.h\"\n");
+	P("#include <cstdio>\n#include <cstdlib>\n#include <cmath>\n#include \"coreneuron/mechanism/mech/cfile/scoplib.h\"\n");
 	P("#undef PI\n");
 #endif
 	printlist(defs_list);

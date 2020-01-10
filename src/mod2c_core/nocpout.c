@@ -342,10 +342,10 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/nrniv/nrniv_decl.h\"\
 \n#include \"coreneuron/utils/ivocvect.h\"\
 \n#include \"coreneuron/gpu/nrn_acc_manager.h\"\
-\n#include \"coreneuron/mech/cfile/scoplib.h\"\n\
+\n#include \"coreneuron/mechanism/mech/cfile/scoplib.h\"\n\
 \n#include \"coreneuron/sim/scopmath/newton_struct.h\"\
 \n#include \"coreneuron/nrnoc/md2redef.h\"\
-\n#include \"coreneuron/mech/register_mech.hpp\"\
+\n#include \"coreneuron/mechanism/mech/register_mech.hpp\"\
 \n#include \"_kinderiv.h\"\
 \n#if !NRNGPU\
 \n#if !defined(DISABLE_HOC_EXP)\
@@ -371,6 +371,9 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 		extra_pragma_loop_arg = lappendstr(defs_list, "\
 \n#if defined(_OPENACC) && !defined(DISABLE_OPENACC)\
 \n#include <openacc.h>\
+\n#if defined(__PGI)\
+\n#include \"accelmath.h\"\
+\n#endif\
 \n#if defined(PG_ACC_BUGS)\
 \n#define _PRAGMA_FOR_INIT_ACC_LOOP_ _Pragma(\"acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], nrn_ion_global_map[0:nrn_ion_global_map_size][0:3], _nt[0:1] _thread_present_) if(_nt->compute_gpu)\")\
 \n#else\
