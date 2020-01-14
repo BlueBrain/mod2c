@@ -8,10 +8,10 @@
 #include "coreneuron/utils/randoms/nrnran123.h"
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
-#include "coreneuron/sim/multicore.h"
+#include "coreneuron/sim/multicore.hpp"
 #include "coreneuron/nrniv/nrniv_decl.h"
-#include "coreneuron/utils/ivocvect.h"
-#include "coreneuron/gpu/nrn_acc_manager.h"
+#include "coreneuron/utils/ivocvect.hpp"
+#include "coreneuron/gpu/nrn_acc_manager.hpp"
 #include "coreneuron/mechanism/mech/cfile/scoplib.h"
 
 #include "coreneuron/sim/scopmath/newton_struct.h"
