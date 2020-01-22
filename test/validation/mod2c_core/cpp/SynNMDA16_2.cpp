@@ -1,8 +1,8 @@
 /* Created by Language version: 6.2.0 */
 /* VECTORIZED */
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 #undef PI
  
 #include "coreneuron/utils/randoms/nrnran123.h"
