@@ -101,7 +101,11 @@ static void openfiles(char* given_filename, char* output_dir) {
         exit(1);
       }
       char* basename = strrchr(modprefix,'/');
-      Sprintf(output_filename, "%s%s.cpp", output_dir, basename);
+      if (basename) {
+        Sprintf(output_filename, "%s%s.cpp", output_dir, basename);
+      } else {
+        Sprintf(output_filename, "%s%s.cpp", output_dir, modprefix);
+      }
   }
   else
     Sprintf(output_filename, "%s.cpp", modprefix);
