@@ -3226,7 +3226,14 @@ insertstr(qend, "\
 		Symbol* ions[10]; int j, nion=0;
 		/* v can be changed in the NET_RECEIVE block since it is
 		   called between integrator steps and before a re_init
-		   But no need to do so if it is not used.
+		   but no need to do so if it is not used.
+		   Note the subtle problem that results from not mentioning v
+		   in the NET_RECEIVE block but calling a function that uses it.
+		   That is highly unlikely to occur but should we insert the
+		   statements no matter what? Rather than that it would
+		   probably be better to revert to standard mod2c (nocmodl)
+		   _threadargs_ style that requires
+		   an explicit v arg by the user to a function.
 		*/
 		Symbol* vsym = lookup("v");
 		for (q = qstmt; q != qend; q = q->next) {
@@ -3287,16 +3294,28 @@ diag("too many ions mentioned in NET_RECEIVE block (limit 10", (char*)0);
 void net_init(qinit, qp2)
 	Item* qinit, *qp2;
 {
+	Item* q_before_boilerplate;
+	Item* q_after_boilerplate;
 	/* qinit=INITIAL { stmtlist qp2=} */
 	replacstr(qinit, "\nvoid _net_init(Point_process* _pnt, int _weight_index, double _lflag)");
 	vectorize_substitute(insertstr(qinit->next->next, ""), "\n\
-   double* _p; Datum* _ppvar; ThreadDatum* _thread; \n\
+   double* _p; Datum* _ppvar; ThreadDatum* _thread; double v;\n\
    Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
 ");
-	vectorize_substitute(insertstr(qinit->next->next->next, ""), net_boilerplate(0));
+	q_after_boilerplate = insertstr(qinit->next->next->next, "");
+	q_before_boilerplate = insertstr(q_after_boilerplate, "");
+	vectorize_substitute(insertstr(q_before_boilerplate, ""), net_boilerplate(0));
 	if (net_init_q1_) {
 		diag("NET_RECEIVE block can contain only one INITIAL block", (char*)0);
 	}
+	if (!artificial_cell) {
+		/* Do not expect to use v, but all function calls need it
+		   due to _threadargs_.  Can use the value of v but changing
+		   v will not take effect on return
+		*/
+		insertstr(q_after_boilerplate, " v = VEC_V(_ml->_nodeindices[_iml]);\n");
+	}
+	
 	net_init_q1_ = qinit;
 	net_init_q2_ = qp2;
 }
