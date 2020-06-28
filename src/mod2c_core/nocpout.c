@@ -392,9 +392,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma(\"\")\
 \n#endif\
 \n \
-\n#if defined(__clang__)\
-\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"clang loop vectorize(enable)\")\
-\n#elif defined(__ICC) || defined(__INTEL_COMPILER)\
+\n#if defined(__ICC) || defined(__INTEL_COMPILER)\
 \n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"ivdep\")\
 \n#elif defined(__IBMC__) || defined(__IBMCPP__)\
 \n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"ibm independent_loop\")\
@@ -402,6 +400,8 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"vector\")\
 \n#elif defined(_CRAYC)\
 \n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"_CRI ivdep\")\
+\n#elif defined(__clang__)\
+\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"clang loop vectorize(enable)\")\
 \n#elif defined(__GNUC__) || defined(__GNUG__)\
 \n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"GCC ivdep\")\
 \n#else\
