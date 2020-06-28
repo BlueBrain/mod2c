@@ -31,6 +31,9 @@
  
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include <openacc.h>
+#if defined(__PGI)
+#include "accelmath.h"
+#endif
 #if defined(PG_ACC_BUGS)
 #define _PRAGMA_FOR_INIT_ACC_LOOP_ _Pragma("acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], nrn_ion_global_map[0:nrn_ion_global_map_size][0:3], _nt[0:1] _thread_present_) if(_nt->compute_gpu)")
 #else
@@ -48,9 +51,7 @@
 #define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma("")
 #endif
  
-#if defined(__clang__)
-#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("clang loop vectorize(enable)")
-#elif defined(__ICC) || defined(__INTEL_COMPILER)
+#if defined(__ICC) || defined(__INTEL_COMPILER)
 #define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("ivdep")
 #elif defined(__IBMC__) || defined(__IBMCPP__)
 #define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("ibm independent_loop")
@@ -58,6 +59,8 @@
 #define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("vector")
 #elif defined(_CRAYC)
 #define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("_CRI ivdep")
+#elif defined(__clang__)
+#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("clang loop vectorize(enable)")
 #elif defined(__GNUC__) || defined(__GNUG__)
 #define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("GCC ivdep")
 #else
