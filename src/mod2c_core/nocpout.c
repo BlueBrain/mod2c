@@ -3110,6 +3110,9 @@ static void emit_nrn_watch_check_code() {
 "  for (;;) { /* help clang-format properly indent */\n"
 "  #endif\n"
 "    v = _vec_v[_ni[_iml]];\n"
+"#if NRN_PRCELLSTATE\n"
+"    _v_unused = v;\n"
+"#endif\n"
 );
 
 	iw = 0; /* 0 unused Datum but for consistent size with NEURON... */
