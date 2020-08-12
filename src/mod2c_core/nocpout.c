@@ -3333,14 +3333,17 @@ void fornetcon(keyword, par1, args, par2, stmt, qend)
 	/* follows net_receive pretty closely */
 	++for_netcons_;
 	deltokens(par1, par2);
-	i = for_netcons_;
-	sprintf(buf, "{int _ifn%d, _nfn%d; double* _fnargs%d, **_fnargslist%d;\n\
-\t_nfn%d = _nrn_netcon_args(_ppvar[_fnc_index]._pvoid, &_fnargslist%d);\n\
-\tfor (_ifn%d = 0; _ifn%d < _nfn%d; ++_ifn%d) {\n",
-	i,i,i,i,i,i,i,i,i,i);
+	sprintf(buf,
+"\t{size_t _ix, _ifn, _ifn_begin, _ifn_end; double* _fnargs%d;\n"
+"\t  _ix = size_t(_ppvar[_fnc_index*_STRIDE]);\n"
+"\t  _ifn_begin = _nt->_fornetcon_perm_indices[_ix];\n"
+"\t  _ifn_end = _nt->_fornetcon_perm_indices[_ix + 1];\n"
+"\t  std::vector<size_t>&_fnargs_order = _nt->_fornetcon_weight_perm;\n"
+"\t  for (_ifn = _ifn_begin; _ifn < _ifn_end; ++_ifn) {\n"
+"\t    _fnargs%d = _weights + _fnargs_order[_ifn];\n",
+ 	for_netcons_, for_netcons_);
+     
 	replacstr(keyword, buf);
-	sprintf(buf, "\t _fnargs%d = _fnargslist%d[_ifn%d];\n", i,i,i);
-	insertstr(keyword->next, buf);
 	insertstr(qend->next, "\t}}\n");
 	i = 0;
 	ITERATE(q1, args) {
