@@ -3341,7 +3341,7 @@ void fornetcon(keyword, par1, args, par2, stmt, qend)
 "\t  std::vector<size_t>&_fnargs_order = _nt->_fornetcon_weight_perm;\n"
 "\t  for (_ifn = _ifn_begin; _ifn < _ifn_end; ++_ifn) {\n"
 "\t    _fnargs%d = _weights + _fnargs_order[_ifn];\n",
- 	for_netcons_);
+ 	for_netcons_, for_netcons_);
      
 	replacstr(keyword, buf);
 	insertstr(qend->next, "\t}}\n");
