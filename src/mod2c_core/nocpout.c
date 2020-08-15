@@ -3202,7 +3202,7 @@ void net_receive(qblk, qarg, qp1, qp2, qstmt, qend)
 	q = insertstr(qstmt, "\n{");
 	net_receive_block_open_brace_ = q;
 	vectorize_substitute(q, "\n\
-{  double* _p; Datum* _ppvar; ThreadDatum* _thread; double v;\n\
+{  double* _p; Datum* _ppvar; ThreadDatum* _thread; double v = 0;\n\
    Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
 ");
 
@@ -3302,7 +3302,7 @@ void net_init(qinit, qp2)
 	/* qinit=INITIAL { stmtlist qp2=} */
 	replacstr(qinit, "\nvoid _net_init(Point_process* _pnt, int _weight_index, double _lflag)");
 	vectorize_substitute(insertstr(qinit->next->next, ""), "\n\
-   double* _p; Datum* _ppvar; ThreadDatum* _thread; double v;\n\
+   double* _p; Datum* _ppvar; ThreadDatum* _thread; double v = 0;\n\
    Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;\n\
 ");
 	q_after_boilerplate = insertstr(qinit->next->next->next, "");
