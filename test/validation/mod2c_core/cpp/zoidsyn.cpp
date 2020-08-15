@@ -417,7 +417,7 @@ static void _net_receive_kernel(double _nrb_t, Point_process* _pnt, int _weight_
 void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) 
 #endif
  
-{  double* _p; Datum* _ppvar; ThreadDatum* _thread; double v;
+{  double* _p; Datum* _ppvar; ThreadDatum* _thread; double v = 0;
    Memb_list* _ml; int _cntml_padded, _cntml_actual; int _iml; double* _args;
  
    NrnThread* _nt;
