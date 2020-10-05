@@ -950,6 +950,12 @@ static void _net_send_buffering(NetSendBuffer_t* _nsb, int _sendtype, int _i_vda
   #pragma acc atomic capture
   _i = _nsb->_cnt++;
   if (_i >= _nsb->_size) {
+#if defined(_OPENACC)
+    int NetSendBuffer_t_not_large_enough = 0;
+    assert(NetSendBuffer_t_not_large_enough);
+#else
+    _nsb->grow();
+#endif
   }
   _nsb->_sendtype[_i] = _sendtype;
   _nsb->_vdata_index[_i] = _i_vdata;

@@ -3040,6 +3040,12 @@ sprintf(buf, "\
 \n  #pragma acc atomic capture\
 \n  _i = _nsb->_cnt++;\
 \n  if (_i >= _nsb->_size) {\
+\n#if defined(_OPENACC)\
+\n    int NetSendBuffer_t_not_large_enough = 0;\
+\n    assert(NetSendBuffer_t_not_large_enough);\
+\n#else\
+\n    _nsb->grow();\
+\n#endif\
 \n  }\
 \n  _nsb->_sendtype[_i] = _sendtype;\
 \n  _nsb->_vdata_index[_i] = _i_vdata;\
