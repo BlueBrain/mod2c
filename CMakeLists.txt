@@ -25,17 +25,14 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 
-cmake_minimum_required(VERSION 2.8.9)
+cmake_minimum_required(VERSION 3.7)
 set(CMAKE_BUILD_TYPE Release)
 
-project(mod2c)
+project(mod2c VERSION 2.1.0)
 
 set(MOD2C_DESCRIPTION "MOD2C converter")
 
-set(VERSION_MAJOR 2)
-set(VERSION_MINOR 1)
-set(VERSION_PATCH 0)
-set(VERSION_STRING "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+set(VERSION_STRING "${PROJECT_VERSION}")
 
 option(UNIT_TESTS "Enable unit tests compilation and execution" FALSE)
 option(FUNCTIONAL_TESTS "Enable functional tests compilation and execution" FALSE)
