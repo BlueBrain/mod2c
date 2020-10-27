@@ -57,4 +57,5 @@ endif()
 add_subdirectory(src/mod2c_core)
 add_subdirectory(test/validation)
 
+configure_file(share/nrnunits.lib ${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib COPYONLY)
 install(FILES share/nrnunits.lib DESTINATION share)
