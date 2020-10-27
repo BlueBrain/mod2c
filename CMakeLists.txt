@@ -58,4 +58,5 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     add_subdirectory(test/validation)
 endif()
 
+configure_file(share/nrnunits.lib ${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib COPYONLY)
 install(FILES share/nrnunits.lib DESTINATION share)
