@@ -42,7 +42,6 @@ list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake
 
 include(DefineInstallationPaths)
 include(ReleaseDebugAutoFlags)
-include(CTest)
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
@@ -52,6 +51,11 @@ if(MINGW)
 endif()
 
 add_subdirectory(src/mod2c_core)
-add_subdirectory(test/validation)
+
+# Disable tests if we are a sub project
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    include(CTest)
+    add_subdirectory(test/validation)
+endif()
 
 install(FILES share/nrnunits.lib DESTINATION share)
