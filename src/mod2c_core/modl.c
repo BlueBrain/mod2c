@@ -87,8 +87,10 @@ static void openfiles(char* given_filename, char* output_dir) {
   modprefix = strdup (given_filename);                      // we want to keep original string to open input file
   char* first_ext_char = strrchr(modprefix, '.');           // find last '.' that delimit file name from extension
 
+  Sprintf(input_filename, "%s", given_filename);
+
   if(first_ext_char) *first_ext_char = '\0';                // effectively cut the extension from prefix if it exist in given_filename
-  if ((fin = fopen(given_filename, "r")) == (FILE *) 0) {   // first try to open given_filename
+  if ((fin = fopen(input_filename, "r")) == (FILE *) 0) {   // first try to open given_filename
     Sprintf(input_filename, "%s.mod", given_filename);      // if it dont work try to add ".mod" extension and retry
     Sprintf(finname, "%s.mod", given_filename);             // finname is still a global variable, so we need to update it
     if ((fin = fopen(input_filename, "r")) == (FILE *) 0) {
@@ -111,7 +113,7 @@ static void openfiles(char* given_filename, char* output_dir) {
     Sprintf(output_filename, "%s.cpp", modprefix);
 
   if ((fcout = fopen(output_filename, "w")) == (FILE *) 0) {
-  diag("Can't create C file: ", output_filename);
+    diag("Can't create C file: ", output_filename);
   }
   Fprintf(stderr, "Translating %s into %s\n", input_filename, output_filename);
 }
