@@ -36,6 +36,7 @@ set(VERSION_STRING "${PROJECT_VERSION}")
 
 option(UNIT_TESTS "Enable unit tests compilation and execution" FALSE)
 option(FUNCTIONAL_TESTS "Enable functional tests compilation and execution" FALSE)
+option(MOD2C_ENABLE_LEGACY_UNITS "Enable old definition for units" OFF)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake
       ${PROJECT_SOURCE_DIR}/CMake/config)
@@ -58,5 +59,13 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     add_subdirectory(test/validation)
 endif()
 
-configure_file(share/nrnunits.lib ${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib COPYONLY)
-install(FILES share/nrnunits.lib DESTINATION share)
+if (MOD2C_ENABLE_LEGACY_UNITS)
+  set(LegacyY "")
+  set(LegacyN "/")
+else()
+  set(LegacyY "/")
+  set(LegacyN "")
+endif()
+
+configure_file(share/nrnunits.lib.in ${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib @ONLY)
+install(FILES share/mod2c/nrnunits.lib DESTINATION share)

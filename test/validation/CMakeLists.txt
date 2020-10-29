@@ -37,7 +37,7 @@ configure_file("test_mod2c.in" ${CMAKE_CURRENT_BINARY_DIR}/test_mod2c @ONLY)
 set(MOD2CFILTER "perl ${CMAKE_CURRENT_SOURCE_DIR}/filter_mod2c_output.pl -DNRNBBCORE=1")
 configure_file("test_mod2c.in" ${CMAKE_CURRENT_BINARY_DIR}/test_mod2c_core @ONLY)
 
-set(TEST_ENVIRONMENT "MODLUNIT=${CMAKE_SOURCE_DIR}/share/nrnunits.lib")
+set(TEST_ENVIRONMENT "MODLUNIT=${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib")
 
 foreach(mod2c "mod2c_core")
     set(test_data "${CMAKE_CURRENT_SOURCE_DIR}/${mod2c}")
