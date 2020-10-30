@@ -68,4 +68,4 @@ else()
 endif()
 
 configure_file(share/nrnunits.lib.in ${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib @ONLY)
-install(FILES share/mod2c/nrnunits.lib DESTINATION share)
+install(FILES ${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib DESTINATION share/mod2c)
