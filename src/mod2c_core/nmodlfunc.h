@@ -139,3 +139,4 @@ void poplocal();
 void conductance_hint(int blocktype, Item* q1, Item* q2);
 void possible_local_current(int blocktype, List* symlist);
 Symbol* breakpoint_current(Symbol* s);
+void nrnunit_dynamic_str(char* buf, const char* name, char* unit1, char* unit2);

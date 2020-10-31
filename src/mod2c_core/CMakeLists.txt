@@ -45,7 +45,14 @@ bison_target(parse1 parse1.y ${CMAKE_CURRENT_BINARY_DIR}/parse1.c)
 flex_target(lex lex.l ${CMAKE_CURRENT_BINARY_DIR}/lex.c)
 add_flex_bison_dependency(lex parse1)
 
-add_definitions(-DNMODL=1 -DBBCORE=1 -DNOCMODL=1 -DCVODE=1 -DVECTORIZE=1)
+if(MOD2C_ENABLE_LEGACY_UNITS)
+    set(USE_LEGACY_UNITS 1)
+else()
+    set(USE_LEGACY_UNITS 0)
+endif()
+
+add_definitions(-DNMODL=1 -DBBCORE=1 -DNOCMODL=1 -DCVODE=1 -DVECTORIZE=1
+    -DUSE_LEGACY_UNITS=${USE_LEGACY_UNITS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(mod2c_core

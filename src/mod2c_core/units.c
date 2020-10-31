@@ -961,3 +961,24 @@ static void fperr(sig) int sig;
 	signal(8, fperr);
 	fperrc++;
 }
+
+void nrnunit_dynamic_str(char* buf, const char* name, char* u1, char* u2) {
+  double u;
+  Unit_push(u1);
+  Unit_push(u2);
+  unit_div();
+  u = unit_mag();
+  unit_pop;
+
+#ifndef USE_LEGACY_UNITS
+#define USE_LEGACY_UNITS 0
+#endif
+#if USE_LEGACY_UNITS
+  sprintf(buf, "\ndouble %s = %g;\n", name, u);
+#else
+  /* compiler can't read %a format til c++17 (or c99) */
+  sprintf(buf, "\ndouble %s = /* %a; */ %.18g;\n", name, u, u);
+#endif
+}
+
+
