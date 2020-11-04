@@ -34,6 +34,10 @@ set(MOD2C_DESCRIPTION "MOD2C converter")
 
 set(VERSION_STRING "${PROJECT_VERSION}")
 
+# put mod2c_core in <build>/bin of the project of which
+# this is a subproject
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 option(UNIT_TESTS "Enable unit tests compilation and execution" FALSE)
 option(FUNCTIONAL_TESTS "Enable functional tests compilation and execution" FALSE)
 option(MOD2C_ENABLE_LEGACY_UNITS "Enable old definition for units" OFF)
@@ -68,4 +72,4 @@ else()
 endif()
 
 configure_file(share/nrnunits.lib.in ${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib @ONLY)
-install(FILES share/mod2c/nrnunits.lib DESTINATION share)
+install(FILES ${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib DESTINATION share/mod2c)
