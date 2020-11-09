@@ -71,5 +71,5 @@ else()
   set(LegacyN "")
 endif()
 
-configure_file(share/nrnunits.lib.in ${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib @ONLY)
-install(FILES ${CMAKE_BINARY_DIR}/share/mod2c/nrnunits.lib DESTINATION share/mod2c)
+configure_file(share/nrnunits.lib.in ${CMAKE_CURRENT_BINARY_DIR}/share/mod2c/nrnunits.lib @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/share/mod2c/nrnunits.lib DESTINATION share/mod2c)
