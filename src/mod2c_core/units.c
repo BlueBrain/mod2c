@@ -612,7 +612,7 @@ struct unit *up;
 	return buf;
 }
 
-static int pu(u, i, f)
+static int pu(int u, int i, int f)
 {
 
 	if(u > 0) {

@@ -1063,7 +1063,7 @@ static const char *_mechanism[] = {\n\
 	/*********Creation of the allocation function*/
 
 	if (diamdec) {
-		Lappendstr(defs_list, "static Symbol* _morphology_sym;\n");
+		Lappendstr(defs_list, "static char* _morphology_sym;\n");
 	}
 #if !BBCORE
 	if (areadec) {
@@ -1204,7 +1204,7 @@ static void _constructor(Prop* _prop) {\n\
 #if CVODE
 	if (cvode_emit) {
 		Lappendstr(defs_list, " /* some states have an absolute tolerance */\n");
-		Lappendstr(defs_list, "static Symbol** _atollist;\n");
+		Lappendstr(defs_list, "static char** _atollist;\n");
 		Lappendstr(defs_list, "static HocStateTolerance _hoc_state_tol[] = {\n");
 		ITERATE(q, rangestate) {
 			double d1;
