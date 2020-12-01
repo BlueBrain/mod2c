@@ -60,5 +60,11 @@ add_executable(mod2c_core
     ${BISON_diffeq_OUTPUTS} ${BISON_parse1_OUTPUTS}
     ${FLEX_lex_OUTPUTS})
 
+# as mod2c is typically executed on front-end node, in order to avoid runtime
+# issues from platform specific optimisations, build mod2c with debug flags
+# as performance is not a concern (for translating mod files to cpp)
+separate_arguments(NMODL_C_FLAGS UNIX_COMMAND "${CMAKE_C_FLAGS_DEBUG}")
+target_compile_options(mod2c_core PRIVATE ${NMODL_C_FLAGS})
+
 install(TARGETS mod2c_core DESTINATION bin)
 
