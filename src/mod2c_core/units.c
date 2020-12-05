@@ -35,6 +35,10 @@ THE POSSIBILITY OF SUCH DAMAGE.
 #include	"units.h"
 #include	<assert.h>
 
+#ifndef USE_LEGACY_UNITS
+#define USE_LEGACY_UNITS 0
+#endif
+
 int	unitonflag = 1;
 static int	UnitsOn = 0;
 extern double	fabs();
@@ -612,7 +616,7 @@ struct unit *up;
 	return buf;
 }
 
-static int pu(u, i, f)
+static int pu(int u, int i, int f)
 {
 
 	if(u > 0) {
@@ -686,10 +690,7 @@ loop:
 	goto loop;
 }
 
-static int lookup(name, up, den, c)
-char *name;
-struct unit *up;
-{
+static int lookup(char* name, struct unit* up, int den, int c) {
 	register struct unit *p;
 	register struct table *q;
 	register int i;
@@ -851,6 +852,55 @@ redef:
 	goto l0;
 }
 
+#if USE_LEGACY_UNITS == 0
+/*
+  Convert str to double using atof.
+  Allows consistency with BlueBrain/nmodl
+*/
+
+static double getflt() {
+	int c;
+	char str[100];
+	char* cp;
+	double d_modern;
+
+	cp = str;
+	do
+		c = get();
+	while(c == ' ' || c == '\t');
+
+l1:
+	if(c >= '0' && c <= '9') {
+		*cp++ = c;
+		c = get();
+		goto l1;
+	}
+	if(c == '.') {
+		*cp++ = c;
+		c = get();
+		goto l1;
+	}
+	if(c == '+' || c == '-') {
+		*cp++ = 'e';
+		*cp++ = c;
+		c = get();
+		while(c >= '0' && c <= '9') {
+			*cp++ = c;
+			c = get();
+		}
+	}
+	*cp = '\0';
+	d_modern = atof(str);
+	if(c == '|') {
+		d_modern /= getflt();
+		return d_modern;
+	}
+	peekc = c;
+	return(d_modern);
+}
+
+#else /* USE_LEGACY_UNITS == 1 */
+
 static double
 getflt()
 {
@@ -907,6 +957,8 @@ l1:
 	peekc = c;
 	return(d);
 }
+
+#endif /* USE_LEGACY_UNITS == 1 */
 
 static int get()
 {
@@ -970,9 +1022,6 @@ void nrnunit_dynamic_str(char* buf, const char* name, char* u1, char* u2) {
   u = unit_mag();
   unit_pop;
 
-#ifndef USE_LEGACY_UNITS
-#define USE_LEGACY_UNITS 0
-#endif
 #if USE_LEGACY_UNITS
   sprintf(buf, "\ndouble %s = %g;\n", name, u);
 #else
