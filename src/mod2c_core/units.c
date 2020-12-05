@@ -616,7 +616,7 @@ struct unit *up;
 	return buf;
 }
 
-static int pu(u, i, f)
+static int pu(int u, int i, int f)
 {
 
 	if(u > 0) {
@@ -690,10 +690,7 @@ loop:
 	goto loop;
 }
 
-static int lookup(name, up, den, c)
-char *name;
-struct unit *up;
-{
+static int lookup(char* name, struct unit* up, int den, int c) {
 	register struct unit *p;
 	register struct table *q;
 	register int i;
@@ -856,7 +853,10 @@ redef:
 }
 
 #if USE_LEGACY_UNITS == 0
-/* convert str to double using atof. */
+/*
+  Convert str to double using atof.
+  Allows consistency with BlueBrain/nmodl
+*/
 
 static double getflt() {
 	int c;
