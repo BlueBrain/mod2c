@@ -25,6 +25,8 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 */
+#include <stdlib.h>
+
 #include "nmodlconf.h"
 
 /* print the .c file from the lists */
@@ -35,6 +37,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 #define CACHEVEC 1
 
 extern char* nmodl_version_;
+extern char* finname;
 
 #define P(arg) fputs(arg, fcout)
 List           *procfunc, *initfunc, *modelfunc, *termfunc, *initlist, *firstlist;
@@ -202,6 +205,9 @@ void c_out()
 	}
 #endif
 #if VECTORIZE
+    fprintf(stderr, "Error : %s is not thread safe and incompatible with CoreNEURON\n"
+                    "See details at https://neuron.yale.edu/neuron/docs/multithread-parallelization", finname);
+    abort();
 	P("/* NOT VECTORIZED */\n");
 #endif
 	Fflush(fcout);
