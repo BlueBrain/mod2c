@@ -5,7 +5,7 @@ NEURON {
 	SUFFIX nap
 	USEION na READ ena WRITE ina
 	RANGE  gbar, timestauh, timestaum, shifttaum, shifttauh, thegna
-	GLOBAL minf, mtau 
+	RANGE minf, mtau
 	:, hinf, mtau, htau
 }
 

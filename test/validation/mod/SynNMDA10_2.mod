@@ -58,6 +58,7 @@ NEURON {
 	RANGE T_max, T, tau, tRel, Erev, synon
 	GLOBAL mg, Rb, Ru, Rd, Rr, Ro, Rc
 	NONSPECIFIC_CURRENT i
+    THREADSAFE
 }
 
 UNITS {
