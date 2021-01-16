@@ -1,6 +1,7 @@
 %{
 /* /local/src/master/nrn/src/nmodl/lex.l,v 4.2 1997/11/05 17:59:02 hines Exp */
 
+#include <unistd.h>
 #include "nmodlconf.h"
 
 #undef output
