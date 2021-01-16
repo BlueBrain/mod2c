@@ -1020,7 +1020,7 @@ void nrnunit_dynamic_str(char* buf, const char* name, char* u1, char* u2) {
   Unit_push(u2);
   unit_div();
   u = unit_mag();
-  unit_pop;
+  unit_pop();
 
 #if USE_LEGACY_UNITS
   sprintf(buf, "\ndouble %s = %g;\n", name, u);
