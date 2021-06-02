@@ -153,7 +153,19 @@ static void rhs_d_pnt_race(const char* r, const char* d) {
 \n    #pragma acc atomic update\
 \n    _vec_rhs[_nd_idx] %s _rhs;\
 \n    #pragma acc atomic update\
-\n    _vec_d[_nd_idx] %s _g;\
+\n    _vec_d[_nd_idx] %s _g;", r, d);
+	P(buf);
+	if(electrode_current) {
+		sprintf(buf, "\
+\n    if (_nt->nrn_fast_imem) {\
+\n      #pragma acc atomic update\
+\n      _nt->nrn_fast_imem->nrn_sav_rhs[_nd_idx] %s _rhs;\
+\n      #pragma acc atomic update\
+\n      _nt->nrn_fast_imem->nrn_sav_d[_nd_idx] %s _g;\
+\n    }", r, d);
+		P(buf);
+	}
+	sprintf(buf, "\
 \n  } else {\
 \n    _vec_shadow_rhs[_iml] = _rhs;\
 \n    _vec_shadow_d[_iml] = _g;\
@@ -177,7 +189,7 @@ static void rhs_d_pnt_race(const char* r, const char* d) {
 \n   _vec_d[_nd_idx] %s _vec_shadow_d[_iml];\
 %s\
 \n#endif\
-\n", r, d,  r, d,  r, d, print_fast_imem_code());
+\n", r, d, r, d, print_fast_imem_code());
   P(buf);
 }
 
