@@ -293,9 +293,9 @@ void c_out()
 #if NMODL
 	/* generation of initmodel interface */
 #if VECTORIZE
-	P("\nstatic void nrn_init(NrnThread* _nt, Memb_list* _ml, int _type){\n");
+	  P("\nstatic void nrn_init(NrnThread* _nt, Memb_list* _ml, int _type){\n");
 	  P("double _v; int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
-      P("_ni = _ml->_nodeindices;\n");
+	  P("_ni = _ml->_nodeindices;\n");
 	  P("_cntml_actual = _ml->_nodecount;\n");
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("for (_iml = 0; _iml < _cntml_actual; ++_iml) {\n");
