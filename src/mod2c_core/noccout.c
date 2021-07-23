@@ -34,8 +34,6 @@ THE POSSIBILITY OF SUCH DAMAGE.
 #include "parse1.h"
 #include "symbol.h"
 
-#define CACHEVEC 1
-
 extern char* nmodl_version_;
 extern char* finname;
 
@@ -108,20 +106,11 @@ static void ext_vdef() {
 			P(" }else\n");
 			P("#endif\n");
 			P(" {\n");
-#if CACHEVEC == 0
-			P("    _v = NODEV(_nd);\n");
-#else
 			P("    _v = _vec_v[_nd_idx];\n    _PRCELLSTATE_V\n");
-#endif
 			
 			P(" }\n");
 		}else{
-#if CACHEVEC == 0
-			P(" _nd = _ml->_nodelist[_iml];\n");
-			P(" _v = NODEV(_nd);\n");
-#else
 			P("    _v = _vec_v[_nd_idx];\n    _PRCELLSTATE_V\n");
-#endif
 		}
 }
 
@@ -294,9 +283,7 @@ void c_out()
 #if VECTORIZE
 	P("\nstatic void nrn_init(NrnThread* _nt, Memb_list* _ml, int _type){\n");
 	  P("double _v; int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
-	  P("#if CACHEVEC\n");
-	  P("    _ni = _ml->_nodeindices;\n");
-	  P("#endif\n");
+      P("_ni = _ml->_nodeindices;\n");
 	  P("_cntml_actual = _ml->_nodecount;\n");
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("for (_iml = 0; _iml < _cntml_actual; ++_iml) {\n");
@@ -342,9 +329,7 @@ void c_out()
     if (brkpnt_exists) {
 	P("\nstatic void nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type){\n");
 	  P("int* _ni; double _rhs, _v; int _iml, _cntml_padded, _cntml_actual;\n");
-	  P("#if CACHEVEC\n");
-	  P("    _ni = _ml->_nodeindices;\n");
-	  P("#endif\n");
+	  P("_ni = _ml->_nodeindices;\n");
 	  P("_cntml_actual = _ml->_nodecount;\n");
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("for (_iml = 0; _iml < _cntml_actual; ++_iml) {\n");
@@ -377,22 +362,14 @@ void c_out()
 		P(" _rhs *= 1.e2/(_nd_area);\n");
 	  }
 	if (electrode_current) {
-#if CACHEVEC == 0
-		P("	NODERHS(_nd) += _rhs;\n");
-#else
 		P("	VEC_RHS(_ni[_iml]) += _rhs;\n");
-#endif
 		P("#if EXTRACELLULAR\n");
 		P(" if (_nd->_extnode) {\n");
 		P("   *_nd->_extnode->_rhs[0] += _rhs;\n");
 		P(" }\n");
 		P("#endif\n");
 	}else{
-#if CACHEVEC == 0
-		P("	NODERHS(_nd) -= _rhs;\n");
-#else
 		P("	VEC_RHS(_ni[_iml]) -= _rhs;\n");
-#endif
 	}
    }
 	P(" \n}}\n");
@@ -401,30 +378,20 @@ void c_out()
 	   and now the jacobian calculation merely returns that */
 	P("\nstatic void nrn_jacob(NrnThread* _nt, Memb_list* _ml, int _type){\n");
 	  P("int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
-	  P("#if CACHEVEC\n");
-	  P("    _ni = _ml->_nodeindices;\n");
-	  P("#endif\n");
+	  P("_ni = _ml->_nodeindices;\n");
 	  P("_cntml_actual = _ml->_nodecount;\n");
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("for (_iml = 0; _iml < _cntml_actual; ++_iml) {\n");
 	  P(" _p = _ml->_data + _iml*_psize;\n");
 	if (electrode_current) {
-#if CACHEVEC == 0
-		P("	NODED(_nd) -= _g;\n");
-#else
 		P("	VEC_D(_ni[_iml]) -= _g;\n");
-#endif
 		P("#if EXTRACELLULAR\n");
 		P(" if (_nd->_extnode) {\n");
 		P("   *_nd->_extnode->_d[0] += _g;\n");
 		P(" }\n");
 		P("#endif\n");
 	}else{
-#if CACHEVEC == 0
-		P("	NODED(_nd) += _g;\n");
-#else
 		P("	VEC_D(_ni[_iml]) += _g;\n");
-#endif
 	}
 	P(" \n}}\n");
     }
@@ -439,9 +406,7 @@ void c_out()
 	if (nrnstate || currents->next == currents) {
 #if VECTORIZE
 	  P("double _v = 0.0; int* _ni; int _iml, _cntml_padded, _cntml_actual;\n");
-	  P("#if CACHEVEC\n");
-	  P("    _ni = _ml->_nodeindices;\n");
-	  P("#endif\n");
+	  P("_ni = _ml->_nodeindices;\n");
 	  P("_cntml_actual = _ml->_nodecount;\n");
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("for (_iml = 0; _iml < _cntml_actual; ++_iml) {\n");
@@ -961,10 +926,6 @@ void c_out_vectorize()
 		P("   *_nd->_extnode->_d[0] += _g;\n");
 		P(" }\n");
 		P("#endif\n");
-#if CACHEVEC == 0
-		P("	NODERHS(_nd) += _rhs;\n");
-		P("	NODED(_nd) -= _g;\n");
-#else
 		if (point_process) {
 			rhs_d_pnt_race("+=", "-=");
 		}else{
@@ -972,19 +933,13 @@ void c_out_vectorize()
 			P("	_vec_d[_nd_idx] -= _g;\n");
 			P(print_fast_imem_code());
 		}
-#endif
 	}else{
-#if CACHEVEC == 0
-		P("	NODERHS(_nd) -= _rhs;\n");
-		P("	NODED(_nd) += _g;\n");
-#else
 		if (point_process) {
 			rhs_d_pnt_race("-=", "+=");
 		}else{
 			P("	_vec_rhs[_nd_idx] -= _rhs;\n");
 			P("	_vec_d[_nd_idx] += _g;\n");
 		}
-#endif
 	}
    }
 	P(" \n}\n");
@@ -1003,22 +958,14 @@ void c_out_vectorize()
       print_cuda_launcher_call("jacob");
 	  pr_layout_for_p(0, NRN_JACOB);
 	if (electrode_current) {
-#if CACHEVEC == 0
-		P("	NODED(_nd) -= _g;\n");
-#else
 		P("	VEC_D(_ni[_iml]) -= _g;\n");
-#endif
 		P("#if EXTRACELLULAR\n");
 		P(" if (_nd->_extnode) {\n");
 		P("   *_nd->_extnode->_d[0] += _g;\n");
 		P(" }\n");
 		P("#endif\n");
 	}else{
-#if CACHEVEC == 0
-		P("	NODED(_nd) += _g;\n");
-#else
 		P("	VEC_D(_ni[_iml]) += _g;\n");
-#endif
 	}
 	P(" \n}\n");
 	P(" \n}\n");
