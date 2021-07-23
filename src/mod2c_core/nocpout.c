@@ -3115,6 +3115,7 @@ static void emit_nrn_watch_check_code() {
 "#if NRN_PRCELLSTATE\n"
 "    _v_unused = v;\n"
 "#endif\n"
+"    bool _untriggered = true;\n"
 );
 
 	iw = 0; /* 0 unused Datum but for consistent size with NEURON... */
@@ -3126,9 +3127,10 @@ static void emit_nrn_watch_check_code() {
 
 		par2par = items_as_string(par1, par2);
 		sprintf(buf, "\n"
-"    if (_watch_array(%d)&2) {\n"
+"    if (_watch_array(%d)&2 && _untriggered) {\n"
 "      if %s {\n"
 "        if ((_watch_array(%d)&1) == 0) {\n"
+"          _untriggered = false;\n"
 "          #if NET_RECEIVE_BUFFERING\n"
 "          _net_send_buffering(_ml->_net_send_buffer, 0, _tqitem, 0, _ppvar[1*_STRIDE], t +  0.0 , %s );\n"
 "          #else\n"
