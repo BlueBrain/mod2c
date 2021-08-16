@@ -64,6 +64,27 @@ add_executable(mod2c_core
 # issues from platform specific optimisations, build mod2c with debug flags
 # as performance is not a concern (for translating mod files to cpp)
 separate_arguments(NMODL_C_FLAGS UNIX_COMMAND "${CMAKE_C_FLAGS_DEBUG}")
+
+if(CMAKE_C_COMPILER_ID STREQUAL "PGI" OR CMAKE_C_COMPILER_ID STREQUAL "NVHPC")
+  if(CMAKE_C_COMPILER_VERSION VERSION_LESS 20.7)
+    # Taken from CoreNEURON's OpenAccHelper.cmake
+    list(APPEND NMODL_C_FLAGS --diag_suppress=161,177,550)
+  else()
+    # https://forums.developer.nvidia.com/t/many-all-diagnostic-numbers-increased-by-1-from-previous-values/146268/3
+    # changed the numbering scheme in newer versions. The following list is from a clean start 13
+    # August 2021.
+    # Examples of the suppressed warnings are given below.
+    # ~~~
+    # "src/mod2c_core/kinetic.c", warning #111-D: statement is unreachable
+    # "src/mod2c_core/parsact.c", warning #128-D: loop is not reachable
+    # "src/mod2c_core/units.c", warning #170-D: pointer points outside of underlying object
+    # "src/mod2c_core/parsact.c", warning #177-D: variable "qq" was declared but never referenced
+    # "src/mod2c_core/kinetic.c", warning #550-D: variable "qv" was set but never used
+    # "src/mod2c_core/sens.c", warning #1052-D: standard requires that parameter "fn" be given a type by a subsequent declaration ("int" assumed)
+    # ~~~
+    list(APPEND NMODL_C_FLAGS --diag_suppress=111,128,170,177,550,1052)
+  endif()
+endif()
 target_compile_options(mod2c_core PRIVATE ${NMODL_C_FLAGS})
 
 install(TARGETS mod2c_core DESTINATION bin)
