@@ -945,20 +945,19 @@ static void _net_send_buffering(NetSendBuffer_t* _nsb, int _sendtype, int _i_vda
   int _i = 0;
   #pragma acc atomic capture
   _i = _nsb->_cnt++;
+#if !defined(_OPENACC)
   if (_i >= _nsb->_size) {
-#if defined(_OPENACC)
-    int NetSendBuffer_t_not_large_enough = 0;
-    assert(NetSendBuffer_t_not_large_enough);
-#else
     _nsb->grow();
-#endif
   }
-  _nsb->_sendtype[_i] = _sendtype;
-  _nsb->_vdata_index[_i] = _i_vdata;
-  _nsb->_weight_index[_i] = _weight_index;
-  _nsb->_pnt_index[_i] = _ipnt;
-  _nsb->_nsb_t[_i] = _t;
-  _nsb->_nsb_flag[_i] = _flag;
+#endif
+  if (_i < _nsb->_size) {
+    _nsb->_sendtype[_i] = _sendtype;
+    _nsb->_vdata_index[_i] = _i_vdata;
+    _nsb->_weight_index[_i] = _weight_index;
+    _nsb->_pnt_index[_i] = _ipnt;
+    _nsb->_nsb_t[_i] = _t;
+    _nsb->_nsb_flag[_i] = _flag;
+  }
 }
  
 void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {
