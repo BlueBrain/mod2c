@@ -3035,20 +3035,19 @@ sprintf(buf, "\
 \n  int _i = 0;\
 \n  #pragma acc atomic capture\
 \n  _i = _nsb->_cnt++;\
+\n#if !defined(_OPENACC)\
 \n  if (_i >= _nsb->_size) {\
-\n#if defined(_OPENACC)\
-\n    int NetSendBuffer_t_not_large_enough = 0;\
-\n    assert(NetSendBuffer_t_not_large_enough);\
-\n#else\
 \n    _nsb->grow();\
-\n#endif\
 \n  }\
-\n  _nsb->_sendtype[_i] = _sendtype;\
-\n  _nsb->_vdata_index[_i] = _i_vdata;\
-\n  _nsb->_weight_index[_i] = _weight_index;\
-\n  _nsb->_pnt_index[_i] = _ipnt;\
-\n  _nsb->_nsb_t[_i] = _t;\
-\n  _nsb->_nsb_flag[_i] = _flag;\
+\n#endif\
+\n  if (_i < _nsb->_size) {\
+\n    _nsb->_sendtype[_i] = _sendtype;\
+\n    _nsb->_vdata_index[_i] = _i_vdata;\
+\n    _nsb->_weight_index[_i] = _weight_index;\
+\n    _nsb->_pnt_index[_i] = _ipnt;\
+\n    _nsb->_nsb_t[_i] = _t;\
+\n    _nsb->_nsb_flag[_i] = _flag;\
+\n  }\
 \n}\n");
 		insertstr(q, buf);
 	}
