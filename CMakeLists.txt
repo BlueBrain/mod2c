@@ -25,7 +25,7 @@
 # THE POSSIBILITY OF SUCH DAMAGE.
 
 
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.15)
 set(CMAKE_BUILD_TYPE Release)
 
 project(mod2c VERSION 2.1.0)
