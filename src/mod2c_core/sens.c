@@ -150,6 +150,7 @@ void add_sens_statelist(s)
 void sensmassage(type, qfun, fn)
 	int type;
 	Item *qfun;
+	int fn;
 {
 /*qfun is the list symbol for the name of the derivative block. It has
 a count of the number of state variables used.  A copy of this symbol
