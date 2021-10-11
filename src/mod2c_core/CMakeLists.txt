@@ -63,7 +63,7 @@ add_executable(mod2c_core
 # as mod2c is typically executed on front-end node, in order to avoid runtime
 # issues from platform specific optimisations, build mod2c with debug flags
 # as performance is not a concern (for translating mod files to cpp)
-separate_arguments(NMODL_C_FLAGS UNIX_COMMAND "${CMAKE_C_FLAGS_DEBUG}")
+separate_arguments(NMODL_C_FLAGS UNIX_COMMAND "${CMAKE_CXX_FLAGS_DEBUG}")
 
 if(CMAKE_C_COMPILER_ID STREQUAL "PGI" OR CMAKE_C_COMPILER_ID STREQUAL "NVHPC")
   if(CMAKE_C_COMPILER_VERSION VERSION_LESS 20.7)
