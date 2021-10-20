@@ -181,6 +181,7 @@ static void rhs_d_pnt_race(const char* r, const char* d) {
 \n           int _nd_idx = _ni[_iml];\
 \n           _vec_rhs[_nd_idx] %s _vec_shadow_rhs[_iml];\
 \n           _vec_d[_nd_idx] %s _vec_shadow_d[_iml];\
+%s\
 \n        }\
 \n#else\
 \n for (_iml = 0; _iml < _cntml_actual; ++_iml) {\
@@ -189,7 +190,7 @@ static void rhs_d_pnt_race(const char* r, const char* d) {
 \n   _vec_d[_nd_idx] %s _vec_shadow_d[_iml];\
 %s\
 \n#endif\
-\n", r, d, r, d, print_fast_imem_code());
+\n", r, d, print_fast_imem_code(), r, d, print_fast_imem_code());
   P(buf);
 }
 
