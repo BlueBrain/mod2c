@@ -9,5 +9,6 @@ Nicolas Cornu
 Olli Lupton
 Omar Awile
 Pramod Kumbhar (maintainer)
+Sergio Rivas-Gomez
 Stuart Yates
 Timothee Ewart
