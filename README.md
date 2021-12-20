@@ -30,14 +30,17 @@ Note that mod2c is used only during the compilation phase of the CoreNEURON simu
 and hence should be built only for the front-end/login nodes in cross-compile environments
 like BG-Q, Cray, Intel MIC etc.
 
+
+# Funding & Acknowledgment
+ 
+The development of this software was supported by funding to the Blue Brain Project, a research center of the École polytechnique fédérale de Lausanne (EPFL), from the Swiss government's ETH Board of the Swiss Federal Institutes of Technology.
+ 
+Copyright © 2015-2021 Blue Brain Project/EPFL
+
+
 ## License
 * See LICENSE.txt
 * See [NEURON](https://www.neuron.yale.edu/neuron/)
 * The mechanisms and test datasets appearing in the CoreNeuron repository are subject to separate licenses.
   More information is available on the NMC portal website [NMC portal](https://bbp.epfl.ch/nmc-portal/copyright),
   the specific licenses are described in the ME-type model packages downloadable from that website.
-
-## Contributors
-To facilitate the future distributions of the software the Blue Brain Project wishes to remain the sole
-owner of the copyright. Therefore we will ask contributors to not modify the existing copyright.
-Contributors will however be gratefully acknowledged in the corresponding CREDIT.txt file.
