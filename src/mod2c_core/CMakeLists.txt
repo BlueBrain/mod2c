@@ -44,19 +44,19 @@ add_custom_command(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/diffeq.c" "${CMAKE_CURRENT_BINARY_DIR}/diffeq.h"
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
   COMMAND "${BISON_EXECUTABLE}" ARGS --defines=diffeq.h -o diffeq.c "${CUR_SRC_REL}/diffeq.y"
-  DEPENDS "${CUR_SRC_REL}/diffeq.y"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/diffeq.y"
   COMMENT "[BISON][diffeq] Building parser with bison ${BISON_VERSION}")
 add_custom_command(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/parse1.c" "${CMAKE_CURRENT_BINARY_DIR}/parse1.h"
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
   COMMAND "${BISON_EXECUTABLE}" ARGS --defines=parse1.h -o parse1.c "${CUR_SRC_REL}/parse1.y"
-  DEPENDS "${CUR_SRC_REL}/parse1.y"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/parse1.y"
   COMMENT "[BISON][parse1] Building parser with bison ${BISON_VERSION}")
 add_custom_command(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/lex.c"
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
   COMMAND "${FLEX_EXECUTABLE}" ARGS -o lex.c "${CUR_SRC_REL}/lex.l"
-  DEPENDS "${CUR_SRC_REL}/lex.l" "${CMAKE_CURRENT_BINARY_DIR}/parse1.h"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/lex.l" "${CMAKE_CURRENT_BINARY_DIR}/parse1.h"
   COMMENT "[FLEX][lex] Building scanner with flex ${FLEX_VERSION}")
 
 if(MOD2C_ENABLE_LEGACY_UNITS)
