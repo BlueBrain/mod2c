@@ -1,4 +1,4 @@
-# Copyright (c) 2016, Blue Brain Project
+# Copyright (c) 2016-2022, Blue Brain Project
 # All rights reserved.
 
 # Redistribution and use in source and binary forms, with or without modification,
@@ -39,11 +39,25 @@ set(NOCMODL_CORE_SOURCES
 "simultan.c" "units.c"
 )
 
-bison_target(diffeq diffeq.y ${CMAKE_CURRENT_BINARY_DIR}/diffeq.c)
-bison_target(parse1 parse1.y ${CMAKE_CURRENT_BINARY_DIR}/parse1.c)
-
-flex_target(lex lex.l ${CMAKE_CURRENT_BINARY_DIR}/lex.c)
-add_flex_bison_dependency(lex parse1)
+file(RELATIVE_PATH CUR_SRC_REL "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}")
+add_custom_command(
+  OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/diffeq.c" "${CMAKE_CURRENT_BINARY_DIR}/diffeq.h"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  COMMAND "${BISON_EXECUTABLE}" ARGS --defines=diffeq.h -o diffeq.c "${CUR_SRC_REL}/diffeq.y"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/diffeq.y"
+  COMMENT "[BISON][diffeq] Building parser with bison ${BISON_VERSION}")
+add_custom_command(
+  OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/parse1.c" "${CMAKE_CURRENT_BINARY_DIR}/parse1.h"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  COMMAND "${BISON_EXECUTABLE}" ARGS --defines=parse1.h -o parse1.c "${CUR_SRC_REL}/parse1.y"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/parse1.y"
+  COMMENT "[BISON][parse1] Building parser with bison ${BISON_VERSION}")
+add_custom_command(
+  OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/lex.c"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  COMMAND "${FLEX_EXECUTABLE}" ARGS -o lex.c "${CUR_SRC_REL}/lex.l"
+  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/lex.l" "${CMAKE_CURRENT_BINARY_DIR}/parse1.h"
+  COMMENT "[FLEX][lex] Building scanner with flex ${FLEX_VERSION}")
 
 if(MOD2C_ENABLE_LEGACY_UNITS)
     set(USE_LEGACY_UNITS 1)
@@ -55,10 +69,9 @@ add_definitions(-DNMODL=1 -DBBCORE=1 -DNOCMODL=1 -DCVODE=1 -DVECTORIZE=1
     -DUSE_LEGACY_UNITS=${USE_LEGACY_UNITS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 
-add_executable(mod2c_core
-    ${NOCMODL_CORE_SOURCES}
-    ${BISON_diffeq_OUTPUTS} ${BISON_parse1_OUTPUTS}
-    ${FLEX_lex_OUTPUTS})
+add_executable(
+  mod2c_core ${NOCMODL_CORE_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/diffeq.c"
+             "${CMAKE_CURRENT_BINARY_DIR}/parse1.c" "${CMAKE_CURRENT_BINARY_DIR}/lex.c")
 
 # as mod2c is typically executed on front-end node, in order to avoid runtime
 # issues from platform specific optimisations, build mod2c with debug flags
