@@ -3338,7 +3338,7 @@ void fornetcon(keyword, par1, args, par2, stmt, qend)
 "\t  _ix = size_t(_ppvar[_fnc_index*_STRIDE]);\n"
 "\t  _ifn_begin = _nt->_fornetcon_perm_indices[_ix];\n"
 "\t  _ifn_end = _nt->_fornetcon_perm_indices[_ix + 1];\n"
-"\t  std::vector<size_t>&_fnargs_order = _nt->_fornetcon_weight_perm;\n"
+"\t  size_t* _fnargs_order{_nt->_fornetcon_weight_perm};\n"
 "\t  for (_ifn = _ifn_begin; _ifn < _ifn_end; ++_ifn) {\n"
 "\t    _fnargs%d = _weights + _fnargs_order[_ifn];\n",
  	for_netcons_, for_netcons_);
