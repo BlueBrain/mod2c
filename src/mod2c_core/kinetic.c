@@ -469,7 +469,12 @@ Sprintf(buf, "{int _reset=0;\n");
 	  , numlist, numlist, suffix, numlist, count, numlist
 	  );
 
-	Linsertstr(procfunc, buf);
+	Sprintf(buf, "_slist%d", numlist);
+	add_global_var("int", buf, 1, count);
+	Sprintf(buf, "_dlist%d", numlist);
+	add_global_var("int", buf, 1, count);
+
+	//Linsertstr(procfunc, buf);
 	insertstr(q4, "  } return _reset;\n");
 	movelist(q1, q4, procfunc);
 

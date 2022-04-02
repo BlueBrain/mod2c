@@ -78,6 +78,17 @@ extern char* nmodl_version_;
 extern int   usederivstatearray;
 #endif
 
+struct GlobalData global_vars[1024];
+int num_global_vars;
+
+void add_global_var(const char* type, const char* name, int is_array, int array_length) {
+  strncpy(global_vars[num_global_vars].type, type, NRN_BUFSIZE);
+  strncpy(global_vars[num_global_vars].name, name, NRN_BUFSIZE);
+  global_vars[num_global_vars].is_array = is_array;
+  global_vars[num_global_vars].array_length = array_length;
+  num_global_vars++;
+}
+
 extern int yyparse();
 extern int mkdir_p();
 

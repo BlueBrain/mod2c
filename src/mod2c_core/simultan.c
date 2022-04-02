@@ -202,7 +202,9 @@ numlist, counts*(1 + sens_parm), numlist, counts);
 	  "int _slist%d[%d];\n"
 	  "#pragma acc declare create(_slist%d)\n"
 	  , numlist, numlist, suffix, numlist, counts*(1 + sens_parm), numlist);
-	vectorize_substitute(q, buf);	
+	vectorize_substitute(q, buf);
+    Sprintf(buf, "_slist%d", numlist);
+    add_global_var("int", buf, 1, counts*(1 + sens_parm));
 	return counts;
 }
 

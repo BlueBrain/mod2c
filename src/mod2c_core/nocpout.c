@@ -561,6 +561,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
                 "double _celsius_;\n"
                 "#pragma acc declare copyin(_celsius_)\n", suffix);
                 Lappendstr(defs_list, buf);
+                add_global_var("double", "celsius", 0, 0);
             }
         }
     }
@@ -592,6 +593,7 @@ Sprintf(buf, "static void _hoc_%s(void);\n", s->name);
 		  "#pragma acc declare copyin (_mechtype)\n"
 		  , suffix);
 		replacstr(q, buf);
+        add_global_var("int", "_mechtype", 0, 0);
 	}
 
 	/**** create special point process functions */
@@ -783,8 +785,10 @@ s->name, suffix, gind, s->name, gind);
 			decode_ustr(s, &d1, &d2, buf);
 			if (s->subtype & ARRAY) {
 				Sprintf(buf, "double %s[%d];\n", s->name, s->araydim);
+                add_global_var("double", s->name, 1, s->araydim);
 			}else{
 				Sprintf(buf, "double %s = %g;\n", s->name, d1);
+                add_global_var("double", s->name, 0, 0);
 			}
 			Lappendstr(defs_list, buf);
 #if BBCORE
@@ -806,24 +810,9 @@ s->name, suffix, gind, s->name, gind);
 	}
 
 #if BBCORE
-	if (acc_globals_update_list) {
-		Lappendstr(defs_list, "\nstatic void _acc_globals_update() {\n");
-		if (acc_globals_update_list->next != acc_globals_update_list) {
-			movelist(acc_globals_update_list->next, acc_globals_update_list->prev, defs_list);
-		}
-        if (use_celsius) {
-            Lappendstr(defs_list, "_celsius_ = celsius;\n");
-            Lappendstr(defs_list, "#pragma acc update device(_celsius_)\n");
-        }
-		Lappendstr(defs_list, "}\n\n");
-	}
-
-    if (use_celsius) {
-        Lappendstr(defs_list, "#define celsius _celsius_\n");
-    }
-
 	Lappendstr(defs_list, "\n#if 0 /*BBCORE*/\n");
 #endif
+
 	Lappendstr(defs_list, "/* some parameters have upper and lower limits */\n");
 	Lappendstr(defs_list, "static HocParmLimits _hoc_parm_limits[] = {\n");
 	SYMLISTITER {
@@ -860,10 +849,12 @@ diag("No statics allowed for thread safe models:", s->name);
 				Sprintf(buf, "static double %s[%d];\n"
                              "#pragma acc declare create(%s)\n",
                              s->name, s->araydim, s->name);
+                add_global_var("double", s->name, 1, s->araydim);
 			}else{
 				Sprintf(buf, "static double %s = %g;\n"
                              "#pragma acc declare copyin(%s)\n",
                              s->name, d1, s->name);
+                add_global_var("double", s->name, 0, 0);
 			}
 			Lappendstr(defs_list, buf);
 		}
@@ -1074,6 +1065,66 @@ static const char *_mechanism[] = {\n\
 		q=q->next->next->next;
 	}
 	
+#if BBCORE
+		Lappendstr(defs_list, "\n//global variables\n");
+		Lappendstr(defs_list, "static struct GlobalVars {\n");
+        for(int i=0; i < num_global_vars; i++) {
+            if(global_vars[i].is_array) {
+		        Sprintf(buf, "  %s %s[%d];\n", global_vars[i].type, global_vars[i].name, global_vars[i].array_length);
+            } else {
+		        Sprintf(buf, "  %s %s;\n", global_vars[i].type, global_vars[i].name);
+            }
+            Lappendstr(defs_list, buf);
+        }
+		Lappendstr(defs_list, "};\n\n");
+
+		Lappendstr(defs_list, "static GlobalVars global_data;\n");
+		Lappendstr(defs_list, "static GlobalVars* global_data_ptr;\n\n");
+
+	if (acc_globals_update_list) {
+		Lappendstr(defs_list, "\nstatic void _acc_globals_update() {\n");
+
+        //Lappendstr(defs_list, "  global_data_ptr = &global_data;\n");
+
+        for(int i=0; i < num_global_vars; i++) {
+            if(global_vars[i].is_array) {
+                for(int j=0; j<global_vars[i].array_length; j++) {
+		            Sprintf(buf, "  global_data.%s[%d] = %s[%d];\n", global_vars[i].name, j, global_vars[i].name, j);
+                } 
+            } else {
+		        Sprintf(buf, "  global_data.%s = %s;\n", global_vars[i].name, global_vars[i].name);
+                Lappendstr(defs_list, buf);
+            }
+        }
+        if (num_global_vars) {
+            Lappendstr(defs_list, "  #pragma acc enter data copyin(global_data[0:1]) if(nrn_threads->compute_gpu)\n");
+        }
+
+		if (acc_globals_update_list->next != acc_globals_update_list) {
+			movelist(acc_globals_update_list->next, acc_globals_update_list->prev, defs_list);
+		}
+        if (use_celsius) {
+            //Lappendstr(defs_list, "_celsius_ = celsius;\n");
+            //Lappendstr(defs_list, "#pragma acc update device(_celsius_)\n");
+        }
+		Lappendstr(defs_list, "}\n\n");
+
+        for(int i=0; i < num_global_vars; i++) {
+            Sprintf(buf, "#define %s global_data_ptr->%s\n", global_vars[i].name, global_vars[i].name);
+            Lappendstr(defs_list, buf);
+	    }
+        Lappendstr(defs_list, "\n");
+    }
+
+    if (use_celsius) {
+        //Lappendstr(defs_list, "#define celsius _celsius_\n");
+    }
+
+#endif
+
+
+
+
 	Lappendstr(defs_list, "\n\
 static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {\n");
 #if BBCORE
@@ -1266,6 +1317,7 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 	int _vectorized = %d;\n", modbase, vectorize);
 	Lappendstr(defs_list, buf);
 	q = lappendstr(defs_list, "");
+    Lappendstr(defs_list, "global_data_ptr = &global_data;\n");
 	Lappendstr(defs_list, "_initlists();\n");
 #else
 	Sprintf(buf, "void _%s_reg() {\n	_initlists();\n", modbase);

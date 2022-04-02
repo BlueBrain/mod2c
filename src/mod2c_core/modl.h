@@ -310,3 +310,14 @@ extern Item    *qlint;
 #define IGNORE(arg)	arg
 #define Free(arg)	free((void *)(arg))
 #endif
+
+struct GlobalData {
+    char type[NRN_BUFSIZE];
+    char name[NRN_BUFSIZE];
+    int is_array;
+    int array_length;
+};
+
+extern struct GlobalData global_vars[];
+extern int num_global_vars;
+void add_global_var(const char* type, const char* name, int, int);

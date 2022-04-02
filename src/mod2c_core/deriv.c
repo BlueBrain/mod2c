@@ -635,7 +635,11 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 	  , numlist, numlist, suffix, numlist, count, numlist
 	  , numlist, numlist, suffix, numlist, count, numlist
 	  );
-		Linsertstr(procfunc, buf);
+		//Linsertstr(procfunc, buf);
+    Sprintf(buf, "_slist%d", numlist);
+    add_global_var("int", buf, 1, count);
+    Sprintf(buf, "_dlist%d", numlist);
+    add_global_var("int", buf, 1, count);
 	
 #if CVODE
 	Lappendstr(procfunc, "\n/*CVODE*/\n");
