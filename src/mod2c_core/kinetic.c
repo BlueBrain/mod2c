@@ -470,9 +470,9 @@ Sprintf(buf, "{int _reset=0;\n");
 	  );
 
 	Sprintf(buf, "_slist%d", numlist);
-	add_global_var("int", buf, 1, count);
+	add_global_var("int", buf, 1, count, 1);
 	Sprintf(buf, "_dlist%d", numlist);
-	add_global_var("int", buf, 1, count);
+	add_global_var("int", buf, 1, count, 1);
 
 	//Linsertstr(procfunc, buf);
 	insertstr(q4, "  } return _reset;\n");
@@ -1277,7 +1277,7 @@ if (vectorize){
 	 "#pragma acc update device(_slist%d[0:%d])\n"
 	 " #pragma acc update device(_dlist%d[0:%d])\n\n"
 	 , fun->u.i, count, fun->u.i, count);
-	Lappendstr(initlist, buf);
+	//Lappendstr(initlist, buf);
 
 }
 

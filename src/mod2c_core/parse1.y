@@ -1121,7 +1121,7 @@ factordef: NAME '=' real unit
 			"#pragma acc declare copyin(%s)\n"
 			, SYM($1)->name, STR($3), SYM($1)->name);
 		  //Lappendstr(firstlist, buf);
-          add_global_var("double", SYM($1)->name, 0, 0);
+          add_global_var("double", SYM($1)->name, 0, 0, 0);
 		}
 	| NAME '=' unit unit
 		{
@@ -1132,7 +1132,7 @@ factordef: NAME '=' real unit
 		    Sprintf(buf, "#pragma acc declare copyin(%s)\n",
 			SYM($1)->name);
 		    //Lappendstr(firstlist, buf);
-            add_global_var("double", SYM($1)->name, 0, 0);
+            add_global_var("double", SYM($1)->name, 0, 0, 0);
 		}
 	| NAME '=' unit '-' GT unit 
 		{
@@ -1143,7 +1143,7 @@ factordef: NAME '=' real unit
 		    Sprintf(buf, "#pragma acc declare copyin(%s)\n",
 			SYM($1)->name);
 		    //Lappendstr(firstlist, buf);
-            add_global_var("double", SYM($1)->name, 0, 0);
+            add_global_var("double", SYM($1)->name, 0, 0, 0);
 		}
 	| error {myerr("Unit factor syntax: examples:\n\
 foot2inch = (foot) -> (inch)\n\

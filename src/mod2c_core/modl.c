@@ -81,11 +81,12 @@ extern int   usederivstatearray;
 struct GlobalData global_vars[1024];
 int num_global_vars;
 
-void add_global_var(const char* type, const char* name, int is_array, int array_length) {
+void add_global_var(const char* type, const char* name, int is_array, int array_length, int is_internal_var) {
   strncpy(global_vars[num_global_vars].type, type, NRN_BUFSIZE);
   strncpy(global_vars[num_global_vars].name, name, NRN_BUFSIZE);
   global_vars[num_global_vars].is_array = is_array;
   global_vars[num_global_vars].array_length = array_length;
+  global_vars[num_global_vars].is_internal_var = is_internal_var;
   num_global_vars++;
 }
 

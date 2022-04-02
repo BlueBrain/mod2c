@@ -615,7 +615,7 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 	  "#pragma acc update device(_slist%d[0:%d])\n"
 	  " #pragma acc update device(_dlist%d[0:%d])\n\n"
 	  , numlist, count, numlist, count);
-	Lappendstr(initlist, buf);
+	//Lappendstr(initlist, buf);
 
 	if (count == 0) {
 		diag("DERIVATIVE contains no derivatives", (char *)0);
@@ -637,9 +637,9 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 	  );
 		//Linsertstr(procfunc, buf);
     Sprintf(buf, "_slist%d", numlist);
-    add_global_var("int", buf, 1, count);
+    add_global_var("int", buf, 1, count, 1);
     Sprintf(buf, "_dlist%d", numlist);
-    add_global_var("int", buf, 1, count);
+    add_global_var("int", buf, 1, count, 1);
 	
 #if CVODE
 	Lappendstr(procfunc, "\n/*CVODE*/\n");

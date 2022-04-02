@@ -561,7 +561,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
                 "double _celsius_;\n"
                 "#pragma acc declare copyin(_celsius_)\n", suffix);
                 //Lappendstr(defs_list, buf);
-                add_global_var("double", "celsius", 0, 0);
+                add_global_var("double", "celsius", 0, 0, 0);
             }
         }
     }
@@ -585,7 +585,7 @@ Sprintf(buf, "static void _hoc_%s(void);\n", s->name);
 	Lappendstr(defs_list, "\n#endif /*BBCORE*/\n");
 #endif
 
-	q = lappendstr(defs_list, "static int _mechtype;\n");
+	//q = lappendstr(defs_list, "static int _mechtype;\n");
 	//if (net_send_seen_ && !artificial_cell) {
 	//	Sprintf(buf,
 	//	  "\n#define _mechtype _mechtype%s\n"
@@ -594,7 +594,7 @@ Sprintf(buf, "static void _hoc_%s(void);\n", s->name);
 	//	  , suffix);
 	//	replacstr(q, buf);
 	//}
-    add_global_var("int", "_mechtype", 0, 0);
+    add_global_var("int", "_mechtype", 0, 0, 1);
 
 	/**** create special point process functions */
 	if (point_process) {
@@ -785,10 +785,10 @@ s->name, suffix, gind, s->name, gind);
 			decode_ustr(s, &d1, &d2, buf);
 			if (s->subtype & ARRAY) {
 				Sprintf(buf, "double %s[%d];\n", s->name, s->araydim);
-                add_global_var("double", s->name, 1, s->araydim);
+                add_global_var("double", s->name, 1, s->araydim, 0);
 			}else{
 				Sprintf(buf, "double %s = %g;\n", s->name, d1);
-                add_global_var("double", s->name, 0, 0);
+                add_global_var("double", s->name, 0, 0, 0);
 			}
 			Lappendstr(defs_list, buf);
 #if BBCORE
@@ -848,11 +848,11 @@ diag("No statics allowed for thread safe models:", s->name);
 			if (s->subtype & ARRAY) {
 				Sprintf(buf, "static double %s[%d];\n",
                              s->name, s->araydim);
-                add_global_var("double", s->name, 1, s->araydim);
+                add_global_var("double", s->name, 1, s->araydim, 0);
 			}else{
 				Sprintf(buf, "static double %s = %g;\n",
                              s->name, d1);
-                add_global_var("double", s->name, 0, 0);
+                add_global_var("double", s->name, 0, 0, 0);
 			}
 			Lappendstr(defs_list, buf);
 		}
@@ -1085,13 +1085,16 @@ static const char *_mechanism[] = {\n\
         //Lappendstr(defs_list, "  global_data_ptr = &global_data;\n");
 
         for(int i=0; i < num_global_vars; i++) {
+            if(!global_vars[i].is_internal_var) {
             if(global_vars[i].is_array) {
                 for(int j=0; j<global_vars[i].array_length; j++) {
 		            Sprintf(buf, "  global_data.%s[%d] = %s[%d];\n", global_vars[i].name, j, global_vars[i].name, j);
-                } 
+                    Lappendstr(defs_list, buf);
+                }
             } else {
 		        Sprintf(buf, "  global_data.%s = %s;\n", global_vars[i].name, global_vars[i].name);
                 Lappendstr(defs_list, buf);
+            }
             }
         }
         if (num_global_vars) {

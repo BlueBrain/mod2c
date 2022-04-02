@@ -316,8 +316,9 @@ struct GlobalData {
     char name[NRN_BUFSIZE];
     int is_array;
     int array_length;
+    int is_internal_var;
 };
 
 extern struct GlobalData global_vars[];
 extern int num_global_vars;
-void add_global_var(const char* type, const char* name, int, int);
+void add_global_var(const char* type, const char* name, int is_array, int array_length, int is_internal_var);

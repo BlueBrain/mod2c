@@ -155,7 +155,7 @@ static int nonlin_common(q4, sensused)	/* used by massagenonlin() and mixed_eqns
 	}
 	Sprintf(buf, "#pragma acc update device(_slist%d[0:%d])\n\n",
 	  numlist, counts);
-	Lappendstr(initlist, buf);
+	//Lappendstr(initlist, buf);
 
 	ITERATE(lq, eqnq) {
 		char *eqtype = SYM(ITM(lq))->name;
@@ -204,7 +204,7 @@ numlist, counts*(1 + sens_parm), numlist, counts);
 	  , numlist, numlist, suffix, numlist, counts*(1 + sens_parm), numlist);
 	//vectorize_substitute(q, buf);
     Sprintf(buf, "_slist%d", numlist);
-    add_global_var("int", buf, 1, counts*(1 + sens_parm));
+    add_global_var("int", buf, 1, counts*(1 + sens_parm), 1);
 	return counts;
 }
 
