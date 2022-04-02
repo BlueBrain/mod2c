@@ -608,11 +608,11 @@ static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
  
 #define _slist1 _slist1_NMDA16_2
-int* _slist1;
+int _slist1[16];
 #pragma acc declare create(_slist1)
 
 #define _dlist1 _dlist1_NMDA16_2
-int* _dlist1;
+int _dlist1[16];
 #pragma acc declare create(_dlist1)
  
 /* _kinetic_ kstates _NMDA16_2 */
@@ -1621,9 +1621,6 @@ static void _initlists(){
  int _cntml_padded=1;
  int _iml=0;
   if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*16);
- _dlist1 = (int*)malloc(sizeof(int)*16);
  _slist1[0] = &(RA2sMg) - _p;  _dlist1[0] = &(DRA2sMg) - _p;
  _slist1[1] = &(OMg) - _p;  _dlist1[1] = &(DOMg) - _p;
  _slist1[2] = &(O) - _p;  _dlist1[2] = &(DO) - _p;
@@ -1640,8 +1637,8 @@ static void _initlists(){
  _slist1[13] = &(RA2) - _p;  _dlist1[13] = &(DRA2) - _p;
  _slist1[14] = &(RA) - _p;  _dlist1[14] = &(DRA) - _p;
  _slist1[15] = &(R) - _p;  _dlist1[15] = &(DR) - _p;
- #pragma acc enter data copyin(_slist1[0:16])
- #pragma acc enter data copyin(_dlist1[0:16])
+ #pragma acc update device(_slist1[0:16])
+ #pragma acc update device(_dlist1[0:16])
 
 _first = 0;
 }

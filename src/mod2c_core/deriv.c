@@ -564,13 +564,6 @@ void massagederiv(q1, q2, q3, q4, sensused)
 			count++;
 		}
 	}
-	Sprintf(buf,
-	  "\n"
-	  " _slist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  " _dlist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  , numlist, count, numlist, count
-	);
-	Lappendstr(initlist, buf);
 
 	count = 0;
 	ITERATE(qs, deriv_used_list) {
@@ -619,8 +612,8 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 	}
 
 	Sprintf(buf,
-	  "#pragma acc enter data copyin(_slist%d[0:%d])\n"
-	  " #pragma acc enter data copyin(_dlist%d[0:%d])\n\n"
+	  "#pragma acc update device(_slist%d[0:%d])\n"
+	  " #pragma acc update device(_dlist%d[0:%d])\n\n"
 	  , numlist, count, numlist, count);
 	Lappendstr(initlist, buf);
 
@@ -634,13 +627,13 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 	Sprintf(buf,
 
 	  "\n#define _slist%d _slist%d%s\n"
-	  "int* _slist%d;\n"
+	  "int _slist%d[%d];\n"
 	  "#pragma acc declare create(_slist%d)\n"
 	  "\n#define _dlist%d _dlist%d%s\n"
-	  "int* _dlist%d;\n"
+	  "int _dlist%d[%d];\n"
 	  "#pragma acc declare create(_dlist%d)\n"
-	  , numlist, numlist, suffix, numlist, numlist
-	  , numlist, numlist, suffix, numlist, numlist
+	  , numlist, numlist, suffix, numlist, count, numlist
+	  , numlist, numlist, suffix, numlist, count, numlist
 	  );
 		Linsertstr(procfunc, buf);
 	

@@ -286,15 +286,15 @@ static int _ode_spec1(_threadargsproto_);
  int _newton_states_NapDA(_threadargsproto_);
  
 #define _slist2 _slist2_NapDA
-int* _slist2;
+int _slist2[2];
 #pragma acc declare create(_slist2)
   
 #define _slist1 _slist1_NapDA
-int* _slist1;
+int _slist1[2];
 #pragma acc declare create(_slist1)
 
 #define _dlist1 _dlist1_NapDA
-int* _dlist1;
+int _dlist1[2];
 #pragma acc declare create(_dlist1)
  extern int states(_threadargsproto_);
  
@@ -637,18 +637,15 @@ static void _initlists(){
  int _cntml_padded=1;
  int _iml=0;
   if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*2);
- _dlist1 = (int*)malloc(sizeof(int)*2);
  _slist1[0] = &(m) - _p;  _dlist1[0] = &(Dm) - _p;
  _slist1[1] = &(h) - _p;  _dlist1[1] = &(Dh) - _p;
- #pragma acc enter data copyin(_slist1[0:2])
- #pragma acc enter data copyin(_dlist1[0:2])
+ #pragma acc update device(_slist1[0:2])
+ #pragma acc update device(_dlist1[0:2])
 
  _slist2 = (int*)malloc(sizeof(int)*2);
  _slist2[0] = &(h) - _p;
  _slist2[1] = &(m) - _p;
- #pragma acc enter data copyin(_slist2[0:2])
+ #pragma acc update device(_slist2[0:2])
 
 _first = 0;
 }

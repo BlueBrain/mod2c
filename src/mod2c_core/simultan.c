@@ -128,9 +128,6 @@ static int nonlin_common(q4, sensused)	/* used by massagenonlin() and mixed_eqns
 			}
 		}
 	}
-	Sprintf(buf, "_slist%d = (int*)malloc(sizeof(int)*%d);\n",
-	  numlist, counts);
-	Lappendstr(initlist, buf);
 
 	counts = 0;
 	SYMITER_STAT {
@@ -156,7 +153,7 @@ static int nonlin_common(q4, sensused)	/* used by massagenonlin() and mixed_eqns
 			}
 		}
 	}
-	Sprintf(buf, "#pragma acc enter data copyin(_slist%d[0:%d])\n\n",
+	Sprintf(buf, "#pragma acc update device(_slist%d[0:%d])\n\n",
 	  numlist, counts);
 	Lappendstr(initlist, buf);
 
@@ -202,9 +199,9 @@ numlist, counts*(1 + sens_parm), numlist, counts);
 	q = linsertstr(procfunc, buf);
 	Sprintf(buf,
 	  "\n#define _slist%d _slist%d%s\n"
-	  "int* _slist%d;\n"
+	  "int _slist%d[%d];\n"
 	  "#pragma acc declare create(_slist%d)\n"
-	  , numlist, numlist, suffix, numlist, numlist);
+	  , numlist, numlist, suffix, numlist, counts*(1 + sens_parm), numlist);
 	vectorize_substitute(q, buf);	
 	return counts;
 }

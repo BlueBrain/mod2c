@@ -260,11 +260,11 @@ static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
  
 #define _slist1 _slist1_Nap_No
-int* _slist1;
+int _slist1[1];
 #pragma acc declare create(_slist1)
 
 #define _dlist1 _dlist1_Nap_No
-int* _dlist1;
+int _dlist1[1];
 #pragma acc declare create(_dlist1)
  static inline int states(_threadargsproto_);
  
@@ -507,12 +507,9 @@ static void _initlists(){
  int _cntml_padded=1;
  int _iml=0;
   if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*1);
- _dlist1 = (int*)malloc(sizeof(int)*1);
  _slist1[0] = &(p) - _p;  _dlist1[0] = &(Dp) - _p;
- #pragma acc enter data copyin(_slist1[0:1])
- #pragma acc enter data copyin(_dlist1[0:1])
+ #pragma acc update device(_slist1[0:1])
+ #pragma acc update device(_dlist1[0:1])
 
 _first = 0;
 }
