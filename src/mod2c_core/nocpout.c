@@ -560,7 +560,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
                 "#define _celsius_ _celsius_%s\n"
                 "double _celsius_;\n"
                 "#pragma acc declare copyin(_celsius_)\n", suffix);
-                Lappendstr(defs_list, buf);
+                //Lappendstr(defs_list, buf);
                 add_global_var("double", "celsius", 0, 0);
             }
         }
@@ -586,15 +586,15 @@ Sprintf(buf, "static void _hoc_%s(void);\n", s->name);
 #endif
 
 	q = lappendstr(defs_list, "static int _mechtype;\n");
-	if (net_send_seen_ && !artificial_cell) {
-		Sprintf(buf,
-		  "\n#define _mechtype _mechtype%s\n"
-		  "int _mechtype;\n"
-		  "#pragma acc declare copyin (_mechtype)\n"
-		  , suffix);
-		replacstr(q, buf);
-        add_global_var("int", "_mechtype", 0, 0);
-	}
+	//if (net_send_seen_ && !artificial_cell) {
+	//	Sprintf(buf,
+	//	  "\n#define _mechtype _mechtype%s\n"
+	//	  "int _mechtype;\n"
+	//	  "#pragma acc declare copyin (_mechtype)\n"
+	//	  , suffix);
+	//	replacstr(q, buf);
+	//}
+    add_global_var("int", "_mechtype", 0, 0);
 
 	/**** create special point process functions */
 	if (point_process) {
@@ -797,14 +797,14 @@ s->name, suffix, gind, s->name, gind);
 			}else{
 				Sprintf(buf, "#pragma acc declare copyin (%s)\n", s->name);
 			}
-			Lappendstr(defs_list, buf);
+			//Lappendstr(defs_list, buf);
 
 			if (s->subtype & ARRAY) {
 				Sprintf(buf, "#pragma acc update device (%s,%d) if(nrn_threads->compute_gpu)\n", s->name, s->araydim);
 			}else{
 				Sprintf(buf, "#pragma acc update device (%s) if(nrn_threads->compute_gpu)\n", s->name);
 			}
-			Lappendstr(acc_globals_update_list, buf);
+			//Lappendstr(acc_globals_update_list, buf);
 #endif
 		}
 	}
@@ -846,14 +846,12 @@ diag("No statics allowed for thread safe models:", s->name);
 #endif
 			decode_ustr(s, &d1, &d2, buf);
 			if (s->subtype & ARRAY) {
-				Sprintf(buf, "static double %s[%d];\n"
-                             "#pragma acc declare create(%s)\n",
-                             s->name, s->araydim, s->name);
+				Sprintf(buf, "static double %s[%d];\n",
+                             s->name, s->araydim);
                 add_global_var("double", s->name, 1, s->araydim);
 			}else{
-				Sprintf(buf, "static double %s = %g;\n"
-                             "#pragma acc declare copyin(%s)\n",
-                             s->name, d1, s->name);
+				Sprintf(buf, "static double %s = %g;\n",
+                             s->name, d1);
                 add_global_var("double", s->name, 0, 0);
 			}
 			Lappendstr(defs_list, buf);
@@ -1067,7 +1065,7 @@ static const char *_mechanism[] = {\n\
 	
 #if BBCORE
 		Lappendstr(defs_list, "\n//global variables\n");
-		Lappendstr(defs_list, "static struct GlobalVars {\n");
+		Lappendstr(defs_list, "struct GlobalVars {\n");
         for(int i=0; i < num_global_vars; i++) {
             if(global_vars[i].is_array) {
 		        Sprintf(buf, "  %s %s[%d];\n", global_vars[i].type, global_vars[i].name, global_vars[i].array_length);

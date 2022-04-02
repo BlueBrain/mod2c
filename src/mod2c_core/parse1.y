@@ -1120,7 +1120,7 @@ factordef: NAME '=' real unit
 		  Sprintf(buf, "\ndouble %s = %s;\n"
 			"#pragma acc declare copyin(%s)\n"
 			, SYM($1)->name, STR($3), SYM($1)->name);
-		  Lappendstr(firstlist, buf);
+		  //Lappendstr(firstlist, buf);
           add_global_var("double", SYM($1)->name, 0, 0);
 		}
 	| NAME '=' unit unit
@@ -1131,7 +1131,7 @@ factordef: NAME '=' real unit
 		    Lappendstr(firstlist, buf);
 		    Sprintf(buf, "#pragma acc declare copyin(%s)\n",
 			SYM($1)->name);
-		    Lappendstr(firstlist, buf);
+		    //Lappendstr(firstlist, buf);
             add_global_var("double", SYM($1)->name, 0, 0);
 		}
 	| NAME '=' unit '-' GT unit 
@@ -1142,7 +1142,7 @@ factordef: NAME '=' real unit
 		    Lappendstr(firstlist, buf);
 		    Sprintf(buf, "#pragma acc declare copyin(%s)\n",
 			SYM($1)->name);
-		    Lappendstr(firstlist, buf);
+		    //Lappendstr(firstlist, buf);
             add_global_var("double", SYM($1)->name, 0, 0);
 		}
 	| error {myerr("Unit factor syntax: examples:\n\
