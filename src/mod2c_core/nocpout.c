@@ -200,7 +200,6 @@ int artificial_cell; /* 1 if also explicitly declared an ARTIFICIAL_CELL */
 static int diamdec = 0;	/*1 if diam is declared*/
 static int areadec = 0;
 static int use_bbcorepointer = 0;
-static int use_celsius = 0; /* celsius is used */
 static void defs_h();
 static int iontype();
 static void nrndeclare();
@@ -554,14 +553,15 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 				Sprintf(buf, "extern double %s;\n", s->name);
 			}
 			Lappendstr(defs_list, buf);
-			if (strcmp(s->name, "celsius") == 0) {
-                use_celsius = 1;
-                Sprintf(buf,
-                "#define _celsius_ _celsius_%s\n"
-                "double _celsius_;\n"
-                "#pragma acc declare copyin(_celsius_)\n", suffix);
+            // TODO: what could be other extern variables? :-|
+			if (strcmp(s->name, "celsius") == 0 || strcmp(s->name, "secondorder") || strcmp(s->name, "pi"))  {
+                //use_celsius = 1;
+                //Sprintf(buf,
+                //"#define _celsius_ _celsius_%s\n"
+                //"double _celsius_;\n"
+                //"#pragma acc declare copyin(_celsius_)\n", suffix);
                 //Lappendstr(defs_list, buf);
-                add_global_var("double", "celsius", 0, 0, 0);
+                add_global_var("double", s->name, 0, 0, 0);
             }
         }
     }
@@ -1104,10 +1104,10 @@ static const char *_mechanism[] = {\n\
 		if (acc_globals_update_list->next != acc_globals_update_list) {
 			movelist(acc_globals_update_list->next, acc_globals_update_list->prev, defs_list);
 		}
-        if (use_celsius) {
+        //if (use_celsius) {
             //Lappendstr(defs_list, "_celsius_ = celsius;\n");
             //Lappendstr(defs_list, "#pragma acc update device(_celsius_)\n");
-        }
+        //}
 		Lappendstr(defs_list, "}\n\n");
 
         for(int i=0; i < num_global_vars; i++) {
@@ -1117,9 +1117,9 @@ static const char *_mechanism[] = {\n\
         Lappendstr(defs_list, "\n");
     }
 
-    if (use_celsius) {
+    //if (use_celsius) {
         //Lappendstr(defs_list, "#define celsius _celsius_\n");
-    }
+    //}
 
 #endif
 
