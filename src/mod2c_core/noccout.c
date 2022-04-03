@@ -50,6 +50,7 @@ extern List	*begin_dion_stmt(), *end_dion_stmt();
 extern List* conductance_;
 extern List* breakpoint_local_current_;
 extern List* newtonspace_list;
+extern List* acc_globals_update_list;
 static void conductance_cout();
 extern int net_send_buffer_in_initial;
 #endif
@@ -751,6 +752,7 @@ void c_out_vectorize()
 	P("#undef PI\n");
 	printlist(defs_list);
 	printlist(firstlist);
+    printlist(acc_globals_update_list);
 	if (modelline) {
 		Fprintf(fcout, "static const char *modelname = \"%s\";\n\n", modelline);
 	} else {
@@ -1074,6 +1076,7 @@ void c_out_vectorize()
 	*/
 	/* initlists() is called once to setup slist and dlist pointers */
 	P("\nstatic void _initlists(){\n");
+    P("global_data_ptr = &global_data;\n");
 	P(" double _x; double* _p = &_x;\n");
 	P(" int _i; static int _first = 1;\n");
 	P(" int _cntml_actual=1;\n");
