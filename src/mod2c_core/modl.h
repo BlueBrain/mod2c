@@ -76,6 +76,9 @@
 #define NRN_BUFSIZE MAX_PATH
 #endif
 
+// buffer to store variable type like int, float or double
+#define NRN_VARTYPE_BUFSIZE 16
+
 typedef struct Item    List;		/* list of mixed items */
 typedef struct Item {
 	short           itemtype;
@@ -310,3 +313,38 @@ extern Item    *qlint;
 #define IGNORE(arg)	arg
 #define Free(arg)	free((void *)(arg))
 #endif
+
+
+// represent a global variable at file scope level
+typedef struct global_variable_t {
+
+    // type is base type like "int" or "double"
+    char type[NRN_VARTYPE_BUFSIZE];
+
+    // name is name of the variable
+    char name[NRN_BUFSIZE];
+
+    // > 0 if variable is of type array
+    int is_array;
+
+    // length of array if is_array > 0
+    int array_length;
+
+    // > 0 if this variable doesn't need to be
+    // initialized from another global variable
+    // in the file.
+    int skip_initialisation;
+
+} global_variable_t;
+
+// all global variables in the program
+extern struct global_variable_t* global_variables;
+
+// count of global variables
+extern int global_variables_count;
+
+// current capacity of global variable array
+extern int global_variables_capacity;
+
+// add new global variable
+void add_global_var(const char* type, const char* name, int is_array, int array_length, int skip_initialisation);

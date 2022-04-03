@@ -221,126 +221,35 @@ void _net_buf_receive(NrnThread*);
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
-#define Rmc2u Rmc2u_NMDA10_1
- double Rmc2u = 0.00504192;
- #pragma acc declare copyin (Rmc2u)
-#define Rmc2b Rmc2b_NMDA10_1
- double Rmc2b = 5e-05;
- #pragma acc declare copyin (Rmc2b)
-#define Rmc1u Rmc1u_NMDA10_1
- double Rmc1u = 0.00243831;
- #pragma acc declare copyin (Rmc1u)
-#define Rmc1b Rmc1b_NMDA10_1
- double Rmc1b = 5e-05;
- #pragma acc declare copyin (Rmc1b)
-#define Rmd2u Rmd2u_NMDA10_1
- double Rmd2u = 0.00295341;
- #pragma acc declare copyin (Rmd2u)
-#define Rmd2b Rmd2b_NMDA10_1
- double Rmd2b = 5e-05;
- #pragma acc declare copyin (Rmd2b)
-#define Rmd1u Rmd1u_NMDA10_1
- double Rmd1u = 0.00298874;
- #pragma acc declare copyin (Rmd1u)
-#define Rmd1b Rmd1b_NMDA10_1
- double Rmd1b = 5e-05;
- #pragma acc declare copyin (Rmd1b)
-#define RcMg RcMg_NMDA10_1
- double RcMg = 0.548;
- #pragma acc declare copyin (RcMg)
-#define RoMg RoMg_NMDA10_1
- double RoMg = 0.01;
- #pragma acc declare copyin (RoMg)
-#define Rr2Mg Rr2Mg_NMDA10_1
- double Rr2Mg = 0.00042;
- #pragma acc declare copyin (Rr2Mg)
-#define Rd2Mg Rd2Mg_NMDA10_1
- double Rd2Mg = 0.00026;
- #pragma acc declare copyin (Rd2Mg)
-#define Rr1Mg Rr1Mg_NMDA10_1
- double Rr1Mg = 0.00087;
- #pragma acc declare copyin (Rr1Mg)
-#define Rd1Mg Rd1Mg_NMDA10_1
- double Rd1Mg = 0.0021;
- #pragma acc declare copyin (Rd1Mg)
-#define RuMg RuMg_NMDA10_1
- double RuMg = 0.0171;
- #pragma acc declare copyin (RuMg)
-#define RbMg RbMg_NMDA10_1
- double RbMg = 10;
- #pragma acc declare copyin (RbMg)
-#define Rmu Rmu_NMDA10_1
- double Rmu = 12.8;
- #pragma acc declare copyin (Rmu)
-#define Rmb Rmb_NMDA10_1
- double Rmb = 0.05;
- #pragma acc declare copyin (Rmb)
-#define Rc Rc_NMDA10_1
- double Rc = 0.273;
- #pragma acc declare copyin (Rc)
-#define Ro Ro_NMDA10_1
- double Ro = 0.01;
- #pragma acc declare copyin (Ro)
-#define Rr2 Rr2_NMDA10_1
- double Rr2 = 0.0005;
- #pragma acc declare copyin (Rr2)
-#define Rd2 Rd2_NMDA10_1
- double Rd2 = 0.00043;
- #pragma acc declare copyin (Rd2)
-#define Rr1 Rr1_NMDA10_1
- double Rr1 = 0.0016;
- #pragma acc declare copyin (Rr1)
-#define Rd1 Rd1_NMDA10_1
- double Rd1 = 0.0022;
- #pragma acc declare copyin (Rd1)
-#define Ru Ru_NMDA10_1
- double Ru = 0.0056;
- #pragma acc declare copyin (Ru)
-#define Rb Rb_NMDA10_1
- double Rb = 10;
- #pragma acc declare copyin (Rb)
-#define memb_fraction memb_fraction_NMDA10_1
- double memb_fraction = 0.8;
- #pragma acc declare copyin (memb_fraction)
-#define mg mg_NMDA10_1
- double mg = 1;
- #pragma acc declare copyin (mg)
-#define valence valence_NMDA10_1
- double valence = -2;
- #pragma acc declare copyin (valence)
- 
-static void _acc_globals_update() {
- #pragma acc update device (Rmc2u) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rmc2b) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rmc1u) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rmc1b) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rmd2u) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rmd2b) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rmd1u) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rmd1b) if(nrn_threads->compute_gpu)
- #pragma acc update device (RcMg) if(nrn_threads->compute_gpu)
- #pragma acc update device (RoMg) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rr2Mg) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rd2Mg) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rr1Mg) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rd1Mg) if(nrn_threads->compute_gpu)
- #pragma acc update device (RuMg) if(nrn_threads->compute_gpu)
- #pragma acc update device (RbMg) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rmu) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rmb) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rc) if(nrn_threads->compute_gpu)
- #pragma acc update device (Ro) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rr2) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rd2) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rr1) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rd1) if(nrn_threads->compute_gpu)
- #pragma acc update device (Ru) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rb) if(nrn_threads->compute_gpu)
- #pragma acc update device (memb_fraction) if(nrn_threads->compute_gpu)
- #pragma acc update device (mg) if(nrn_threads->compute_gpu)
- #pragma acc update device (valence) if(nrn_threads->compute_gpu)
- }
-
+ static double Rmc2u = 0.00504192;
+ static double Rmc2b = 5e-05;
+ static double Rmc1u = 0.00243831;
+ static double Rmc1b = 5e-05;
+ static double Rmd2u = 0.00295341;
+ static double Rmd2b = 5e-05;
+ static double Rmd1u = 0.00298874;
+ static double Rmd1b = 5e-05;
+ static double RcMg = 0.548;
+ static double RoMg = 0.01;
+ static double Rr2Mg = 0.00042;
+ static double Rd2Mg = 0.00026;
+ static double Rr1Mg = 0.00087;
+ static double Rd1Mg = 0.0021;
+ static double RuMg = 0.0171;
+ static double RbMg = 10;
+ static double Rmu = 12.8;
+ static double Rmb = 0.05;
+ static double Rc = 0.273;
+ static double Ro = 0.01;
+ static double Rr2 = 0.0005;
+ static double Rd2 = 0.00043;
+ static double Rr1 = 0.0016;
+ static double Rd1 = 0.0022;
+ static double Ru = 0.0056;
+ static double Rb = 10;
+ static double memb_fraction = 0.8;
+ static double mg = 1;
+ static double valence = -2;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -401,58 +310,47 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double ClMg0 = 0;
-#pragma acc declare copyin(ClMg0)
  static double Cl0 = 0;
-#pragma acc declare copyin(Cl0)
  static double D2Mg0 = 0;
-#pragma acc declare copyin(D2Mg0)
  static double D1Mg0 = 0;
-#pragma acc declare copyin(D1Mg0)
  static double D20 = 0;
-#pragma acc declare copyin(D20)
  static double D10 = 0;
-#pragma acc declare copyin(D10)
  static double OMg0 = 0;
-#pragma acc declare copyin(OMg0)
  static double O0 = 0;
-#pragma acc declare copyin(O0)
  static double UMg0 = 0;
-#pragma acc declare copyin(UMg0)
  static double U0 = 0;
-#pragma acc declare copyin(U0)
  static double delta_t = 1;
-#pragma acc declare copyin(delta_t)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "mg_NMDA10_1", &mg_NMDA10_1,
- "valence_NMDA10_1", &valence_NMDA10_1,
- "memb_fraction_NMDA10_1", &memb_fraction_NMDA10_1,
- "Rb_NMDA10_1", &Rb_NMDA10_1,
- "Ru_NMDA10_1", &Ru_NMDA10_1,
- "Ro_NMDA10_1", &Ro_NMDA10_1,
- "Rc_NMDA10_1", &Rc_NMDA10_1,
- "Rd1_NMDA10_1", &Rd1_NMDA10_1,
- "Rr1_NMDA10_1", &Rr1_NMDA10_1,
- "Rd2_NMDA10_1", &Rd2_NMDA10_1,
- "Rr2_NMDA10_1", &Rr2_NMDA10_1,
- "Rmb_NMDA10_1", &Rmb_NMDA10_1,
- "Rmu_NMDA10_1", &Rmu_NMDA10_1,
- "Rmc1b_NMDA10_1", &Rmc1b_NMDA10_1,
- "Rmc1u_NMDA10_1", &Rmc1u_NMDA10_1,
- "Rmc2b_NMDA10_1", &Rmc2b_NMDA10_1,
- "Rmc2u_NMDA10_1", &Rmc2u_NMDA10_1,
- "Rmd1b_NMDA10_1", &Rmd1b_NMDA10_1,
- "Rmd1u_NMDA10_1", &Rmd1u_NMDA10_1,
- "Rmd2b_NMDA10_1", &Rmd2b_NMDA10_1,
- "Rmd2u_NMDA10_1", &Rmd2u_NMDA10_1,
- "RbMg_NMDA10_1", &RbMg_NMDA10_1,
- "RuMg_NMDA10_1", &RuMg_NMDA10_1,
- "RoMg_NMDA10_1", &RoMg_NMDA10_1,
- "RcMg_NMDA10_1", &RcMg_NMDA10_1,
- "Rd1Mg_NMDA10_1", &Rd1Mg_NMDA10_1,
- "Rr1Mg_NMDA10_1", &Rr1Mg_NMDA10_1,
- "Rd2Mg_NMDA10_1", &Rd2Mg_NMDA10_1,
- "Rr2Mg_NMDA10_1", &Rr2Mg_NMDA10_1,
+ "mg_NMDA10_1", &mg,
+ "valence_NMDA10_1", &valence,
+ "memb_fraction_NMDA10_1", &memb_fraction,
+ "Rb_NMDA10_1", &Rb,
+ "Ru_NMDA10_1", &Ru,
+ "Ro_NMDA10_1", &Ro,
+ "Rc_NMDA10_1", &Rc,
+ "Rd1_NMDA10_1", &Rd1,
+ "Rr1_NMDA10_1", &Rr1,
+ "Rd2_NMDA10_1", &Rd2,
+ "Rr2_NMDA10_1", &Rr2,
+ "Rmb_NMDA10_1", &Rmb,
+ "Rmu_NMDA10_1", &Rmu,
+ "Rmc1b_NMDA10_1", &Rmc1b,
+ "Rmc1u_NMDA10_1", &Rmc1u,
+ "Rmc2b_NMDA10_1", &Rmc2b,
+ "Rmc2u_NMDA10_1", &Rmc2u,
+ "Rmd1b_NMDA10_1", &Rmd1b,
+ "Rmd1u_NMDA10_1", &Rmd1u,
+ "Rmd2b_NMDA10_1", &Rmd2b,
+ "Rmd2u_NMDA10_1", &Rmd2u,
+ "RbMg_NMDA10_1", &RbMg,
+ "RuMg_NMDA10_1", &RuMg,
+ "RoMg_NMDA10_1", &RoMg,
+ "RcMg_NMDA10_1", &RcMg,
+ "Rd1Mg_NMDA10_1", &Rd1Mg,
+ "Rr1Mg_NMDA10_1", &Rr1Mg,
+ "Rd2Mg_NMDA10_1", &Rd2Mg,
+ "Rr2Mg_NMDA10_1", &Rr2Mg,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -555,6 +453,145 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  set_pnt_receive(_mechtype, _net_receive, nullptr, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
+ struct _GlobalVars {
+   int _slist1[10];
+   int _dlist1[10];
+   int _mechtype;
+   double Rmc2u;
+   double Rmc2b;
+   double Rmc1u;
+   double Rmc1b;
+   double Rmd2u;
+   double Rmd2b;
+   double Rmd1u;
+   double Rmd1b;
+   double RcMg;
+   double RoMg;
+   double Rr2Mg;
+   double Rd2Mg;
+   double Rr1Mg;
+   double Rd1Mg;
+   double RuMg;
+   double RbMg;
+   double Rmu;
+   double Rmb;
+   double Rc;
+   double Ro;
+   double Rr2;
+   double Rd2;
+   double Rr1;
+   double Rd1;
+   double Ru;
+   double Rb;
+   double memb_fraction;
+   double mg;
+   double valence;
+   double ClMg0;
+   double Cl0;
+   double D2Mg0;
+   double D1Mg0;
+   double D20;
+   double D10;
+   double OMg0;
+   double O0;
+   double UMg0;
+   double U0;
+   double delta_t;
+ };
+
+ static _GlobalVars _global_variables;
+ static _GlobalVars* _global_variables_ptr;
+
+ 
+static void _update_global_variables() {
+   _global_variables._mechtype = _mechtype;
+   _global_variables.Rmc2u = Rmc2u;
+   _global_variables.Rmc2b = Rmc2b;
+   _global_variables.Rmc1u = Rmc1u;
+   _global_variables.Rmc1b = Rmc1b;
+   _global_variables.Rmd2u = Rmd2u;
+   _global_variables.Rmd2b = Rmd2b;
+   _global_variables.Rmd1u = Rmd1u;
+   _global_variables.Rmd1b = Rmd1b;
+   _global_variables.RcMg = RcMg;
+   _global_variables.RoMg = RoMg;
+   _global_variables.Rr2Mg = Rr2Mg;
+   _global_variables.Rd2Mg = Rd2Mg;
+   _global_variables.Rr1Mg = Rr1Mg;
+   _global_variables.Rd1Mg = Rd1Mg;
+   _global_variables.RuMg = RuMg;
+   _global_variables.RbMg = RbMg;
+   _global_variables.Rmu = Rmu;
+   _global_variables.Rmb = Rmb;
+   _global_variables.Rc = Rc;
+   _global_variables.Ro = Ro;
+   _global_variables.Rr2 = Rr2;
+   _global_variables.Rd2 = Rd2;
+   _global_variables.Rr1 = Rr1;
+   _global_variables.Rd1 = Rd1;
+   _global_variables.Ru = Ru;
+   _global_variables.Rb = Rb;
+   _global_variables.memb_fraction = memb_fraction;
+   _global_variables.mg = mg;
+   _global_variables.valence = valence;
+   _global_variables.ClMg0 = ClMg0;
+   _global_variables.Cl0 = Cl0;
+   _global_variables.D2Mg0 = D2Mg0;
+   _global_variables.D1Mg0 = D1Mg0;
+   _global_variables.D20 = D20;
+   _global_variables.D10 = D10;
+   _global_variables.OMg0 = OMg0;
+   _global_variables.O0 = O0;
+   _global_variables.UMg0 = UMg0;
+   _global_variables.U0 = U0;
+   _global_variables.delta_t = delta_t;
+   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+ }
+
+ #define _slist1 _global_variables_ptr->_slist1
+ #define _dlist1 _global_variables_ptr->_dlist1
+ #define _mechtype _global_variables_ptr->_mechtype
+ #define Rmc2u _global_variables_ptr->Rmc2u
+ #define Rmc2b _global_variables_ptr->Rmc2b
+ #define Rmc1u _global_variables_ptr->Rmc1u
+ #define Rmc1b _global_variables_ptr->Rmc1b
+ #define Rmd2u _global_variables_ptr->Rmd2u
+ #define Rmd2b _global_variables_ptr->Rmd2b
+ #define Rmd1u _global_variables_ptr->Rmd1u
+ #define Rmd1b _global_variables_ptr->Rmd1b
+ #define RcMg _global_variables_ptr->RcMg
+ #define RoMg _global_variables_ptr->RoMg
+ #define Rr2Mg _global_variables_ptr->Rr2Mg
+ #define Rd2Mg _global_variables_ptr->Rd2Mg
+ #define Rr1Mg _global_variables_ptr->Rr1Mg
+ #define Rd1Mg _global_variables_ptr->Rd1Mg
+ #define RuMg _global_variables_ptr->RuMg
+ #define RbMg _global_variables_ptr->RbMg
+ #define Rmu _global_variables_ptr->Rmu
+ #define Rmb _global_variables_ptr->Rmb
+ #define Rc _global_variables_ptr->Rc
+ #define Ro _global_variables_ptr->Ro
+ #define Rr2 _global_variables_ptr->Rr2
+ #define Rd2 _global_variables_ptr->Rd2
+ #define Rr1 _global_variables_ptr->Rr1
+ #define Rd1 _global_variables_ptr->Rd1
+ #define Ru _global_variables_ptr->Ru
+ #define Rb _global_variables_ptr->Rb
+ #define memb_fraction _global_variables_ptr->memb_fraction
+ #define mg _global_variables_ptr->mg
+ #define valence _global_variables_ptr->valence
+ #define ClMg0 _global_variables_ptr->ClMg0
+ #define Cl0 _global_variables_ptr->Cl0
+ #define D2Mg0 _global_variables_ptr->D2Mg0
+ #define D1Mg0 _global_variables_ptr->D1Mg0
+ #define D20 _global_variables_ptr->D20
+ #define D10 _global_variables_ptr->D10
+ #define OMg0 _global_variables_ptr->OMg0
+ #define O0 _global_variables_ptr->O0
+ #define UMg0 _global_variables_ptr->UMg0
+ #define U0 _global_variables_ptr->U0
+ #define delta_t _global_variables_ptr->delta_t
+ 
 static const char *modelname = "kinetic NMDA receptor model";
 
 static int error;
@@ -573,14 +610,6 @@ static inline int release(_threadargsprotocomma_ double);
  
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
- 
-#define _slist1 _slist1_NMDA10_1
-int* _slist1;
-#pragma acc declare create(_slist1)
-
-#define _dlist1 _dlist1_NMDA10_1
-int* _dlist1;
-#pragma acc declare create(_dlist1)
  
 /* _kinetic_ kstates _NMDA10_1 */
 #ifndef INSIDE_NMODL
@@ -1202,7 +1231,7 @@ _thread = _ml->_thread;
     }
     #endif
   }
-_acc_globals_update();
+_update_global_variables();
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -1376,15 +1405,13 @@ for (;;) { /* help clang-format properly indent */
 static void terminal(){}
 
 static void _initlists(){
+ _global_variables_ptr = &_global_variables;
  double _x; double* _p = &_x;
  int _i; static int _first = 1;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
   if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*10);
- _dlist1 = (int*)malloc(sizeof(int)*10);
  _slist1[0] = &(OMg) - _p;  _dlist1[0] = &(DOMg) - _p;
  _slist1[1] = &(ClMg) - _p;  _dlist1[1] = &(DClMg) - _p;
  _slist1[2] = &(Cl) - _p;  _dlist1[2] = &(DCl) - _p;
@@ -1395,9 +1422,6 @@ static void _initlists(){
  _slist1[7] = &(O) - _p;  _dlist1[7] = &(DO) - _p;
  _slist1[8] = &(UMg) - _p;  _dlist1[8] = &(DUMg) - _p;
  _slist1[9] = &(U) - _p;  _dlist1[9] = &(DU) - _p;
- #pragma acc enter data copyin(_slist1[0:10])
- #pragma acc enter data copyin(_dlist1[0:10])
-
 _first = 0;
 }
 } // namespace coreneuron_lib

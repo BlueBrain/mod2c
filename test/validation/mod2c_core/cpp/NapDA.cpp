@@ -172,10 +172,6 @@
  inline double malf( _threadargsprotocomma_ double );
  /* declare global and static user variables */
  
-static void _acc_globals_update() {
- }
-
- 
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
  static HocParmLimits _hoc_parm_limits[] = {
@@ -191,11 +187,8 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double delta_t = 0.01;
-#pragma acc declare copyin(delta_t)
  static double h0 = 0;
-#pragma acc declare copyin(h0)
  static double m0 = 0;
-#pragma acc declare copyin(m0)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
  0,0
@@ -265,6 +258,36 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   hoc_register_dparam_semantics(_mechtype, 1, "na_ion");
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
+ struct _GlobalVars {
+   int _slist1[2];
+   int _dlist1[2];
+   int _slist2[2];
+   int _mechtype;
+   double delta_t;
+   double h0;
+   double m0;
+ };
+
+ static _GlobalVars _global_variables;
+ static _GlobalVars* _global_variables_ptr;
+
+ 
+static void _update_global_variables() {
+   _global_variables._mechtype = _mechtype;
+   _global_variables.delta_t = delta_t;
+   _global_variables.h0 = h0;
+   _global_variables.m0 = m0;
+   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+ }
+
+ #define _slist1 _global_variables_ptr->_slist1
+ #define _dlist1 _global_variables_ptr->_dlist1
+ #define _slist2 _global_variables_ptr->_slist2
+ #define _mechtype _global_variables_ptr->_mechtype
+ #define delta_t _global_variables_ptr->delta_t
+ #define h0 _global_variables_ptr->h0
+ #define m0 _global_variables_ptr->m0
+ 
 static const char *modelname = "";
 
 static int error;
@@ -284,19 +307,7 @@ static int _ode_spec1(_threadargsproto_);
 #define INSIDE_NMODL
 #endif
  int _newton_states_NapDA(_threadargsproto_);
- 
-#define _slist2 _slist2_NapDA
-int* _slist2;
-#pragma acc declare create(_slist2)
-  
-#define _slist1 _slist1_NapDA
-int* _slist1;
-#pragma acc declare create(_slist1)
-
-#define _dlist1 _dlist1_NapDA
-int* _dlist1;
-#pragma acc declare create(_dlist1)
- extern int states(_threadargsproto_);
+  extern int states(_threadargsproto_);
  
 /*CVODE*/
  static int _ode_spec1 (_threadargsproto_) {int _reset = 0; {
@@ -483,7 +494,7 @@ _thread = _ml->_thread;
     }
     #endif
   }
-_acc_globals_update();
+_update_global_variables();
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -631,25 +642,17 @@ for (;;) { /* help clang-format properly indent */
 static void terminal(){}
 
 static void _initlists(){
+ _global_variables_ptr = &_global_variables;
  double _x; double* _p = &_x;
  int _i; static int _first = 1;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
   if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*2);
- _dlist1 = (int*)malloc(sizeof(int)*2);
  _slist1[0] = &(m) - _p;  _dlist1[0] = &(Dm) - _p;
  _slist1[1] = &(h) - _p;  _dlist1[1] = &(Dh) - _p;
- #pragma acc enter data copyin(_slist1[0:2])
- #pragma acc enter data copyin(_dlist1[0:2])
-
- _slist2 = (int*)malloc(sizeof(int)*2);
  _slist2[0] = &(h) - _p;
  _slist2[1] = &(m) - _p;
- #pragma acc enter data copyin(_slist2[0:2])
-
 _first = 0;
 }
 } // namespace coreneuron_lib

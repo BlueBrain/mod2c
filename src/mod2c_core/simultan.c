@@ -128,9 +128,6 @@ static int nonlin_common(q4, sensused)	/* used by massagenonlin() and mixed_eqns
 			}
 		}
 	}
-	Sprintf(buf, "_slist%d = (int*)malloc(sizeof(int)*%d);\n",
-	  numlist, counts);
-	Lappendstr(initlist, buf);
 
 	counts = 0;
 	SYMITER_STAT {
@@ -156,9 +153,6 @@ static int nonlin_common(q4, sensused)	/* used by massagenonlin() and mixed_eqns
 			}
 		}
 	}
-	Sprintf(buf, "#pragma acc enter data copyin(_slist%d[0:%d])\n\n",
-	  numlist, counts);
-	Lappendstr(initlist, buf);
 
 	ITERATE(lq, eqnq) {
 		char *eqtype = SYM(ITM(lq))->name;
@@ -197,15 +191,8 @@ Sprintf(buf, "if(_counte != %d) printf( \"Number of equations, %%d,\
 	freeqnqueue();
 	Sprintf(buf, ", _slist%d[0:%d]", numlist, counts*(1 + sens_parm));
 	Lappendstr(acc_present_list, buf);
-Sprintf(buf, "static int _slist%d[%d]; static double _dlist%d[%d];\n",
-numlist, counts*(1 + sens_parm), numlist, counts);
-	q = linsertstr(procfunc, buf);
-	Sprintf(buf,
-	  "\n#define _slist%d _slist%d%s\n"
-	  "int* _slist%d;\n"
-	  "#pragma acc declare create(_slist%d)\n"
-	  , numlist, numlist, suffix, numlist, numlist);
-	vectorize_substitute(q, buf);	
+	Sprintf(buf, "_slist%d", numlist);
+	add_global_var("int", buf, 1, counts*(1 + sens_parm), 1);
 	return counts;
 }
 
@@ -411,9 +398,12 @@ Sprintf(buf, "if(_counte != %d) printf( \"Number of equations, %%d,\
 #endif
 	}
 	linblk->used = nstate;
-	Sprintf(buf, "static int _slist%d[%d];static double **_coef%d;\n",
-		numlist, nstate*(1 + sens_parm), numlist);
+	Sprintf(buf, "static double **_coef%d;\n", numlist);
 	Linsertstr(procfunc, buf);
+
+	Sprintf(buf, "_slist%d", numlist);
+	add_global_var("int", buf, 1, nstate*(1 + sens_parm), 1);
+
 	Sprintf(buf, "\n#define _RHS%d(arg) _coef%d[arg][%d]\n",
 		numlist, numlist, nstate);
 	Linsertstr(procfunc, buf);

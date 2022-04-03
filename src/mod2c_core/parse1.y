@@ -1117,10 +1117,9 @@ unitdef: unit '=' unit
 factordef: NAME '=' real unit
 		{ SYM($1)->subtype |= nmodlCONST;
 		  Lappendstr(units_def_for_acc, SYM($1)->name);
-		  Sprintf(buf, "\ndouble %s = %s;\n"
-			"#pragma acc declare copyin(%s)\n"
-			, SYM($1)->name, STR($3), SYM($1)->name);
+		  Sprintf(buf, "\nstatic double %s = %s;\n", SYM($1)->name, STR($3));
 		  Lappendstr(firstlist, buf);
+		  add_global_var("double", SYM($1)->name, 0, 0, 0);
 		}
 	| NAME '=' unit unit
 		{
@@ -1128,9 +1127,7 @@ factordef: NAME '=' real unit
 		    SYM($1)->subtype |= nmodlCONST;
 		    nrnunit_dynamic_str(buf, SYM($1)->name, $3, $4);
 		    Lappendstr(firstlist, buf);
-		    Sprintf(buf, "#pragma acc declare copyin(%s)\n",
-			SYM($1)->name);
-		    Lappendstr(firstlist, buf);
+		    add_global_var("double", SYM($1)->name, 0, 0, 0);
 		}
 	| NAME '=' unit '-' GT unit 
 		{
@@ -1138,9 +1135,7 @@ factordef: NAME '=' real unit
 		    SYM($1)->subtype |= nmodlCONST;
 		    nrnunit_dynamic_str(buf, SYM($1)->name, $3, $6);
 		    Lappendstr(firstlist, buf);
-		    Sprintf(buf, "#pragma acc declare copyin(%s)\n",
-			SYM($1)->name);
-		    Lappendstr(firstlist, buf);
+		    add_global_var("double", SYM($1)->name, 0, 0, 0);
 		}
 	| error {myerr("Unit factor syntax: examples:\n\
 foot2inch = (foot) -> (inch)\n\

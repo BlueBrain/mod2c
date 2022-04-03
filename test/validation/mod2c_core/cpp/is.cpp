@@ -144,9 +144,6 @@
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
  extern double celsius;
- #define _celsius_ _celsius__Is
-double _celsius_;
-#pragma acc declare copyin(_celsius_)
  
 #if 0 /*BBCORE*/
  /* declaration of user functions */
@@ -187,13 +184,6 @@ static double _thread1data[4];
 #define ninf_Is _thread1data[3]
 #define ninf _thread[_gth]._pval[3]
  
-static void _acc_globals_update() {
- _celsius_ = celsius;
- #pragma acc update device(_celsius_)
- }
-
- #define celsius _celsius_
- 
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
  static HocParmLimits _hoc_parm_limits[] = {
@@ -211,17 +201,14 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double delta_t = 0.01;
-#pragma acc declare copyin(delta_t)
  static double m0 = 0;
-#pragma acc declare copyin(m0)
  static double n0 = 0;
-#pragma acc declare copyin(n0)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "minf_Is", &minf_Is,
- "ninf_Is", &ninf_Is,
- "mtau_Is", &mtau_Is,
- "ntau_Is", &ntau_Is,
+ "minf_Is", &minf,
+ "ninf_Is", &ninf,
+ "mtau_Is", &mtau,
+ "ntau_Is", &ntau,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -308,6 +295,39 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   hoc_register_dparam_semantics(_mechtype, 6, "ns_ion");
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
+ struct _GlobalVars {
+   int _slist1[2];
+   int _dlist1[2];
+   int _slist2[2];
+   double celsius;
+   int _mechtype;
+   double delta_t;
+   double m0;
+   double n0;
+ };
+
+ static _GlobalVars _global_variables;
+ static _GlobalVars* _global_variables_ptr;
+
+ 
+static void _update_global_variables() {
+   _global_variables.celsius = celsius;
+   _global_variables._mechtype = _mechtype;
+   _global_variables.delta_t = delta_t;
+   _global_variables.m0 = m0;
+   _global_variables.n0 = n0;
+   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+ }
+
+ #define _slist1 _global_variables_ptr->_slist1
+ #define _dlist1 _global_variables_ptr->_dlist1
+ #define _slist2 _global_variables_ptr->_slist2
+ #define celsius _global_variables_ptr->celsius
+ #define _mechtype _global_variables_ptr->_mechtype
+ #define delta_t _global_variables_ptr->delta_t
+ #define m0 _global_variables_ptr->m0
+ #define n0 _global_variables_ptr->n0
+ 
 static const char *modelname = "Cardiac L-type Calcium channel";
 
 static int error;
@@ -328,19 +348,7 @@ static int _ode_spec1(_threadargsproto_);
 #define INSIDE_NMODL
 #endif
  int _newton_states_Is(_threadargsproto_);
- 
-#define _slist2 _slist2_Is
-int* _slist2;
-#pragma acc declare create(_slist2)
-  
-#define _slist1 _slist1_Is
-int* _slist1;
-#pragma acc declare create(_slist1)
-
-#define _dlist1 _dlist1_Is
-int* _dlist1;
-#pragma acc declare create(_dlist1)
- extern int states(_threadargsproto_);
+  extern int states(_threadargsproto_);
  
 /*CVODE*/
  static int _ode_spec1 (_threadargsproto_) {int _reset = 0; {
@@ -521,7 +529,7 @@ _thread = _ml->_thread;
     }
     #endif
   }
-_acc_globals_update();
+_update_global_variables();
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -685,25 +693,17 @@ for (;;) { /* help clang-format properly indent */
 static void terminal(){}
 
 static void _initlists(){
+ _global_variables_ptr = &_global_variables;
  double _x; double* _p = &_x;
  int _i; static int _first = 1;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
   if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*2);
- _dlist1 = (int*)malloc(sizeof(int)*2);
  _slist1[0] = &(m) - _p;  _dlist1[0] = &(Dm) - _p;
  _slist1[1] = &(n) - _p;  _dlist1[1] = &(Dn) - _p;
- #pragma acc enter data copyin(_slist1[0:2])
- #pragma acc enter data copyin(_dlist1[0:2])
-
- _slist2 = (int*)malloc(sizeof(int)*2);
  _slist2[0] = &(m) - _p;
  _slist2[1] = &(n) - _p;
- #pragma acc enter data copyin(_slist2[0:2])
-
 _first = 0;
 }
 } // namespace coreneuron_lib
