@@ -216,38 +216,13 @@ void _net_buf_receive(NrnThread*);
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
-#define Rc Rc_NMDA10_2
- double Rc = 0.0916;
- #pragma acc declare copyin (Rc)
-#define Ro Ro_NMDA10_2
- double Ro = 0.0465;
- #pragma acc declare copyin (Ro)
-#define Rr Rr_NMDA10_2
- double Rr = 0.0018;
- #pragma acc declare copyin (Rr)
-#define Rd Rd_NMDA10_2
- double Rd = 0.0084;
- #pragma acc declare copyin (Rd)
-#define Ru Ru_NMDA10_2
- double Ru = 0.0055;
- #pragma acc declare copyin (Ru)
-#define Rb Rb_NMDA10_2
- double Rb = 5;
- #pragma acc declare copyin (Rb)
-#define mg mg_NMDA10_2
- double mg = 1;
- #pragma acc declare copyin (mg)
- 
-static void _acc_globals_update() {
- #pragma acc update device (Rc) if(nrn_threads->compute_gpu)
- #pragma acc update device (Ro) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rr) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rd) if(nrn_threads->compute_gpu)
- #pragma acc update device (Ru) if(nrn_threads->compute_gpu)
- #pragma acc update device (Rb) if(nrn_threads->compute_gpu)
- #pragma acc update device (mg) if(nrn_threads->compute_gpu)
- }
-
+ static double Rc = 0.0916;
+ static double Ro = 0.0465;
+ static double Rr = 0.0018;
+ static double Rd = 0.0084;
+ static double Ru = 0.0055;
+ static double Rb = 5;
+ static double mg = 1;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -280,36 +255,25 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double CB20 = 0;
-#pragma acc declare copyin(CB20)
  static double CB10 = 0;
-#pragma acc declare copyin(CB10)
  static double CB00 = 0;
-#pragma acc declare copyin(CB00)
  static double C20 = 0;
-#pragma acc declare copyin(C20)
  static double C10 = 0;
-#pragma acc declare copyin(C10)
  static double C00 = 0;
-#pragma acc declare copyin(C00)
  static double DB0 = 0;
-#pragma acc declare copyin(DB0)
  static double D0 = 0;
-#pragma acc declare copyin(D0)
  static double OB0 = 0;
-#pragma acc declare copyin(OB0)
  static double O0 = 0;
-#pragma acc declare copyin(O0)
  static double delta_t = 1;
-#pragma acc declare copyin(delta_t)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "mg_NMDA10_2", &mg_NMDA10_2,
- "Rb_NMDA10_2", &Rb_NMDA10_2,
- "Ru_NMDA10_2", &Ru_NMDA10_2,
- "Rd_NMDA10_2", &Rd_NMDA10_2,
- "Rr_NMDA10_2", &Rr_NMDA10_2,
- "Ro_NMDA10_2", &Ro_NMDA10_2,
- "Rc_NMDA10_2", &Rc_NMDA10_2,
+ "mg_NMDA10_2", &mg,
+ "Rb_NMDA10_2", &Rb,
+ "Ru_NMDA10_2", &Ru,
+ "Rd_NMDA10_2", &Rd,
+ "Rr_NMDA10_2", &Rr,
+ "Ro_NMDA10_2", &Ro,
+ "Rc_NMDA10_2", &Rc,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -404,6 +368,79 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  set_pnt_receive(_mechtype, _net_receive, nullptr, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
+ struct _GlobalVars {
+   int _slist1[10];
+   int _dlist1[10];
+   int _mechtype;
+   double Rc;
+   double Ro;
+   double Rr;
+   double Rd;
+   double Ru;
+   double Rb;
+   double mg;
+   double CB20;
+   double CB10;
+   double CB00;
+   double C20;
+   double C10;
+   double C00;
+   double DB0;
+   double D0;
+   double OB0;
+   double O0;
+   double delta_t;
+ };
+
+ static _GlobalVars _global_variables;
+ static _GlobalVars* _global_variables_ptr;
+
+ 
+static void _update_global_variables() {
+   _global_variables._mechtype = _mechtype;
+   _global_variables.Rc = Rc;
+   _global_variables.Ro = Ro;
+   _global_variables.Rr = Rr;
+   _global_variables.Rd = Rd;
+   _global_variables.Ru = Ru;
+   _global_variables.Rb = Rb;
+   _global_variables.mg = mg;
+   _global_variables.CB20 = CB20;
+   _global_variables.CB10 = CB10;
+   _global_variables.CB00 = CB00;
+   _global_variables.C20 = C20;
+   _global_variables.C10 = C10;
+   _global_variables.C00 = C00;
+   _global_variables.DB0 = DB0;
+   _global_variables.D0 = D0;
+   _global_variables.OB0 = OB0;
+   _global_variables.O0 = O0;
+   _global_variables.delta_t = delta_t;
+   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+ }
+
+ #define _slist1 _global_variables_ptr->_slist1
+ #define _dlist1 _global_variables_ptr->_dlist1
+ #define _mechtype _global_variables_ptr->_mechtype
+ #define Rc _global_variables_ptr->Rc
+ #define Ro _global_variables_ptr->Ro
+ #define Rr _global_variables_ptr->Rr
+ #define Rd _global_variables_ptr->Rd
+ #define Ru _global_variables_ptr->Ru
+ #define Rb _global_variables_ptr->Rb
+ #define mg _global_variables_ptr->mg
+ #define CB20 _global_variables_ptr->CB20
+ #define CB10 _global_variables_ptr->CB10
+ #define CB00 _global_variables_ptr->CB00
+ #define C20 _global_variables_ptr->C20
+ #define C10 _global_variables_ptr->C10
+ #define C00 _global_variables_ptr->C00
+ #define DB0 _global_variables_ptr->DB0
+ #define D0 _global_variables_ptr->D0
+ #define OB0 _global_variables_ptr->OB0
+ #define O0 _global_variables_ptr->O0
+ #define delta_t _global_variables_ptr->delta_t
+ 
 static const char *modelname = "detailed model of glutamate NMDA receptors";
 
 static int error;
@@ -423,14 +460,6 @@ static inline int rates(_threadargsprotocomma_ double);
  
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
- 
-#define _slist1 _slist1_NMDA10_2
-int* _slist1;
-#pragma acc declare create(_slist1)
-
-#define _dlist1 _dlist1_NMDA10_2
-int* _dlist1;
-#pragma acc declare create(_dlist1)
  
 /* _kinetic_ kstates _NMDA10_2 */
 #ifndef INSIDE_NMODL
@@ -944,7 +973,7 @@ _thread = _ml->_thread;
     }
     #endif
   }
-_acc_globals_update();
+_update_global_variables();
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -1118,15 +1147,13 @@ for (;;) { /* help clang-format properly indent */
 static void terminal(){}
 
 static void _initlists(){
+ _global_variables_ptr = &_global_variables;
  double _x; double* _p = &_x;
  int _i; static int _first = 1;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
   if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*10);
- _dlist1 = (int*)malloc(sizeof(int)*10);
  _slist1[0] = &(OB) - _p;  _dlist1[0] = &(DOB) - _p;
  _slist1[1] = &(CB2) - _p;  _dlist1[1] = &(DCB2) - _p;
  _slist1[2] = &(CB1) - _p;  _dlist1[2] = &(DCB1) - _p;
@@ -1137,9 +1164,6 @@ static void _initlists(){
  _slist1[7] = &(DB) - _p;  _dlist1[7] = &(DDB) - _p;
  _slist1[8] = &(D) - _p;  _dlist1[8] = &(DD) - _p;
  _slist1[9] = &(O) - _p;  _dlist1[9] = &(DO) - _p;
- #pragma acc enter data copyin(_slist1[0:10])
- #pragma acc enter data copyin(_dlist1[0:10])
-
 _first = 0;
 }
 } // namespace coreneuron_lib

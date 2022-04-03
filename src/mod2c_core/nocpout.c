@@ -200,7 +200,6 @@ int artificial_cell; /* 1 if also explicitly declared an ARTIFICIAL_CELL */
 static int diamdec = 0;	/*1 if diam is declared*/
 static int areadec = 0;
 static int use_bbcorepointer = 0;
-static int use_celsius = 0; /* celsius is used */
 static void defs_h();
 static int iontype();
 static void nrndeclare();
@@ -216,7 +215,7 @@ static Item* net_init_q1_;
 static Item* net_init_q2_;
 static int ba_index_; /* BEFORE AFTER blocks. See bablk */
 static List* ba_list_;
-static List* acc_globals_update_list;
+List* globals_update_list;
 
 #if CVODE
 List* state_discon_list_;
@@ -537,10 +536,6 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 		}
 	}
 #endif
-	ITERATE(q, units_def_for_acc) {
-		Sprintf(buf, "#define %s %s%s\n", STR(q), STR(q), suffix);
-		Lappendstr(defs_list, buf);
-	}
 
 	Lappendstr(defs_list, "/* external NEURON variables */\n");
 	SYMLISTITER {
@@ -554,13 +549,14 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 				Sprintf(buf, "extern double %s;\n", s->name);
 			}
 			Lappendstr(defs_list, buf);
-			if (strcmp(s->name, "celsius") == 0) {
-                use_celsius = 1;
-                Sprintf(buf,
-                "#define _celsius_ _celsius_%s\n"
-                "double _celsius_;\n"
-                "#pragma acc declare copyin(_celsius_)\n", suffix);
-                Lappendstr(defs_list, buf);
+
+			// following three global variables used as extern from
+			// coreneuron side for openacc usage and hence add them
+			// to global variable list.
+			if (strcmp(s->name, "celsius") == 0
+					|| strcmp(s->name, "secondorder")
+					|| strcmp(s->name, "pi"))  {
+				add_global_var("double", s->name, 0, 0, 0);
             }
         }
     }
@@ -585,14 +581,7 @@ Sprintf(buf, "static void _hoc_%s(void);\n", s->name);
 #endif
 
 	q = lappendstr(defs_list, "static int _mechtype;\n");
-	if (net_send_seen_ && !artificial_cell) {
-		Sprintf(buf,
-		  "\n#define _mechtype _mechtype%s\n"
-		  "int _mechtype;\n"
-		  "#pragma acc declare copyin (_mechtype)\n"
-		  , suffix);
-		replacstr(q, buf);
-	}
+	add_global_var("int", "_mechtype", 0, 0, 0);
 
 	/**** create special point process functions */
 	if (point_process) {
@@ -752,7 +741,7 @@ sprintf(buf, "static double %s;\n", SYM(q)->name);
 		++thread_data_index;
 	}
 	gind = 0;
-	acc_globals_update_list = newlist();
+	globals_update_list = newlist();
  	SYMLISTITER { /* globals are now global with respect to C as well as hoc */
 		s = SYM(q);
 		if (s->nrntype & (NRNGLOBAL)) {
@@ -775,55 +764,22 @@ s->name, suffix, gind, s->name, gind);
 			}
 			continue;
 		    }
-			if (suffix[0]) {
-				Sprintf(buf, "#define %s %s%s\n", s->name, s->name, suffix);
-				q1 = Lappendstr(defs_list, buf);
-				q1->itemtype = VERBATIM;
-			}
 			decode_ustr(s, &d1, &d2, buf);
 			if (s->subtype & ARRAY) {
-				Sprintf(buf, "double %s[%d];\n", s->name, s->araydim);
+				Sprintf(buf, "static double %s[%d];\n", s->name, s->araydim);
+				add_global_var("double", s->name, 1, s->araydim, 0);
 			}else{
-				Sprintf(buf, "double %s = %g;\n", s->name, d1);
+				Sprintf(buf, "static double %s = %g;\n", s->name, d1);
+				add_global_var("double", s->name, 0, 0, 0);
 			}
 			Lappendstr(defs_list, buf);
-#if BBCORE
-			if (s->subtype & ARRAY) {
-				Sprintf(buf, "#pragma acc declare copyin (%s,%d)\n", s->name, s->araydim);
-			}else{
-				Sprintf(buf, "#pragma acc declare copyin (%s)\n", s->name);
-			}
-			Lappendstr(defs_list, buf);
-
-			if (s->subtype & ARRAY) {
-				Sprintf(buf, "#pragma acc update device (%s,%d) if(nrn_threads->compute_gpu)\n", s->name, s->araydim);
-			}else{
-				Sprintf(buf, "#pragma acc update device (%s) if(nrn_threads->compute_gpu)\n", s->name);
-			}
-			Lappendstr(acc_globals_update_list, buf);
-#endif
 		}
 	}
 
 #if BBCORE
-	if (acc_globals_update_list) {
-		Lappendstr(defs_list, "\nstatic void _acc_globals_update() {\n");
-		if (acc_globals_update_list->next != acc_globals_update_list) {
-			movelist(acc_globals_update_list->next, acc_globals_update_list->prev, defs_list);
-		}
-        if (use_celsius) {
-            Lappendstr(defs_list, "_celsius_ = celsius;\n");
-            Lappendstr(defs_list, "#pragma acc update device(_celsius_)\n");
-        }
-		Lappendstr(defs_list, "}\n\n");
-	}
-
-    if (use_celsius) {
-        Lappendstr(defs_list, "#define celsius _celsius_\n");
-    }
-
 	Lappendstr(defs_list, "\n#if 0 /*BBCORE*/\n");
 #endif
+
 	Lappendstr(defs_list, "/* some parameters have upper and lower limits */\n");
 	Lappendstr(defs_list, "static HocParmLimits _hoc_parm_limits[] = {\n");
 	SYMLISTITER {
@@ -857,13 +813,13 @@ diag("No statics allowed for thread safe models:", s->name);
 #endif
 			decode_ustr(s, &d1, &d2, buf);
 			if (s->subtype & ARRAY) {
-				Sprintf(buf, "static double %s[%d];\n"
-                             "#pragma acc declare create(%s)\n",
-                             s->name, s->araydim, s->name);
+				Sprintf(buf, "static double %s[%d];\n",
+                             s->name, s->araydim);
+				add_global_var("double", s->name, 1, s->araydim, 0);
 			}else{
-				Sprintf(buf, "static double %s = %g;\n"
-                             "#pragma acc declare copyin(%s)\n",
-                             s->name, d1, s->name);
+				Sprintf(buf, "static double %s = %g;\n",
+                             s->name, d1);
+				add_global_var("double", s->name, 0, 0, 0);
 			}
 			Lappendstr(defs_list, buf);
 		}
@@ -874,7 +830,7 @@ diag("No statics allowed for thread safe models:", s->name);
  	ITERATE(q, syminorder) {
 		s = SYM(q);
 		if (s->nrntype & NRNGLOBAL && !(s->subtype & ARRAY)) {
-			Sprintf(buf, "\"%s%s\", &%s%s,\n", s->name, suffix, s->name, suffix);
+			Sprintf(buf, "\"%s%s\", &%s,\n", s->name, suffix, s->name);
 			Lappendstr(defs_list, buf);
 		}
 	}
@@ -1074,6 +1030,89 @@ static const char *_mechanism[] = {\n\
 		q=q->next->next->next;
 	}
 	
+#if BBCORE
+    // start printing struct that contail all global variables
+    Lappendstr(globals_update_list, "struct _GlobalVars {\n");
+    for(int i=0; i < global_variables_count; i++) {
+        // individual member declaration: type name [len]
+        if(global_variables[i].is_array) {
+            Sprintf(buf, "  %s %s[%d];\n",
+                    global_variables[i].type,
+                    global_variables[i].name,
+                    global_variables[i].array_length);
+        } else {
+            Sprintf(buf, "  %s %s;\n",
+                    global_variables[i].type,
+                    global_variables[i].name);
+        }
+        Lappendstr(globals_update_list, buf);
+    }
+    Lappendstr(globals_update_list, "};\n\n");
+
+    // global_variables contain all variables. It's static in order to avoid
+    // external linkage and hence duplicate symbol error.
+    Lappendstr(globals_update_list, "static _GlobalVars _global_variables;\n");
+
+    // openacc doesn't allow accessing static variables and hence using this
+    // global_variables_ptr that is used just to pass the associated pointer
+    // on device side. TODO: nvhpc still emits warning. This needs to be
+    // revisited
+    Lappendstr(globals_update_list, "static _GlobalVars* _global_variables_ptr;\n\n");
+
+    // now print function that is going to initialize all global variables into
+    // container variable global_variables
+    Lappendstr(globals_update_list, "\nstatic void _update_global_variables() {\n");
+
+    for(int i=0; i < global_variables_count; i++) {
+        // variables like slist/dlist are directly initialized
+        // in global_variables and doesn't have additional global
+        // variable to be initialized from.
+        if(global_variables[i].skip_initialisation) {
+            continue;
+        }
+
+        if(global_variables[i].is_array) {
+            // if there is an array, initialize all elements
+            for(int j=0; j<global_variables[i].array_length; j++) {
+                Sprintf(buf, "  _global_variables.%s[%d] = %s[%d];\n",
+                        global_variables[i].name,
+                        j,
+                        global_variables[i].name,
+                        j);
+                Lappendstr(globals_update_list, buf);
+            }
+        } else {
+            // scalar variable
+            Sprintf(buf, "  _global_variables.%s = %s;\n",
+                    global_variables[i].name,
+                    global_variables[i].name);
+            Lappendstr(globals_update_list, buf);
+        }
+    }
+
+    // if there is non-zero global variable then copy global variable onto GPU
+    if (global_variables_count) {
+        Lappendstr(globals_update_list,
+                    "  #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)\n");
+    }
+
+    // end of update function
+    Lappendstr(globals_update_list, "}\n\n");
+
+    // now all global variables should be accessed via container global_variables
+    // especially global_variables_ptr because access via pointer is possible on
+    // cpu side or GPU side. Hence, this is usual macro magic.
+    for(int i=0; i < global_variables_count; i++) {
+        Sprintf(buf, "#define %s _global_variables_ptr->%s\n",
+                global_variables[i].name,
+                global_variables[i].name);
+        Lappendstr(globals_update_list, buf);
+    }
+
+    Lappendstr(globals_update_list, "\n");
+
+#endif
+
 	Lappendstr(defs_list, "\n\
 static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {\n");
 #if BBCORE

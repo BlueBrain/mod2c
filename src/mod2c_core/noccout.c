@@ -50,6 +50,7 @@ extern List	*begin_dion_stmt(), *end_dion_stmt();
 extern List* conductance_;
 extern List* breakpoint_local_current_;
 extern List* newtonspace_list;
+extern List* globals_update_list;
 static void conductance_cout();
 extern int net_send_buffer_in_initial;
 #endif
@@ -751,6 +752,7 @@ void c_out_vectorize()
 	P("#undef PI\n");
 	printlist(defs_list);
 	printlist(firstlist);
+	printlist(globals_update_list);
 	if (modelline) {
 		Fprintf(fcout, "static const char *modelname = \"%s\";\n\n", modelline);
 	} else {
@@ -806,9 +808,6 @@ void c_out_vectorize()
 	  , derivimplic_listnum, derivimplic_listnum);
  	  P(buf);
 	}
-	  if (net_send_seen_ && !artificial_cell) {
-	    P("  #pragma acc update device (_mechtype) if(_nt->compute_gpu)\n");
-	  }
 	ITERATE(q, newtonspace_list) {
 	  P(STR(q));
 	}
@@ -828,7 +827,7 @@ void c_out_vectorize()
        With c++ files we declare routine seq in which case static variables
        can't be used. So, introducing _celsius_ as default implementation.
 	*/
-	P("_acc_globals_update();\n");
+	P("_update_global_variables();\n");
 
 	 pr_layout_for_p(1, NRN_INIT);
 
@@ -1074,6 +1073,10 @@ void c_out_vectorize()
 	*/
 	/* initlists() is called once to setup slist and dlist pointers */
 	P("\nstatic void _initlists(){\n");
+	// _initlists is called first from the _reg function
+	// and hence setup global variable pointer here so
+	// that it's valid to begin with
+	P(" _global_variables_ptr = &_global_variables;\n");
 	P(" double _x; double* _p = &_x;\n");
 	P(" int _i; static int _first = 1;\n");
 	P(" int _cntml_actual=1;\n");

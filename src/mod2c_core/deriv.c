@@ -564,13 +564,6 @@ void massagederiv(q1, q2, q3, q4, sensused)
 			count++;
 		}
 	}
-	Sprintf(buf,
-	  "\n"
-	  " _slist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  " _dlist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  , numlist, count, numlist, count
-	);
-	Lappendstr(initlist, buf);
 
 	count = 0;
 	ITERATE(qs, deriv_used_list) {
@@ -618,31 +611,19 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 		}
 	}
 
-	Sprintf(buf,
-	  "#pragma acc enter data copyin(_slist%d[0:%d])\n"
-	  " #pragma acc enter data copyin(_dlist%d[0:%d])\n\n"
-	  , numlist, count, numlist, count);
-	Lappendstr(initlist, buf);
-
 	if (count == 0) {
 		diag("DERIVATIVE contains no derivatives", (char *)0);
 	}
 	derfun->used = count;
+	//TODO: present list could be replaced with  global_data_ptr present clause?
 	Sprintf(buf, ", _slist%d[0:%d], _dlist%d[0:%d]",
 	  numlist, count, numlist, count);
 	Lappendstr(acc_present_list, buf);
-	Sprintf(buf,
 
-	  "\n#define _slist%d _slist%d%s\n"
-	  "int* _slist%d;\n"
-	  "#pragma acc declare create(_slist%d)\n"
-	  "\n#define _dlist%d _dlist%d%s\n"
-	  "int* _dlist%d;\n"
-	  "#pragma acc declare create(_dlist%d)\n"
-	  , numlist, numlist, suffix, numlist, numlist
-	  , numlist, numlist, suffix, numlist, numlist
-	  );
-		Linsertstr(procfunc, buf);
+	Sprintf(buf, "_slist%d", numlist);
+	add_global_var("int", buf, 1, count, 1);
+	Sprintf(buf, "_dlist%d", numlist);
+	add_global_var("int", buf, 1, count, 1);
 	
 #if CVODE
 	Lappendstr(procfunc, "\n/*CVODE*/\n");

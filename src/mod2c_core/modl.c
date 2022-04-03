@@ -78,6 +78,44 @@ extern char* nmodl_version_;
 extern int   usederivstatearray;
 #endif
 
+// global variables, current count and current capacity for array to store
+global_variable_t* global_variables = NULL;
+int global_variables_count = 0;
+int global_variables_capacity = 0;
+
+// add new global variable that needs to be printed
+// TODO: add function for deallocation/cleanup of global_variables
+void add_global_var(const char* type,
+        const char* name,
+        int is_array,
+        int array_length,
+        int skip_initialisation) {
+
+    // if there is no capacity to store variable, reallocate array
+    // note that typically there are small number of global variables
+    // that need to be printed. So ~64 is more than enough in most
+    // of the cases.
+    if (global_variables_capacity <= global_variables_count) {
+        int new_size = sizeof(global_variable_t) * (global_variables_capacity + 64);
+        global_variables = (global_variable_t*) realloc(global_variables, new_size);
+
+        if(global_variables == NULL) {
+            diag("Error while memory allocation, realloc failed!");
+        }
+    }
+
+    // add new variable at the end
+    int i = global_variables_count;
+    strncpy(global_variables[i].type, type, NRN_VARTYPE_BUFSIZE);
+    strncpy(global_variables[i].name, name, NRN_BUFSIZE);
+    global_variables[i].is_array = is_array;
+    global_variables[i].array_length = array_length;
+    global_variables[i].skip_initialisation = skip_initialisation;
+
+    global_variables_count++;
+}
+
+
 extern int yyparse();
 extern int mkdir_p();
 

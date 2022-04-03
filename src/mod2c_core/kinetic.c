@@ -458,18 +458,12 @@ Sprintf(buf, "{int _reset=0;\n");
 	Sprintf(buf, ", _slist%d[0:%d], _dlist%d[0:%d]",
 	  numlist, count, numlist, count);
 	Lappendstr(acc_present_list, buf);
-	Sprintf(buf,
-	  "\n#define _slist%d _slist%d%s\n"
-	  "int* _slist%d;\n"    
-	  "#pragma acc declare create(_slist%d)\n"
-	  "\n#define _dlist%d _dlist%d%s\n"
-	  "int* _dlist%d;\n"   
-	  "#pragma acc declare create(_dlist%d)\n"
-	  , numlist, numlist, suffix, numlist, numlist
-	  , numlist, numlist, suffix, numlist, numlist
-	  );
 
-	Linsertstr(procfunc, buf);
+	Sprintf(buf, "_slist%d", numlist);
+	add_global_var("int", buf, 1, count, 1);
+	Sprintf(buf, "_dlist%d", numlist);
+	add_global_var("int", buf, 1, count, 1);
+
 	insertstr(q4, "  } return _reset;\n");
 	movelist(q1, q4, procfunc);
 
@@ -1218,12 +1212,6 @@ static void kinlist(fun, rlst)
 			count++;
 		}
 	}
-	Sprintf(buf,
-	  "\n _slist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  " _dlist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  , fun->u.i, count, fun->u.i, count);
-	Lappendstr(initlist, buf);
-
 	for (i=0; i < rlst->nsym; i++) {
 		s = rlst->symorder[i];
 #if CVODE
@@ -1274,12 +1262,6 @@ if (vectorize){
 }
 		s->used = 0;
 	}
-	Sprintf(buf,
-	 "#pragma acc enter data copyin(_slist%d[0:%d])\n"
-	 " #pragma acc enter data copyin(_dlist%d[0:%d])\n\n"
-	 , fun->u.i, count, fun->u.i, count);
-	Lappendstr(initlist, buf);
-
 }
 
 /* for now we only check CONSERVE and COMPARTMENT */

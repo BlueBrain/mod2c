@@ -142,9 +142,6 @@
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
  extern double celsius;
- #define _celsius_ _celsius__napIn
-double _celsius_;
-#pragma acc declare copyin(_celsius_)
  
 #if 0 /*BBCORE*/
  /* declaration of user functions */
@@ -163,17 +160,7 @@ double _celsius_;
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
-#define eNa eNa_napIn
- double eNa = 55;
- #pragma acc declare copyin (eNa)
- 
-static void _acc_globals_update() {
- #pragma acc update device (eNa) if(nrn_threads->compute_gpu)
- _celsius_ = celsius;
- #pragma acc update device(_celsius_)
- }
-
- #define celsius _celsius_
+ static double eNa = 55;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -191,14 +178,11 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double delta_t = 0.01;
-#pragma acc declare copyin(delta_t)
  static double h0 = 0;
-#pragma acc declare copyin(h0)
  static double m0 = 0;
-#pragma acc declare copyin(m0)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "eNa_napIn", &eNa_napIn,
+ "eNa_napIn", &eNa,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -266,6 +250,40 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   hoc_register_dparam_semantics(_mechtype, 2, "na_ion");
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
+ struct _GlobalVars {
+   int _slist1[2];
+   int _dlist1[2];
+   double celsius;
+   int _mechtype;
+   double eNa;
+   double delta_t;
+   double h0;
+   double m0;
+ };
+
+ static _GlobalVars _global_variables;
+ static _GlobalVars* _global_variables_ptr;
+
+ 
+static void _update_global_variables() {
+   _global_variables.celsius = celsius;
+   _global_variables._mechtype = _mechtype;
+   _global_variables.eNa = eNa;
+   _global_variables.delta_t = delta_t;
+   _global_variables.h0 = h0;
+   _global_variables.m0 = m0;
+   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+ }
+
+ #define _slist1 _global_variables_ptr->_slist1
+ #define _dlist1 _global_variables_ptr->_dlist1
+ #define celsius _global_variables_ptr->celsius
+ #define _mechtype _global_variables_ptr->_mechtype
+ #define eNa _global_variables_ptr->eNa
+ #define delta_t _global_variables_ptr->delta_t
+ #define h0 _global_variables_ptr->h0
+ #define m0 _global_variables_ptr->m0
+ 
 static const char *modelname = "nap";
 
 static int error;
@@ -276,14 +294,6 @@ static inline int trates(_threadargsprotocomma_ double);
  
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
- 
-#define _slist1 _slist1_napIn
-int* _slist1;
-#pragma acc declare create(_slist1)
-
-#define _dlist1 _dlist1_napIn
-int* _dlist1;
-#pragma acc declare create(_dlist1)
  static inline int states(_threadargsproto_);
  
 /*CVODE*/
@@ -352,7 +362,7 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-_acc_globals_update();
+_update_global_variables();
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -496,20 +506,15 @@ for (;;) { /* help clang-format properly indent */
 static void terminal(){}
 
 static void _initlists(){
+ _global_variables_ptr = &_global_variables;
  double _x; double* _p = &_x;
  int _i; static int _first = 1;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
   if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*2);
- _dlist1 = (int*)malloc(sizeof(int)*2);
  _slist1[0] = &(m) - _p;  _dlist1[0] = &(Dm) - _p;
  _slist1[1] = &(h) - _p;  _dlist1[1] = &(Dh) - _p;
- #pragma acc enter data copyin(_slist1[0:2])
- #pragma acc enter data copyin(_dlist1[0:2])
-
 _first = 0;
 }
 } // namespace coreneuron_lib

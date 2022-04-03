@@ -156,10 +156,7 @@ void _net_buf_receive(NrnThread*);
  /* declaration of user functions */
  
 #endif /*BBCORE*/
- 
-#define _mechtype _mechtype_ZoidSyn
-int _mechtype;
-#pragma acc declare copyin (_mechtype)
+ static int _mechtype;
  static int _pointtype;
  
 #if 0 /*BBCORE*/
@@ -193,10 +190,6 @@ int _mechtype;
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
- 
-static void _acc_globals_update() {
- }
-
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -316,6 +309,21 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  set_pnt_receive(_mechtype, _net_receive, nullptr, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
+ struct _GlobalVars {
+   int _mechtype;
+ };
+
+ static _GlobalVars _global_variables;
+ static _GlobalVars* _global_variables_ptr;
+
+ 
+static void _update_global_variables() {
+   _global_variables._mechtype = _mechtype;
+   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+ }
+
+ #define _mechtype _global_variables_ptr->_mechtype
+ 
 static const char *modelname = "";
 
 static int error;
@@ -549,8 +557,7 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-  #pragma acc update device (_mechtype) if(_nt->compute_gpu)
-_acc_globals_update();
+_update_global_variables();
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -702,6 +709,7 @@ void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type) {
 static void terminal(){}
 
 static void _initlists(){
+ _global_variables_ptr = &_global_variables;
  double _x; double* _p = &_x;
  int _i; static int _first = 1;
  int _cntml_actual=1;

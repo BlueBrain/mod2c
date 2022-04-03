@@ -136,9 +136,6 @@
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
  extern double celsius;
- #define _celsius_ _celsius__NaSm
-double _celsius_;
-#pragma acc declare copyin(_celsius_)
  
 #if 0 /*BBCORE*/
  /* declaration of user functions */
@@ -157,41 +154,13 @@ double _celsius_;
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
-#define Etemp Etemp_NaSm
- double Etemp = 21;
- #pragma acc declare copyin (Etemp)
-#define Vtm Vtm_NaSm
- double Vtm = -33.5;
- #pragma acc declare copyin (Vtm)
-#define Vsm Vsm_NaSm
- double Vsm = -16;
- #pragma acc declare copyin (Vsm)
-#define ena ena_NaSm
- double ena = 40;
- #pragma acc declare copyin (ena)
-#define ktm ktm_NaSm
- double ktm = 26.3;
- #pragma acc declare copyin (ktm)
-#define ksm ksm_NaSm
- double ksm = 9.4;
- #pragma acc declare copyin (ksm)
-#define tom tom_NaSm
- double tom = 637.8;
- #pragma acc declare copyin (tom)
- 
-static void _acc_globals_update() {
- #pragma acc update device (Etemp) if(nrn_threads->compute_gpu)
- #pragma acc update device (Vtm) if(nrn_threads->compute_gpu)
- #pragma acc update device (Vsm) if(nrn_threads->compute_gpu)
- #pragma acc update device (ena) if(nrn_threads->compute_gpu)
- #pragma acc update device (ktm) if(nrn_threads->compute_gpu)
- #pragma acc update device (ksm) if(nrn_threads->compute_gpu)
- #pragma acc update device (tom) if(nrn_threads->compute_gpu)
- _celsius_ = celsius;
- #pragma acc update device(_celsius_)
- }
-
- #define celsius _celsius_
+ static double Etemp = 21;
+ static double Vtm = -33.5;
+ static double Vsm = -16;
+ static double ena = 40;
+ static double ktm = 26.3;
+ static double ksm = 9.4;
+ static double tom = 637.8;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -206,18 +175,16 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double delta_t = 1;
-#pragma acc declare copyin(delta_t)
  static double m0 = 0;
-#pragma acc declare copyin(m0)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "ena_NaSm", &ena_NaSm,
- "Etemp_NaSm", &Etemp_NaSm,
- "Vsm_NaSm", &Vsm_NaSm,
- "ksm_NaSm", &ksm_NaSm,
- "tom_NaSm", &tom_NaSm,
- "Vtm_NaSm", &Vtm_NaSm,
- "ktm_NaSm", &ktm_NaSm,
+ "ena_NaSm", &ena,
+ "Etemp_NaSm", &Etemp,
+ "Vsm_NaSm", &Vsm,
+ "ksm_NaSm", &ksm,
+ "tom_NaSm", &tom,
+ "Vtm_NaSm", &Vtm,
+ "ktm_NaSm", &ktm,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -278,6 +245,55 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   hoc_register_dparam_semantics(_mechtype, 1, "na_ion");
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
+ struct _GlobalVars {
+   int _slist1[1];
+   int _dlist1[1];
+   double celsius;
+   int _mechtype;
+   double Etemp;
+   double Vtm;
+   double Vsm;
+   double ena;
+   double ktm;
+   double ksm;
+   double tom;
+   double delta_t;
+   double m0;
+ };
+
+ static _GlobalVars _global_variables;
+ static _GlobalVars* _global_variables_ptr;
+
+ 
+static void _update_global_variables() {
+   _global_variables.celsius = celsius;
+   _global_variables._mechtype = _mechtype;
+   _global_variables.Etemp = Etemp;
+   _global_variables.Vtm = Vtm;
+   _global_variables.Vsm = Vsm;
+   _global_variables.ena = ena;
+   _global_variables.ktm = ktm;
+   _global_variables.ksm = ksm;
+   _global_variables.tom = tom;
+   _global_variables.delta_t = delta_t;
+   _global_variables.m0 = m0;
+   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+ }
+
+ #define _slist1 _global_variables_ptr->_slist1
+ #define _dlist1 _global_variables_ptr->_dlist1
+ #define celsius _global_variables_ptr->celsius
+ #define _mechtype _global_variables_ptr->_mechtype
+ #define Etemp _global_variables_ptr->Etemp
+ #define Vtm _global_variables_ptr->Vtm
+ #define Vsm _global_variables_ptr->Vsm
+ #define ena _global_variables_ptr->ena
+ #define ktm _global_variables_ptr->ktm
+ #define ksm _global_variables_ptr->ksm
+ #define tom _global_variables_ptr->tom
+ #define delta_t _global_variables_ptr->delta_t
+ #define m0 _global_variables_ptr->m0
+ 
 static const char *modelname = "A slow Sodium current";
 
 static int error;
@@ -288,14 +304,6 @@ static inline int rates(_threadargsprotocomma_ double);
  
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
- 
-#define _slist1 _slist1_NaSm
-int* _slist1;
-#pragma acc declare create(_slist1)
-
-#define _dlist1 _dlist1_NaSm
-int* _dlist1;
-#pragma acc declare create(_dlist1)
  static inline int states(_threadargsproto_);
  
 /*CVODE*/
@@ -361,7 +369,7 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-_acc_globals_update();
+_update_global_variables();
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -501,19 +509,14 @@ for (;;) { /* help clang-format properly indent */
 static void terminal(){}
 
 static void _initlists(){
+ _global_variables_ptr = &_global_variables;
  double _x; double* _p = &_x;
  int _i; static int _first = 1;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
   if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*1);
- _dlist1 = (int*)malloc(sizeof(int)*1);
  _slist1[0] = &(m) - _p;  _dlist1[0] = &(Dm) - _p;
- #pragma acc enter data copyin(_slist1[0:1])
- #pragma acc enter data copyin(_dlist1[0:1])
-
 _first = 0;
 }
 } // namespace coreneuron_lib
