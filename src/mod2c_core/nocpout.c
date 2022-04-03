@@ -784,10 +784,10 @@ s->name, suffix, gind, s->name, gind);
 			}
 			decode_ustr(s, &d1, &d2, buf);
 			if (s->subtype & ARRAY) {
-				Sprintf(buf, "double %s[%d];\n", s->name, s->araydim);
+				Sprintf(buf, "static double %s[%d];\n", s->name, s->araydim);
                 add_global_var("double", s->name, 1, s->araydim, 0);
 			}else{
-				Sprintf(buf, "double %s = %g;\n", s->name, d1);
+				Sprintf(buf, "static double %s = %g;\n", s->name, d1);
                 add_global_var("double", s->name, 0, 0, 0);
 			}
 			Lappendstr(defs_list, buf);

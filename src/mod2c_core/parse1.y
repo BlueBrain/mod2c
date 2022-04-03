@@ -1117,7 +1117,7 @@ unitdef: unit '=' unit
 factordef: NAME '=' real unit
 		{ SYM($1)->subtype |= nmodlCONST;
 		  Lappendstr(units_def_for_acc, SYM($1)->name);
-		  Sprintf(buf, "\ndouble %s = %s;\n"
+		  Sprintf(buf, "\nstatic double %s = %s;\n"
 			, SYM($1)->name, STR($3));
 		  Lappendstr(firstlist, buf);
           add_global_var("double", SYM($1)->name, 0, 0, 0);
