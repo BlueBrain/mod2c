@@ -335,6 +335,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	}
 
 	Lappendstr(defs_list, "\
+\n#include \"coreneuron/mechanism/api.hpp\"\
 \n#include \"coreneuron/utils/randoms/nrnran123.h\"\
 \n#include \"coreneuron/nrnoc/md1redef.h\"\
 \n#include \"coreneuron/nrnconf.h\"\
@@ -343,7 +344,6 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/utils/ivocvect.hpp\"\
 \n#include \"coreneuron/utils/nrnoc_aux.hpp\"\
 \n#include \"coreneuron/gpu/nrn_acc_manager.hpp\"\
-\n#include \"coreneuron/mechanism/mech/cfile/scoplib.h\"\n\
 \n#include \"coreneuron/sim/scopmath/newton_struct.h\"\
 \n#include \"coreneuron/nrnoc/md2redef.h\"\
 \n#include \"coreneuron/mechanism/register_mech.hpp\"\

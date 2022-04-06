@@ -13,7 +13,6 @@
 #include "coreneuron/utils/ivocvect.hpp"
 #include "coreneuron/utils/nrnoc_aux.hpp"
 #include "coreneuron/gpu/nrn_acc_manager.hpp"
-#include "coreneuron/mechanism/mech/cfile/scoplib.h"
 
 #include "coreneuron/sim/scopmath/newton_struct.h"
 #include "coreneuron/nrnoc/md2redef.h"
