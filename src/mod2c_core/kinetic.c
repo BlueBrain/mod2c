@@ -354,21 +354,21 @@ void massagekinetic(q1, q2, q3, q4, sensused) /*KINETIC NAME stmtlist '}'*/
 	  "/* _kinetic_ %s %s */\n"
 	  "#ifndef INSIDE_NMODL\n"
 	  "#define INSIDE_NMODL\n"
-	  "#endif\n"
+	  "#endif\n /* foo2 */"
 	  , SYM(q2)->name, suffix);
 	Linsertstr(procfunc, buf);
-	replacstr(q1, "\nint");
+	replacstr(q1, "\nstatic auto const /* foo1 */");
 #endif
-	qv = insertstr(q3, "()\n");
+	qv = insertstr(q3, "() /* foo3 */\n");
 #if VECTORIZE
 if (vectorize) {
 	kin_vect1(q1, q2, q4);
-vectorize_substitute(qv, "(void* _so, double* _rhs, _threadargsproto_)\n");
+vectorize_substitute(qv, " = /* foo4 */ [](void* _so, double* _rhs, _threadargsproto_) -> int\n");
 }
 #endif
-	qv = insertstr(q3, "{_reset=0;\n");
+	qv = insertstr(q3, "/* foo5 */ {_reset=0;\n");
 #if VECTORIZE
-Sprintf(buf, "{int _reset=0;\n");
+Sprintf(buf, "{/* foo6 */ int _reset=0;\n");
 	vectorize_substitute(qv, buf);
 #endif
 	afterbrace = q3->next;
@@ -470,7 +470,9 @@ Sprintf(buf, "{int _reset=0;\n");
 	  );
 
 	Linsertstr(procfunc, buf);
-	insertstr(q4, "  } return _reset;\n");
+	// The }; namespace { is a terrible hack; really I just want to make sure that
+	// an extra ; is added after the "function" declaration that is now a lambda
+	insertstr(q4, "  } return _reset; /* foo7 */ }; namespace { \n");
 	movelist(q1, q4, procfunc);
 
 	r = (Rlist *)emalloc(sizeof(Rlist));

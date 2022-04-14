@@ -156,7 +156,7 @@ fun->name, listnum, maxerr_str);
 	}else{
 	  Sprintf(buf,
 	    "  if (!_thread[_spth%d]._pvoid) {\n"
-	    "    _thread[_spth%d]._pvoid = nrn_cons_sparseobj(_kinetic_%s%s, %d, _ml, _threadargs_);\n"
+	    "    _thread[_spth%d]._pvoid = nrn_cons_sparseobj(%s%s, %d, _ml, _threadargs_);\n"
 	    "    #ifdef _OPENACC\n"
 	    "    if (_nt->compute_gpu) {\n"
 	    "      void* _d_so = (void*) acc_deviceptr(_thread[_spth%d]._pvoid);\n"
@@ -177,15 +177,7 @@ dindepname, fun->name, listnum, listnum);
 	replacstr(qsol, buf);
 #if VECTORIZE
 	if (method->subtype & DERF) { /* derivimplicit */
-Sprintf(buf,
-"\n"
-"  #if !defined(_%s_%s%s)\n"
-"    #define _%s_%s%s 0\n"
-"  #endif\n"
-"  %s%s_thread(%d, _slist%d, _dlist%d, _%s_%s%s, _threadargs_);\n",
-method->name, fun->name, suffix, method->name, fun->name,
-suffix, ssprefix, method->name,
-numeqn, listnum, listnum, method->name, fun->name, suffix);
+  Sprintf(buf, "\n  %s%s(_threadargs_);\n", fun->name, suffix);
 	vectorize_substitute(qsol, buf);
 
     // euler_thread is defined externally and need a callback function
@@ -204,12 +196,7 @@ numeqn, listnum, listnum, method->name, fun->name, suffix);
 	}else{ /* kinetic */
    if (vectorize) {
 Sprintf(buf,
-"\n"
-"  #if !defined(_kinetic_%s%s)\n"
-"    #define _kinetic_%s%s 0\n"
-"  #endif\n"
-"  %s%s_thread((SparseObj*)_thread[_spth%d]._pvoid, %d, _slist%d, _dlist%d, &%s, %s, _kinetic_%s%s, _linmat%d, _threadargs_);\n",
-fun->name, suffix, fun->name, suffix,
+"\n  %s%s_thread(static_cast<SparseObj*>(_thread[_spth%d]._pvoid), %d, _slist%d, _dlist%d, &%s, %s, %s%s, _linmat%d, _threadargs_);\n",
 ssprefix, method->name, listnum, numeqn, listnum, listnum, indepsym->name,
 dindepname, fun->name, suffix, listnum);
 	vectorize_substitute(qsol, buf);

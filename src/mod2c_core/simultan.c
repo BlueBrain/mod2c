@@ -234,12 +234,7 @@ numlist, numlist-1, counts);
 		counts, numlist, SYM(q2)->name, suffix, numlist);
 	qret = insertstr(q3, buf);
 	Sprintf(buf, 
-	  "#pragma acc routine(nrn_newton_thread) seq\n"
-#if 0
-	  "_reset = nrn_newton_thread(_newtonspace%d, %d,_slist%d, _newton_%s%s, _dlist%d,  _threadargs_);\n"
-#else
-	  "_reset = nrn_newton_thread((NewtonSpace*)_newtonspace%d, %d,_slist%d, _derivimplicit_%s%s, _dlist%d,  _threadargs_);\n"
-#endif
+	  "_reset = nrn_newton_thread((NewtonSpace*)_newtonspace%d, %d,_slist%d, [](_threadargsproto_) { return _newton_%s%s(_threadargs_); }, _dlist%d,  _threadargs_);\n"
 	  , numlist-1, counts, numlist, SYM(q2)->name, suffix, numlist);
 	vectorize_substitute(qret, buf);
 	Insertstr(q3, "/*if(_reset) {abort_run(_reset);}*/ }\n");
