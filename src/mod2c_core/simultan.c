@@ -189,8 +189,6 @@ Sprintf(buf, "if(_counte != %d) printf( \"Number of equations, %%d,\
 		diag("NONLINEAR contains no equations", (char *)0);
 	}
 	freeqnqueue();
-	Sprintf(buf, ", _slist%d[0:%d]", numlist, counts*(1 + sens_parm));
-	Lappendstr(acc_present_list, buf);
 	Sprintf(buf, "_slist%d", numlist);
 	add_global_var("int", buf, 1, counts*(1 + sens_parm), 1);
 	return counts;
