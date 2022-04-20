@@ -97,10 +97,10 @@ void _net_buf_receive(NrnThread*);
 #undef _threadargs_
 #undef _threadargsproto_
  
-#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
-#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
+#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v,
+#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -266,7 +266,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #endif /* BBCORE */
  
 }
- static void _initlists();
+ static void _initlists(Memb_list *_ml);
  
 #define _tqitem &(_nt->_vdata[_ppvar[2*_STRIDE]])
  
@@ -281,8 +281,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #define _ppsize 3
  void _zoidsyn_reg() {
 	int _vectorized = 1;
-  _initlists();
- _mechtype = nrn_get_mechtype(_mechanism[1]);
+  _mechtype = nrn_get_mechtype(_mechanism[1]);
  if (_mechtype == -1) return;
  _nrn_layout_reg(_mechtype, LAYOUT);
  
@@ -309,20 +308,26 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  set_pnt_receive(_mechtype, _net_receive, nullptr, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
- struct _GlobalVars {
-   int _mechtype;
- };
-
- static _GlobalVars _global_variables;
- static _GlobalVars* _global_variables_ptr;
+ struct _global_variables_t {
+   int _ml_mechtype; };
 
  
-static void _update_global_variables() {
-   _global_variables._mechtype = _mechtype;
-   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
+   if(_nt == nullptr || _ml == nullptr) {
+     return;
+   }
+   _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->instance);
+   _global_variables->_ml_mechtype = _mechtype;
+ #ifdef CORENEURON_ENABLE_GPU
+   if (_nt->compute_gpu) {
+     auto* _d_global_vars = cnrn_target_copyin(_global_variables);
+     auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));
+     cnrn_target_memcpy_to_device(&(_d_ml->instance), (void**)&(_d_global_vars));
+   }
+ #endif
  }
 
- #define _mechtype _global_variables_ptr->_mechtype
+ #define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
  
 static const char *modelname = "";
 
@@ -334,7 +339,7 @@ static void _modl_cleanup(){ _match_recurse=1;}
 #if NET_RECEIVE_BUFFERING 
 #undef t
 #define t _nrb_t
-static inline void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
+static inline void _net_receive_kernel(NrnThread*, double, Point_process*, int _weight_index, double _flag);
 void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
   Memb_list* _ml = _nt->_ml_list[_mechtype];
@@ -356,7 +361,7 @@ void _net_buf_receive(NrnThread* _nt) {
       int _k = _nrb->_weight_index[_i];
       double _nrt = _nrb->_nrb_t[_i];
       double _nrflag = _nrb->_nrb_flag[_i];
-      _net_receive_kernel(_nrt, _pnt + _j, _k, _nrflag);
+      _net_receive_kernel(nrn_threads, _nrt, _pnt + _j, _k, _nrflag);
     }
   }
   #pragma acc wait(stream_id)
@@ -417,7 +422,7 @@ void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {
   ++_nrb->_cnt;
 }
  
-static void _net_receive_kernel(double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
+static void _net_receive_kernel(NrnThread* nrn_threads, double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
 #else
  
 void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) 
@@ -513,7 +518,6 @@ void _net_receive (Point_process* _pnt, int _weight_index, double _lflag)
 
 static inline void initmodel(_threadargsproto_) {
   int _i; double _save;{
-  Memb_list* _ml = _nt->_ml_list[_mechtype];
  {
    if ( trf <= 0.0 ) {
      trf = 1.0 ;
@@ -557,7 +561,13 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-_update_global_variables();
+  if(_ml->instance) {
+    free(_ml->instance);
+    _ml->instance = nullptr;
+  }
+  _ml->instance = malloc(sizeof(_global_variables_t));
+  _initlists(_ml);
+  _update_global_variables(_nt, _ml);
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -708,14 +718,11 @@ void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type) {
 
 static void terminal(){}
 
-static void _initlists(){
- _global_variables_ptr = &_global_variables;
+static void _initlists(Memb_list *_ml){
  double _x; double* _p = &_x;
- int _i; static int _first = 1;
+ int _i;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
-  if (!_first) return;
-_first = 0;
-}
+ }
 } // namespace coreneuron_lib

@@ -27,7 +27,7 @@
 #endif
  namespace coreneuron {
  
-#define _thread_present_ /**/ , _thread[0:2] , _slist1[0:10], _dlist1[0:10] 
+#define _thread_present_ /**/ , _thread[0:2] 
  
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include <openacc.h>
@@ -100,10 +100,10 @@ void _net_buf_receive(NrnThread*);
 #undef _threadargs_
 #undef _threadargsproto_
  
-#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
-#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
+#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v,
+#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -335,7 +335,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #endif /* BBCORE */
  
 }
- static void _initlists();
+ static void _initlists(Memb_list *_ml);
  void _net_receive(Point_process*, int, double);
  static void _thread_cleanup(ThreadDatum*);
  
@@ -343,8 +343,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #define _ppsize 2
  void _SynNMDA10_2_reg() {
 	int _vectorized = 1;
-  _initlists();
- _mechtype = nrn_get_mechtype(_mechanism[1]);
+  _mechtype = nrn_get_mechtype(_mechanism[1]);
  if (_mechtype == -1) return;
  _nrn_layout_reg(_mechtype, LAYOUT);
  
@@ -368,10 +367,9 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  set_pnt_receive(_mechtype, _net_receive, nullptr, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
- struct _GlobalVars {
+ struct _global_variables_t {
    int _slist1[10];
    int _dlist1[10];
-   int _mechtype;
    double Rc;
    double Ro;
    double Rr;
@@ -390,56 +388,63 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
    double OB0;
    double O0;
    double delta_t;
- };
-
- static _GlobalVars _global_variables;
- static _GlobalVars* _global_variables_ptr;
+   int _ml_mechtype; };
 
  
-static void _update_global_variables() {
-   _global_variables._mechtype = _mechtype;
-   _global_variables.Rc = Rc;
-   _global_variables.Ro = Ro;
-   _global_variables.Rr = Rr;
-   _global_variables.Rd = Rd;
-   _global_variables.Ru = Ru;
-   _global_variables.Rb = Rb;
-   _global_variables.mg = mg;
-   _global_variables.CB20 = CB20;
-   _global_variables.CB10 = CB10;
-   _global_variables.CB00 = CB00;
-   _global_variables.C20 = C20;
-   _global_variables.C10 = C10;
-   _global_variables.C00 = C00;
-   _global_variables.DB0 = DB0;
-   _global_variables.D0 = D0;
-   _global_variables.OB0 = OB0;
-   _global_variables.O0 = O0;
-   _global_variables.delta_t = delta_t;
-   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
+   if(_nt == nullptr || _ml == nullptr) {
+     return;
+   }
+   _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->instance);
+   _global_variables->_ml_mechtype = _mechtype;
+   _global_variables->Rc = Rc;
+   _global_variables->Ro = Ro;
+   _global_variables->Rr = Rr;
+   _global_variables->Rd = Rd;
+   _global_variables->Ru = Ru;
+   _global_variables->Rb = Rb;
+   _global_variables->mg = mg;
+   _global_variables->CB20 = CB20;
+   _global_variables->CB10 = CB10;
+   _global_variables->CB00 = CB00;
+   _global_variables->C20 = C20;
+   _global_variables->C10 = C10;
+   _global_variables->C00 = C00;
+   _global_variables->DB0 = DB0;
+   _global_variables->D0 = D0;
+   _global_variables->OB0 = OB0;
+   _global_variables->O0 = O0;
+   _global_variables->delta_t = delta_t;
+ #ifdef CORENEURON_ENABLE_GPU
+   if (_nt->compute_gpu) {
+     auto* _d_global_vars = cnrn_target_copyin(_global_variables);
+     auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));
+     cnrn_target_memcpy_to_device(&(_d_ml->instance), (void**)&(_d_global_vars));
+   }
+ #endif
  }
 
- #define _slist1 _global_variables_ptr->_slist1
- #define _dlist1 _global_variables_ptr->_dlist1
- #define _mechtype _global_variables_ptr->_mechtype
- #define Rc _global_variables_ptr->Rc
- #define Ro _global_variables_ptr->Ro
- #define Rr _global_variables_ptr->Rr
- #define Rd _global_variables_ptr->Rd
- #define Ru _global_variables_ptr->Ru
- #define Rb _global_variables_ptr->Rb
- #define mg _global_variables_ptr->mg
- #define CB20 _global_variables_ptr->CB20
- #define CB10 _global_variables_ptr->CB10
- #define CB00 _global_variables_ptr->CB00
- #define C20 _global_variables_ptr->C20
- #define C10 _global_variables_ptr->C10
- #define C00 _global_variables_ptr->C00
- #define DB0 _global_variables_ptr->DB0
- #define D0 _global_variables_ptr->D0
- #define OB0 _global_variables_ptr->OB0
- #define O0 _global_variables_ptr->O0
- #define delta_t _global_variables_ptr->delta_t
+ #define _slist1 reinterpret_cast<_global_variables_t*>(_ml->instance)->_slist1
+ #define _dlist1 reinterpret_cast<_global_variables_t*>(_ml->instance)->_dlist1
+ #define Rc reinterpret_cast<_global_variables_t*>(_ml->instance)->Rc
+ #define Ro reinterpret_cast<_global_variables_t*>(_ml->instance)->Ro
+ #define Rr reinterpret_cast<_global_variables_t*>(_ml->instance)->Rr
+ #define Rd reinterpret_cast<_global_variables_t*>(_ml->instance)->Rd
+ #define Ru reinterpret_cast<_global_variables_t*>(_ml->instance)->Ru
+ #define Rb reinterpret_cast<_global_variables_t*>(_ml->instance)->Rb
+ #define mg reinterpret_cast<_global_variables_t*>(_ml->instance)->mg
+ #define CB20 reinterpret_cast<_global_variables_t*>(_ml->instance)->CB20
+ #define CB10 reinterpret_cast<_global_variables_t*>(_ml->instance)->CB10
+ #define CB00 reinterpret_cast<_global_variables_t*>(_ml->instance)->CB00
+ #define C20 reinterpret_cast<_global_variables_t*>(_ml->instance)->C20
+ #define C10 reinterpret_cast<_global_variables_t*>(_ml->instance)->C10
+ #define C00 reinterpret_cast<_global_variables_t*>(_ml->instance)->C00
+ #define DB0 reinterpret_cast<_global_variables_t*>(_ml->instance)->DB0
+ #define D0 reinterpret_cast<_global_variables_t*>(_ml->instance)->D0
+ #define OB0 reinterpret_cast<_global_variables_t*>(_ml->instance)->OB0
+ #define O0 reinterpret_cast<_global_variables_t*>(_ml->instance)->O0
+ #define delta_t reinterpret_cast<_global_variables_t*>(_ml->instance)->delta_t
+ #define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
  
 static const char *modelname = "detailed model of glutamate NMDA receptors";
 
@@ -619,7 +624,7 @@ for(_i=1;_i<10;_i++){
 #if NET_RECEIVE_BUFFERING 
 #undef t
 #define t _nrb_t
-static inline void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
+static inline void _net_receive_kernel(NrnThread*, double, Point_process*, int _weight_index, double _flag);
 void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
   Memb_list* _ml = _nt->_ml_list[_mechtype];
@@ -641,7 +646,7 @@ void _net_buf_receive(NrnThread* _nt) {
       int _k = _nrb->_weight_index[_i];
       double _nrt = _nrb->_nrb_t[_i];
       double _nrflag = _nrb->_nrb_flag[_i];
-      _net_receive_kernel(_nrt, _pnt + _j, _k, _nrflag);
+      _net_receive_kernel(nrn_threads, _nrt, _pnt + _j, _k, _nrflag);
     }
   }
   #pragma acc wait(stream_id)
@@ -664,7 +669,7 @@ void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {
   ++_nrb->_cnt;
 }
  
-static void _net_receive_kernel(double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
+static void _net_receive_kernel(NrnThread* nrn_threads, double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
 #else
  
 void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) 
@@ -973,7 +978,13 @@ _thread = _ml->_thread;
     }
     #endif
   }
-_update_global_variables();
+  if(_ml->instance) {
+    free(_ml->instance);
+    _ml->instance = nullptr;
+  }
+  _ml->instance = malloc(sizeof(_global_variables_t));
+  _initlists(_ml);
+  _update_global_variables(_nt, _ml);
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -1146,14 +1157,12 @@ for (;;) { /* help clang-format properly indent */
 
 static void terminal(){}
 
-static void _initlists(){
- _global_variables_ptr = &_global_variables;
+static void _initlists(Memb_list *_ml){
  double _x; double* _p = &_x;
- int _i; static int _first = 1;
+ int _i;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
-  if (!_first) return;
  _slist1[0] = &(OB) - _p;  _dlist1[0] = &(DOB) - _p;
  _slist1[1] = &(CB2) - _p;  _dlist1[1] = &(DCB2) - _p;
  _slist1[2] = &(CB1) - _p;  _dlist1[2] = &(DCB1) - _p;
@@ -1164,6 +1173,5 @@ static void _initlists(){
  _slist1[7] = &(DB) - _p;  _dlist1[7] = &(DDB) - _p;
  _slist1[8] = &(D) - _p;  _dlist1[8] = &(DD) - _p;
  _slist1[9] = &(O) - _p;  _dlist1[9] = &(DO) - _p;
-_first = 0;
-}
+ }
 } // namespace coreneuron_lib
