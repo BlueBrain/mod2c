@@ -615,10 +615,6 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 		diag("DERIVATIVE contains no derivatives", (char *)0);
 	}
 	derfun->used = count;
-	//TODO: present list could be replaced with  global_data_ptr present clause?
-	Sprintf(buf, ", _slist%d[0:%d], _dlist%d[0:%d]",
-	  numlist, count, numlist, count);
-	Lappendstr(acc_present_list, buf);
 
 	Sprintf(buf, "_slist%d", numlist);
 	add_global_var("int", buf, 1, count, 1);

@@ -779,9 +779,11 @@ void c_out_vectorize()
 
 	P("\nstatic inline void initmodel(_threadargsproto_) {\n  int _i; double _save;");
 	P("{\n");
-	if (net_send_seen_ && !artificial_cell) {
-	  P("  Memb_list* _ml = _nt->_ml_list[_mechtype];\n");
-	}
+    //TODO: we are now passing _ml as an argument so `_ml_list[_mechtype]` is same
+    // as what is passed as an argument. Confirm this with Michael!
+	//if (net_send_seen_ && !artificial_cell) {
+	//  P("  Memb_list* _ml = _nt->_ml_list[_mechtype];\n");
+	//}
 	initstates();
 	printlist(initfunc);
 	if (match_bound) {
@@ -813,21 +815,15 @@ void c_out_vectorize()
 	}
 	/*check_tables();*/
 
-     /* @todo: will be done once anyway but it seems like this is bein copied
-      * in many other places. See CNEUR-134 */
-      /* added data region in main fuction, need to verify that values are
-       * correctly being used.
-       * While testing with PGI compiler, we have seen incorrect spike if we
-       * don't update celsius, not sure the reason. */
-	/* also PGI 16.3 (but not later) has the bizarre issue that celsius
-	   is 0 when an non file function, e.g. derivimplicit_thread,
-	   is called which calls back into the mod file. But the problem
-	   does not seem to impact other global variable defined in the
-	   mod file.
-       With c++ files we declare routine seq in which case static variables
-       can't be used. So, introducing _celsius_ as default implementation.
-	*/
-	P("_update_global_variables();\n");
+	P("  if(_ml->instance) {\n");
+	P("    free(_ml->instance);\n");
+	P("    _ml->instance = nullptr;\n");
+	P("  }\n");
+	P("  _ml->instance = malloc(sizeof(_global_variables_t));\n");
+
+	// TODO: check with Michael if calling _initlists multiple times will have any side effects
+	P("  _initlists(_ml);\n");
+	P("  _update_global_variables(_nt, _ml);\n");
 
 	 pr_layout_for_p(1, NRN_INIT);
 
@@ -1072,19 +1068,17 @@ void c_out_vectorize()
 	   things.
 	*/
 	/* initlists() is called once to setup slist and dlist pointers */
-	P("\nstatic void _initlists(){\n");
+	P("\nstatic void _initlists(Memb_list *_ml){\n");
 	// _initlists is called first from the _reg function
 	// and hence setup global variable pointer here so
 	// that it's valid to begin with
-	P(" _global_variables_ptr = &_global_variables;\n");
 	P(" double _x; double* _p = &_x;\n");
-	P(" int _i; static int _first = 1;\n");
+	P(" int _i;\n");
 	P(" int _cntml_actual=1;\n");
 	P(" int _cntml_padded=1;\n");
 	P(" int _iml=0;\n");
-	P("  if (!_first) return;\n");
 	printlist(initlist);
-	P("_first = 0;\n}\n");
+    P(" }\n");
     P("} // namespace coreneuron_lib\n");
 }
 
