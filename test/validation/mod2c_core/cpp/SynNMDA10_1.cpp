@@ -27,7 +27,7 @@
 #endif
  namespace coreneuron {
  
-#define _thread_present_ /**/ , _thread[0:2] , _slist1[0:10], _dlist1[0:10] 
+#define _thread_present_ /**/ , _thread[0:2] 
  
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include <openacc.h>
@@ -99,10 +99,10 @@ void _net_buf_receive(NrnThread*);
 #undef _threadargs_
 #undef _threadargsproto_
  
-#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
-#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
+#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v,
+#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -420,7 +420,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #endif /* BBCORE */
  
 }
- static void _initlists();
+ static void _initlists(Memb_list *_ml);
  void _net_receive(Point_process*, int, double);
  static void _thread_cleanup(ThreadDatum*);
  
@@ -428,8 +428,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #define _ppsize 2
  void _SynNMDA10_1_reg() {
 	int _vectorized = 1;
-  _initlists();
- _mechtype = nrn_get_mechtype(_mechanism[1]);
+  _mechtype = nrn_get_mechtype(_mechanism[1]);
  if (_mechtype == -1) return;
  _nrn_layout_reg(_mechtype, LAYOUT);
  
@@ -453,10 +452,9 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  set_pnt_receive(_mechtype, _net_receive, nullptr, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
- struct _GlobalVars {
+ struct _global_variables_t {
    int _slist1[10];
    int _dlist1[10];
-   int _mechtype;
    double Rmc2u;
    double Rmc2b;
    double Rmc1u;
@@ -497,100 +495,107 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
    double UMg0;
    double U0;
    double delta_t;
- };
-
- static _GlobalVars _global_variables;
- static _GlobalVars* _global_variables_ptr;
+   int _ml_mechtype; };
 
  
-static void _update_global_variables() {
-   _global_variables._mechtype = _mechtype;
-   _global_variables.Rmc2u = Rmc2u;
-   _global_variables.Rmc2b = Rmc2b;
-   _global_variables.Rmc1u = Rmc1u;
-   _global_variables.Rmc1b = Rmc1b;
-   _global_variables.Rmd2u = Rmd2u;
-   _global_variables.Rmd2b = Rmd2b;
-   _global_variables.Rmd1u = Rmd1u;
-   _global_variables.Rmd1b = Rmd1b;
-   _global_variables.RcMg = RcMg;
-   _global_variables.RoMg = RoMg;
-   _global_variables.Rr2Mg = Rr2Mg;
-   _global_variables.Rd2Mg = Rd2Mg;
-   _global_variables.Rr1Mg = Rr1Mg;
-   _global_variables.Rd1Mg = Rd1Mg;
-   _global_variables.RuMg = RuMg;
-   _global_variables.RbMg = RbMg;
-   _global_variables.Rmu = Rmu;
-   _global_variables.Rmb = Rmb;
-   _global_variables.Rc = Rc;
-   _global_variables.Ro = Ro;
-   _global_variables.Rr2 = Rr2;
-   _global_variables.Rd2 = Rd2;
-   _global_variables.Rr1 = Rr1;
-   _global_variables.Rd1 = Rd1;
-   _global_variables.Ru = Ru;
-   _global_variables.Rb = Rb;
-   _global_variables.memb_fraction = memb_fraction;
-   _global_variables.mg = mg;
-   _global_variables.valence = valence;
-   _global_variables.ClMg0 = ClMg0;
-   _global_variables.Cl0 = Cl0;
-   _global_variables.D2Mg0 = D2Mg0;
-   _global_variables.D1Mg0 = D1Mg0;
-   _global_variables.D20 = D20;
-   _global_variables.D10 = D10;
-   _global_variables.OMg0 = OMg0;
-   _global_variables.O0 = O0;
-   _global_variables.UMg0 = UMg0;
-   _global_variables.U0 = U0;
-   _global_variables.delta_t = delta_t;
-   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
+   if(_nt == nullptr || _ml == nullptr) {
+     return;
+   }
+   _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->instance);
+   _global_variables->_ml_mechtype = _mechtype;
+   _global_variables->Rmc2u = Rmc2u;
+   _global_variables->Rmc2b = Rmc2b;
+   _global_variables->Rmc1u = Rmc1u;
+   _global_variables->Rmc1b = Rmc1b;
+   _global_variables->Rmd2u = Rmd2u;
+   _global_variables->Rmd2b = Rmd2b;
+   _global_variables->Rmd1u = Rmd1u;
+   _global_variables->Rmd1b = Rmd1b;
+   _global_variables->RcMg = RcMg;
+   _global_variables->RoMg = RoMg;
+   _global_variables->Rr2Mg = Rr2Mg;
+   _global_variables->Rd2Mg = Rd2Mg;
+   _global_variables->Rr1Mg = Rr1Mg;
+   _global_variables->Rd1Mg = Rd1Mg;
+   _global_variables->RuMg = RuMg;
+   _global_variables->RbMg = RbMg;
+   _global_variables->Rmu = Rmu;
+   _global_variables->Rmb = Rmb;
+   _global_variables->Rc = Rc;
+   _global_variables->Ro = Ro;
+   _global_variables->Rr2 = Rr2;
+   _global_variables->Rd2 = Rd2;
+   _global_variables->Rr1 = Rr1;
+   _global_variables->Rd1 = Rd1;
+   _global_variables->Ru = Ru;
+   _global_variables->Rb = Rb;
+   _global_variables->memb_fraction = memb_fraction;
+   _global_variables->mg = mg;
+   _global_variables->valence = valence;
+   _global_variables->ClMg0 = ClMg0;
+   _global_variables->Cl0 = Cl0;
+   _global_variables->D2Mg0 = D2Mg0;
+   _global_variables->D1Mg0 = D1Mg0;
+   _global_variables->D20 = D20;
+   _global_variables->D10 = D10;
+   _global_variables->OMg0 = OMg0;
+   _global_variables->O0 = O0;
+   _global_variables->UMg0 = UMg0;
+   _global_variables->U0 = U0;
+   _global_variables->delta_t = delta_t;
+ #ifdef CORENEURON_ENABLE_GPU
+   if (_nt->compute_gpu) {
+     auto* _d_global_vars = cnrn_target_copyin(_global_variables);
+     auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));
+     cnrn_target_memcpy_to_device(&(_d_ml->instance), (void**)&(_d_global_vars));
+   }
+ #endif
  }
 
- #define _slist1 _global_variables_ptr->_slist1
- #define _dlist1 _global_variables_ptr->_dlist1
- #define _mechtype _global_variables_ptr->_mechtype
- #define Rmc2u _global_variables_ptr->Rmc2u
- #define Rmc2b _global_variables_ptr->Rmc2b
- #define Rmc1u _global_variables_ptr->Rmc1u
- #define Rmc1b _global_variables_ptr->Rmc1b
- #define Rmd2u _global_variables_ptr->Rmd2u
- #define Rmd2b _global_variables_ptr->Rmd2b
- #define Rmd1u _global_variables_ptr->Rmd1u
- #define Rmd1b _global_variables_ptr->Rmd1b
- #define RcMg _global_variables_ptr->RcMg
- #define RoMg _global_variables_ptr->RoMg
- #define Rr2Mg _global_variables_ptr->Rr2Mg
- #define Rd2Mg _global_variables_ptr->Rd2Mg
- #define Rr1Mg _global_variables_ptr->Rr1Mg
- #define Rd1Mg _global_variables_ptr->Rd1Mg
- #define RuMg _global_variables_ptr->RuMg
- #define RbMg _global_variables_ptr->RbMg
- #define Rmu _global_variables_ptr->Rmu
- #define Rmb _global_variables_ptr->Rmb
- #define Rc _global_variables_ptr->Rc
- #define Ro _global_variables_ptr->Ro
- #define Rr2 _global_variables_ptr->Rr2
- #define Rd2 _global_variables_ptr->Rd2
- #define Rr1 _global_variables_ptr->Rr1
- #define Rd1 _global_variables_ptr->Rd1
- #define Ru _global_variables_ptr->Ru
- #define Rb _global_variables_ptr->Rb
- #define memb_fraction _global_variables_ptr->memb_fraction
- #define mg _global_variables_ptr->mg
- #define valence _global_variables_ptr->valence
- #define ClMg0 _global_variables_ptr->ClMg0
- #define Cl0 _global_variables_ptr->Cl0
- #define D2Mg0 _global_variables_ptr->D2Mg0
- #define D1Mg0 _global_variables_ptr->D1Mg0
- #define D20 _global_variables_ptr->D20
- #define D10 _global_variables_ptr->D10
- #define OMg0 _global_variables_ptr->OMg0
- #define O0 _global_variables_ptr->O0
- #define UMg0 _global_variables_ptr->UMg0
- #define U0 _global_variables_ptr->U0
- #define delta_t _global_variables_ptr->delta_t
+ #define _slist1 reinterpret_cast<_global_variables_t*>(_ml->instance)->_slist1
+ #define _dlist1 reinterpret_cast<_global_variables_t*>(_ml->instance)->_dlist1
+ #define Rmc2u reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmc2u
+ #define Rmc2b reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmc2b
+ #define Rmc1u reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmc1u
+ #define Rmc1b reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmc1b
+ #define Rmd2u reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmd2u
+ #define Rmd2b reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmd2b
+ #define Rmd1u reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmd1u
+ #define Rmd1b reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmd1b
+ #define RcMg reinterpret_cast<_global_variables_t*>(_ml->instance)->RcMg
+ #define RoMg reinterpret_cast<_global_variables_t*>(_ml->instance)->RoMg
+ #define Rr2Mg reinterpret_cast<_global_variables_t*>(_ml->instance)->Rr2Mg
+ #define Rd2Mg reinterpret_cast<_global_variables_t*>(_ml->instance)->Rd2Mg
+ #define Rr1Mg reinterpret_cast<_global_variables_t*>(_ml->instance)->Rr1Mg
+ #define Rd1Mg reinterpret_cast<_global_variables_t*>(_ml->instance)->Rd1Mg
+ #define RuMg reinterpret_cast<_global_variables_t*>(_ml->instance)->RuMg
+ #define RbMg reinterpret_cast<_global_variables_t*>(_ml->instance)->RbMg
+ #define Rmu reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmu
+ #define Rmb reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmb
+ #define Rc reinterpret_cast<_global_variables_t*>(_ml->instance)->Rc
+ #define Ro reinterpret_cast<_global_variables_t*>(_ml->instance)->Ro
+ #define Rr2 reinterpret_cast<_global_variables_t*>(_ml->instance)->Rr2
+ #define Rd2 reinterpret_cast<_global_variables_t*>(_ml->instance)->Rd2
+ #define Rr1 reinterpret_cast<_global_variables_t*>(_ml->instance)->Rr1
+ #define Rd1 reinterpret_cast<_global_variables_t*>(_ml->instance)->Rd1
+ #define Ru reinterpret_cast<_global_variables_t*>(_ml->instance)->Ru
+ #define Rb reinterpret_cast<_global_variables_t*>(_ml->instance)->Rb
+ #define memb_fraction reinterpret_cast<_global_variables_t*>(_ml->instance)->memb_fraction
+ #define mg reinterpret_cast<_global_variables_t*>(_ml->instance)->mg
+ #define valence reinterpret_cast<_global_variables_t*>(_ml->instance)->valence
+ #define ClMg0 reinterpret_cast<_global_variables_t*>(_ml->instance)->ClMg0
+ #define Cl0 reinterpret_cast<_global_variables_t*>(_ml->instance)->Cl0
+ #define D2Mg0 reinterpret_cast<_global_variables_t*>(_ml->instance)->D2Mg0
+ #define D1Mg0 reinterpret_cast<_global_variables_t*>(_ml->instance)->D1Mg0
+ #define D20 reinterpret_cast<_global_variables_t*>(_ml->instance)->D20
+ #define D10 reinterpret_cast<_global_variables_t*>(_ml->instance)->D10
+ #define OMg0 reinterpret_cast<_global_variables_t*>(_ml->instance)->OMg0
+ #define O0 reinterpret_cast<_global_variables_t*>(_ml->instance)->O0
+ #define UMg0 reinterpret_cast<_global_variables_t*>(_ml->instance)->UMg0
+ #define U0 reinterpret_cast<_global_variables_t*>(_ml->instance)->U0
+ #define delta_t reinterpret_cast<_global_variables_t*>(_ml->instance)->delta_t
+ #define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
  
 static const char *modelname = "kinetic NMDA receptor model";
 
@@ -831,7 +836,7 @@ for(_i=1;_i<10;_i++){
 #if NET_RECEIVE_BUFFERING 
 #undef t
 #define t _nrb_t
-static inline void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
+static inline void _net_receive_kernel(NrnThread*, double, Point_process*, int _weight_index, double _flag);
 void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
   Memb_list* _ml = _nt->_ml_list[_mechtype];
@@ -853,7 +858,7 @@ void _net_buf_receive(NrnThread* _nt) {
       int _k = _nrb->_weight_index[_i];
       double _nrt = _nrb->_nrb_t[_i];
       double _nrflag = _nrb->_nrb_flag[_i];
-      _net_receive_kernel(_nrt, _pnt + _j, _k, _nrflag);
+      _net_receive_kernel(nrn_threads, _nrt, _pnt + _j, _k, _nrflag);
     }
   }
   #pragma acc wait(stream_id)
@@ -876,7 +881,7 @@ void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {
   ++_nrb->_cnt;
 }
  
-static void _net_receive_kernel(double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
+static void _net_receive_kernel(NrnThread* nrn_threads, double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
 #else
  
 void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) 
@@ -1231,7 +1236,13 @@ _thread = _ml->_thread;
     }
     #endif
   }
-_update_global_variables();
+  if(_ml->instance) {
+    free(_ml->instance);
+    _ml->instance = nullptr;
+  }
+  _ml->instance = malloc(sizeof(_global_variables_t));
+  _initlists(_ml);
+  _update_global_variables(_nt, _ml);
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -1404,14 +1415,12 @@ for (;;) { /* help clang-format properly indent */
 
 static void terminal(){}
 
-static void _initlists(){
- _global_variables_ptr = &_global_variables;
+static void _initlists(Memb_list *_ml){
  double _x; double* _p = &_x;
- int _i; static int _first = 1;
+ int _i;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
-  if (!_first) return;
  _slist1[0] = &(OMg) - _p;  _dlist1[0] = &(DOMg) - _p;
  _slist1[1] = &(ClMg) - _p;  _dlist1[1] = &(DClMg) - _p;
  _slist1[2] = &(Cl) - _p;  _dlist1[2] = &(DCl) - _p;
@@ -1422,6 +1431,5 @@ static void _initlists(){
  _slist1[7] = &(O) - _p;  _dlist1[7] = &(DO) - _p;
  _slist1[8] = &(UMg) - _p;  _dlist1[8] = &(DUMg) - _p;
  _slist1[9] = &(U) - _p;  _dlist1[9] = &(DU) - _p;
-_first = 0;
-}
+ }
 } // namespace coreneuron_lib

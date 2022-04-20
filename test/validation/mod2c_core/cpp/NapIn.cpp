@@ -27,7 +27,7 @@
 #endif
  namespace coreneuron {
  
-#define _thread_present_ /**/ , _slist1[0:2], _dlist1[0:2] 
+#define _thread_present_ /**/ 
  
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include <openacc.h>
@@ -89,10 +89,10 @@
 #undef _threadargs_
 #undef _threadargsproto_
  
-#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
-#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
+#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v,
+#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -226,15 +226,14 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #endif /* BBCORE */
  
 }
- static void _initlists();
+ static void _initlists(Memb_list *_ml);
  static void _update_ion_pointer(Datum*);
  
 #define _psize 14
 #define _ppsize 3
  void _NapIn_reg() {
 	int _vectorized = 1;
-  _initlists();
- _mechtype = nrn_get_mechtype(_mechanism[1]);
+  _mechtype = nrn_get_mechtype(_mechanism[1]);
  if (_mechtype == -1) return;
  _nrn_layout_reg(_mechtype, LAYOUT);
  _na_type = nrn_get_mechtype("na_ion"); 
@@ -250,39 +249,45 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   hoc_register_dparam_semantics(_mechtype, 2, "na_ion");
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
- struct _GlobalVars {
+ struct _global_variables_t {
    int _slist1[2];
    int _dlist1[2];
    double celsius;
-   int _mechtype;
    double eNa;
    double delta_t;
    double h0;
    double m0;
- };
-
- static _GlobalVars _global_variables;
- static _GlobalVars* _global_variables_ptr;
+   int _ml_mechtype; };
 
  
-static void _update_global_variables() {
-   _global_variables.celsius = celsius;
-   _global_variables._mechtype = _mechtype;
-   _global_variables.eNa = eNa;
-   _global_variables.delta_t = delta_t;
-   _global_variables.h0 = h0;
-   _global_variables.m0 = m0;
-   #pragma acc enter data copyin(_global_variables[0:1]) if(nrn_threads->compute_gpu)
+static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
+   if(_nt == nullptr || _ml == nullptr) {
+     return;
+   }
+   _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->instance);
+   _global_variables->_ml_mechtype = _mechtype;
+   _global_variables->celsius = celsius;
+   _global_variables->eNa = eNa;
+   _global_variables->delta_t = delta_t;
+   _global_variables->h0 = h0;
+   _global_variables->m0 = m0;
+ #ifdef CORENEURON_ENABLE_GPU
+   if (_nt->compute_gpu) {
+     auto* _d_global_vars = cnrn_target_copyin(_global_variables);
+     auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));
+     cnrn_target_memcpy_to_device(&(_d_ml->instance), (void**)&(_d_global_vars));
+   }
+ #endif
  }
 
- #define _slist1 _global_variables_ptr->_slist1
- #define _dlist1 _global_variables_ptr->_dlist1
- #define celsius _global_variables_ptr->celsius
- #define _mechtype _global_variables_ptr->_mechtype
- #define eNa _global_variables_ptr->eNa
- #define delta_t _global_variables_ptr->delta_t
- #define h0 _global_variables_ptr->h0
- #define m0 _global_variables_ptr->m0
+ #define _slist1 reinterpret_cast<_global_variables_t*>(_ml->instance)->_slist1
+ #define _dlist1 reinterpret_cast<_global_variables_t*>(_ml->instance)->_dlist1
+ #define celsius reinterpret_cast<_global_variables_t*>(_ml->instance)->celsius
+ #define eNa reinterpret_cast<_global_variables_t*>(_ml->instance)->eNa
+ #define delta_t reinterpret_cast<_global_variables_t*>(_ml->instance)->delta_t
+ #define h0 reinterpret_cast<_global_variables_t*>(_ml->instance)->h0
+ #define m0 reinterpret_cast<_global_variables_t*>(_ml->instance)->m0
+ #define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
  
 static const char *modelname = "nap";
 
@@ -362,7 +367,13 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-_update_global_variables();
+  if(_ml->instance) {
+    free(_ml->instance);
+    _ml->instance = nullptr;
+  }
+  _ml->instance = malloc(sizeof(_global_variables_t));
+  _initlists(_ml);
+  _update_global_variables(_nt, _ml);
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -505,16 +516,13 @@ for (;;) { /* help clang-format properly indent */
 
 static void terminal(){}
 
-static void _initlists(){
- _global_variables_ptr = &_global_variables;
+static void _initlists(Memb_list *_ml){
  double _x; double* _p = &_x;
- int _i; static int _first = 1;
+ int _i;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
-  if (!_first) return;
  _slist1[0] = &(m) - _p;  _dlist1[0] = &(Dm) - _p;
  _slist1[1] = &(h) - _p;  _dlist1[1] = &(Dh) - _p;
-_first = 0;
-}
+ }
 } // namespace coreneuron_lib
