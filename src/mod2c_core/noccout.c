@@ -801,6 +801,17 @@ void c_out_vectorize()
 	  P("_cntml_actual = _ml->_nodecount;\n");
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("_thread = _ml->_thread;\n");
+
+	P("  if(_ml->instance) {\n");
+	P("    free(_ml->instance);\n");
+	P("    _ml->instance = nullptr;\n");
+	P("  }\n");
+	P("  _ml->instance = malloc(sizeof(_global_variables_t));\n");
+
+	// TODO: check with Michael if calling _initlists multiple times will have any side effects
+	P("  _initlists(_ml);\n");
+	P("  _update_global_variables(_nt, _ml);\n");
+
 	if (derivimplic_listnum) {
 	  sprintf(buf,
 	  "  _deriv%d_advance = 0;\n"
@@ -814,16 +825,6 @@ void c_out_vectorize()
 	  P(STR(q));
 	}
 	/*check_tables();*/
-
-	P("  if(_ml->instance) {\n");
-	P("    free(_ml->instance);\n");
-	P("    _ml->instance = nullptr;\n");
-	P("  }\n");
-	P("  _ml->instance = malloc(sizeof(_global_variables_t));\n");
-
-	// TODO: check with Michael if calling _initlists multiple times will have any side effects
-	P("  _initlists(_ml);\n");
-	P("  _update_global_variables(_nt, _ml);\n");
 
 	 pr_layout_for_p(1, NRN_INIT);
 
