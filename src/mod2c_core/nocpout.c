@@ -1061,7 +1061,7 @@ static const char *_mechanism[] = {\n\
     Lappendstr(globals_update_list, "    return;\n");
     Lappendstr(globals_update_list, "  }\n");
 
-    Lappendstr(globals_update_list, "  _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->instance);\n");
+    Lappendstr(globals_update_list, "  _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->global_variables);\n");
     Lappendstr(globals_update_list, "  _global_variables->_ml_mechtype = _mechtype;\n");
     for(int i=0; i < global_variables_count; i++) {
         // variables like slist/dlist are directly initialized
@@ -1094,9 +1094,9 @@ static const char *_mechanism[] = {\n\
     if (!artificial_cell) {
         Lappendstr(globals_update_list, "#ifdef CORENEURON_ENABLE_GPU\n");
         Lappendstr(globals_update_list, "  if (_nt->compute_gpu) {\n");
-        Lappendstr(globals_update_list, "    auto* _d_global_vars = cnrn_target_copyin(_global_variables);\n");
-        Lappendstr(globals_update_list, "    auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));\n");
-        Lappendstr(globals_update_list, "    cnrn_target_memcpy_to_device(&(_d_ml->instance), (void**)&(_d_global_vars));\n");
+        Lappendstr(globals_update_list, "      auto* _d_global_variables = cnrn_target_copyin(_global_variables);\n");
+        Lappendstr(globals_update_list, "      auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));\n");
+        Lappendstr(globals_update_list, "      cnrn_target_memcpy_to_device(&(_d_ml->global_variables), (void**)&(_d_global_variables));\n");
         Lappendstr(globals_update_list, "  }\n");
         Lappendstr(globals_update_list, "#endif\n");
     }
@@ -1108,12 +1108,12 @@ static const char *_mechanism[] = {\n\
     // especially global_variables_ptr because access via pointer is possible on
     // cpu side or GPU side. Hence, this is usual macro magic.
     for(int i=0; i < global_variables_count; i++) {
-        Sprintf(buf, "#define %s reinterpret_cast<_global_variables_t*>(_ml->instance)->%s\n",
+        Sprintf(buf, "#define %s reinterpret_cast<_global_variables_t*>(_ml->global_variables)->%s\n",
                 global_variables[i].name,
                 global_variables[i].name);
         Lappendstr(globals_update_list, buf);
     }
-    Lappendstr(globals_update_list, "#define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype\n");
+    Lappendstr(globals_update_list, "#define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype\n");
     Lappendstr(globals_update_list, "\n");
 
 #endif
@@ -3066,13 +3066,17 @@ sprintf(buf, "\
 
 	insertstr(q, "\n}\n");
 
+    // note that atomic capture required strucutre block because of the issue
+    //   https://forums.developer.nvidia.com/t/segfault-and-missing-branch-target-block-error-while-compiling-larger-functions-with-o1-vs-o2-opt-levels/212264/2
 	if (net_send_seen_ || net_event_seen_) {
 		sprintf(buf, "\
 \nstatic void _net_send_buffering(NetSendBuffer_t* _nsb, int _sendtype, int _i_vdata, int _weight_index,\
 \n int _ipnt, double _t, double _flag) {\
 \n  int _i = 0;\
 \n  #pragma acc atomic capture\
-\n  _i = _nsb->_cnt++;\
+\n  {\
+\n    _i = _nsb->_cnt++;\
+\n  }\
 \n#if !defined(_OPENACC)\
 \n  if (_i >= _nsb->_size) {\
 \n    _nsb->grow();\
