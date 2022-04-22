@@ -802,13 +802,19 @@ void c_out_vectorize()
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("_thread = _ml->_thread;\n");
 
-	P("  if(_ml->instance) {\n");
-	P("    free(_ml->instance);\n");
-	P("    _ml->instance = nullptr;\n");
+	P("  if(_ml->global_variables) {\n");
+	P("    #ifdef _OPENACC\n");
+	P("      if(acc_is_present(_ml->global_variables, sizeof(_global_variables_t))) {\n");
+	P("        acc_delete(_ml->global_variables, sizeof(_global_variables_t));\n");
+	P("      }\n");
+	P("    #endif\n");
+	P("    free(_ml->global_variables);\n");
+	P("    _ml->global_variables = nullptr;\n");
 	P("  }\n");
-	P("  _ml->instance = malloc(sizeof(_global_variables_t));\n");
 
 	// TODO: check with Michael if calling _initlists multiple times will have any side effects
+	P("  _ml->global_variables = malloc(sizeof(_global_variables_t));\n");
+	P("  _ml->global_variables_size = sizeof(_global_variables_t);\n");
 	P("  _initlists(_ml);\n");
 	P("  _update_global_variables(_nt, _ml);\n");
 
