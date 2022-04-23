@@ -537,9 +537,19 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 #endif
 
 	Lappendstr(defs_list, "/* external NEURON variables */\n");
+	int add_celsius  = 0;
+	int redefine_nrn_ghk = 0;
 	SYMLISTITER {
 		s = SYM(q);
+		if(strcmp(s->name, "nrn_ghk") == 0 && s->subtype & EXTDEF) {
+			add_celsius = 1;
+			redefine_nrn_ghk = 1;
+		}
 		if (s->nrntype & NRNEXTRN) {
+			if (strcmp(s->name, "celsius") == 0) {
+				add_celsius = 1;
+				continue;
+			}
 			if (strcmp(s->name, "dt") == 0) { continue; }
 			if (strcmp(s->name, "t") == 0) { continue; }
 			if (s->subtype & ARRAY) {
@@ -548,18 +558,21 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 				Sprintf(buf, "extern double %s;\n", s->name);
 			}
 			Lappendstr(defs_list, buf);
-
-			// following three global variables used as extern from
-			// coreneuron side for openacc usage and hence add them
-			// to global variable list.
-			if (strcmp(s->name, "celsius") == 0
-					|| strcmp(s->name, "secondorder")
-					|| strcmp(s->name, "pi"))  {
+			// following are remaining two global variables used as extern from
+			// coreneuron side and hence add them to global variable list.
+			if (strcmp(s->name, "secondorder") || strcmp(s->name, "pi"))  {
 				add_global_var("double", s->name, 0, 0, 0);
             }
         }
     }
-	
+	if (add_celsius) {
+		Lappendstr(defs_list, "extern double celsius;\n");
+		add_global_var("double", "celsius", 0, 0, 0);
+	}
+	// TODO: decide if this should be overload
+	if (redefine_nrn_ghk) {
+		Lappendstr(defs_list, "#define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)");
+	}
 #if BBCORE
 	Lappendstr(defs_list, "\n#if 0 /*BBCORE*/\n");
 #endif
