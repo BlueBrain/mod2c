@@ -180,7 +180,8 @@ void _net_buf_receive(NrnThread*);
  static int hoc_nrnpointerindex =  -1;
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
- 
+ extern double celsius;
+ #define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius) 
 #if 0 /*BBCORE*/
  /* declaration of user functions */
  static double _hoc_release();
@@ -455,6 +456,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  struct _global_variables_t {
    int _slist1[10];
    int _dlist1[10];
+   double celsius;
    double Rmc2u;
    double Rmc2b;
    double Rmc1u;
@@ -502,8 +504,9 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    if(_nt == nullptr || _ml == nullptr) {
      return;
    }
-   _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->instance);
+   _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->_ml_mechtype = _mechtype;
+   _global_variables->celsius = celsius;
    _global_variables->Rmc2u = Rmc2u;
    _global_variables->Rmc2b = Rmc2b;
    _global_variables->Rmc1u = Rmc1u;
@@ -546,56 +549,57 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    _global_variables->delta_t = delta_t;
  #ifdef CORENEURON_ENABLE_GPU
    if (_nt->compute_gpu) {
-     auto* _d_global_vars = cnrn_target_copyin(_global_variables);
-     auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));
-     cnrn_target_memcpy_to_device(&(_d_ml->instance), (void**)&(_d_global_vars));
+       auto* _d_global_variables = cnrn_target_copyin(_global_variables);
+       auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));
+       cnrn_target_memcpy_to_device(&(_d_ml->global_variables), (void**)&(_d_global_variables));
    }
  #endif
  }
 
- #define _slist1 reinterpret_cast<_global_variables_t*>(_ml->instance)->_slist1
- #define _dlist1 reinterpret_cast<_global_variables_t*>(_ml->instance)->_dlist1
- #define Rmc2u reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmc2u
- #define Rmc2b reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmc2b
- #define Rmc1u reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmc1u
- #define Rmc1b reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmc1b
- #define Rmd2u reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmd2u
- #define Rmd2b reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmd2b
- #define Rmd1u reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmd1u
- #define Rmd1b reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmd1b
- #define RcMg reinterpret_cast<_global_variables_t*>(_ml->instance)->RcMg
- #define RoMg reinterpret_cast<_global_variables_t*>(_ml->instance)->RoMg
- #define Rr2Mg reinterpret_cast<_global_variables_t*>(_ml->instance)->Rr2Mg
- #define Rd2Mg reinterpret_cast<_global_variables_t*>(_ml->instance)->Rd2Mg
- #define Rr1Mg reinterpret_cast<_global_variables_t*>(_ml->instance)->Rr1Mg
- #define Rd1Mg reinterpret_cast<_global_variables_t*>(_ml->instance)->Rd1Mg
- #define RuMg reinterpret_cast<_global_variables_t*>(_ml->instance)->RuMg
- #define RbMg reinterpret_cast<_global_variables_t*>(_ml->instance)->RbMg
- #define Rmu reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmu
- #define Rmb reinterpret_cast<_global_variables_t*>(_ml->instance)->Rmb
- #define Rc reinterpret_cast<_global_variables_t*>(_ml->instance)->Rc
- #define Ro reinterpret_cast<_global_variables_t*>(_ml->instance)->Ro
- #define Rr2 reinterpret_cast<_global_variables_t*>(_ml->instance)->Rr2
- #define Rd2 reinterpret_cast<_global_variables_t*>(_ml->instance)->Rd2
- #define Rr1 reinterpret_cast<_global_variables_t*>(_ml->instance)->Rr1
- #define Rd1 reinterpret_cast<_global_variables_t*>(_ml->instance)->Rd1
- #define Ru reinterpret_cast<_global_variables_t*>(_ml->instance)->Ru
- #define Rb reinterpret_cast<_global_variables_t*>(_ml->instance)->Rb
- #define memb_fraction reinterpret_cast<_global_variables_t*>(_ml->instance)->memb_fraction
- #define mg reinterpret_cast<_global_variables_t*>(_ml->instance)->mg
- #define valence reinterpret_cast<_global_variables_t*>(_ml->instance)->valence
- #define ClMg0 reinterpret_cast<_global_variables_t*>(_ml->instance)->ClMg0
- #define Cl0 reinterpret_cast<_global_variables_t*>(_ml->instance)->Cl0
- #define D2Mg0 reinterpret_cast<_global_variables_t*>(_ml->instance)->D2Mg0
- #define D1Mg0 reinterpret_cast<_global_variables_t*>(_ml->instance)->D1Mg0
- #define D20 reinterpret_cast<_global_variables_t*>(_ml->instance)->D20
- #define D10 reinterpret_cast<_global_variables_t*>(_ml->instance)->D10
- #define OMg0 reinterpret_cast<_global_variables_t*>(_ml->instance)->OMg0
- #define O0 reinterpret_cast<_global_variables_t*>(_ml->instance)->O0
- #define UMg0 reinterpret_cast<_global_variables_t*>(_ml->instance)->UMg0
- #define U0 reinterpret_cast<_global_variables_t*>(_ml->instance)->U0
- #define delta_t reinterpret_cast<_global_variables_t*>(_ml->instance)->delta_t
- #define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
+ #define _slist1 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_slist1
+ #define _dlist1 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
+ #define celsius reinterpret_cast<_global_variables_t*>(_ml->global_variables)->celsius
+ #define Rmc2u reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rmc2u
+ #define Rmc2b reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rmc2b
+ #define Rmc1u reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rmc1u
+ #define Rmc1b reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rmc1b
+ #define Rmd2u reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rmd2u
+ #define Rmd2b reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rmd2b
+ #define Rmd1u reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rmd1u
+ #define Rmd1b reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rmd1b
+ #define RcMg reinterpret_cast<_global_variables_t*>(_ml->global_variables)->RcMg
+ #define RoMg reinterpret_cast<_global_variables_t*>(_ml->global_variables)->RoMg
+ #define Rr2Mg reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rr2Mg
+ #define Rd2Mg reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rd2Mg
+ #define Rr1Mg reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rr1Mg
+ #define Rd1Mg reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rd1Mg
+ #define RuMg reinterpret_cast<_global_variables_t*>(_ml->global_variables)->RuMg
+ #define RbMg reinterpret_cast<_global_variables_t*>(_ml->global_variables)->RbMg
+ #define Rmu reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rmu
+ #define Rmb reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rmb
+ #define Rc reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rc
+ #define Ro reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Ro
+ #define Rr2 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rr2
+ #define Rd2 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rd2
+ #define Rr1 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rr1
+ #define Rd1 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rd1
+ #define Ru reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Ru
+ #define Rb reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rb
+ #define memb_fraction reinterpret_cast<_global_variables_t*>(_ml->global_variables)->memb_fraction
+ #define mg reinterpret_cast<_global_variables_t*>(_ml->global_variables)->mg
+ #define valence reinterpret_cast<_global_variables_t*>(_ml->global_variables)->valence
+ #define ClMg0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->ClMg0
+ #define Cl0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Cl0
+ #define D2Mg0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->D2Mg0
+ #define D1Mg0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->D1Mg0
+ #define D20 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->D20
+ #define D10 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->D10
+ #define OMg0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->OMg0
+ #define O0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->O0
+ #define UMg0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->UMg0
+ #define U0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->U0
+ #define delta_t reinterpret_cast<_global_variables_t*>(_ml->global_variables)->delta_t
+ #define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype
  
 static const char *modelname = "kinetic NMDA receptor model";
 
@@ -1226,6 +1230,19 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
+  if(_ml->global_variables) {
+    #ifdef _OPENACC
+      if(acc_is_present(_ml->global_variables, sizeof(_global_variables_t))) {
+        acc_delete(_ml->global_variables, sizeof(_global_variables_t));
+      }
+    #endif
+    free(_ml->global_variables);
+    _ml->global_variables = nullptr;
+  }
+  _ml->global_variables = malloc(sizeof(_global_variables_t));
+  _ml->global_variables_size = sizeof(_global_variables_t);
+  _initlists(_ml);
+  _update_global_variables(_nt, _ml);
   if (!_thread[_spth1]._pvoid) {
     _thread[_spth1]._pvoid = nrn_cons_sparseobj(_kinetic_kstates_NMDA10_1, 10, _ml, _threadargs_);
     #ifdef _OPENACC
@@ -1236,13 +1253,6 @@ _thread = _ml->_thread;
     }
     #endif
   }
-  if(_ml->instance) {
-    free(_ml->instance);
-    _ml->instance = nullptr;
-  }
-  _ml->instance = malloc(sizeof(_global_variables_t));
-  _initlists(_ml);
-  _update_global_variables(_nt, _ml);
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
