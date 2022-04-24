@@ -137,7 +137,8 @@
  static int hoc_nrnpointerindex =  -1;
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
- 
+ extern double celsius;
+ #define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius) 
 #if 0 /*BBCORE*/
  /* declaration of user functions */
  static void _hoc_rates(void);
@@ -244,6 +245,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  struct _global_variables_t {
    int _slist1[1];
    int _dlist1[1];
+   double celsius;
    double delta_t;
    double p0;
    int _ml_mechtype; };
@@ -253,24 +255,26 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    if(_nt == nullptr || _ml == nullptr) {
      return;
    }
-   _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->instance);
+   _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->_ml_mechtype = _mechtype;
+   _global_variables->celsius = celsius;
    _global_variables->delta_t = delta_t;
    _global_variables->p0 = p0;
  #ifdef CORENEURON_ENABLE_GPU
    if (_nt->compute_gpu) {
-     auto* _d_global_vars = cnrn_target_copyin(_global_variables);
-     auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));
-     cnrn_target_memcpy_to_device(&(_d_ml->instance), (void**)&(_d_global_vars));
+       auto* _d_global_variables = cnrn_target_copyin(_global_variables);
+       auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));
+       cnrn_target_memcpy_to_device(&(_d_ml->global_variables), (void**)&(_d_global_variables));
    }
  #endif
  }
 
- #define _slist1 reinterpret_cast<_global_variables_t*>(_ml->instance)->_slist1
- #define _dlist1 reinterpret_cast<_global_variables_t*>(_ml->instance)->_dlist1
- #define delta_t reinterpret_cast<_global_variables_t*>(_ml->instance)->delta_t
- #define p0 reinterpret_cast<_global_variables_t*>(_ml->instance)->p0
- #define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
+ #define _slist1 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_slist1
+ #define _dlist1 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
+ #define celsius reinterpret_cast<_global_variables_t*>(_ml->global_variables)->celsius
+ #define delta_t reinterpret_cast<_global_variables_t*>(_ml->global_variables)->delta_t
+ #define p0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->p0
+ #define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype
  
 static const char *modelname = "Nap_No.mod   persistent sodium current";
 
@@ -374,11 +378,17 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-  if(_ml->instance) {
-    free(_ml->instance);
-    _ml->instance = nullptr;
+  if(_ml->global_variables) {
+    #ifdef _OPENACC
+      if(acc_is_present(_ml->global_variables, sizeof(_global_variables_t))) {
+        acc_delete(_ml->global_variables, sizeof(_global_variables_t));
+      }
+    #endif
+    free(_ml->global_variables);
+    _ml->global_variables = nullptr;
   }
-  _ml->instance = malloc(sizeof(_global_variables_t));
+  _ml->global_variables = malloc(sizeof(_global_variables_t));
+  _ml->global_variables_size = sizeof(_global_variables_t);
   _initlists(_ml);
   _update_global_variables(_nt, _ml);
 double * _nt_data = _nt->_data;
