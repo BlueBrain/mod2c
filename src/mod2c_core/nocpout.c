@@ -2458,7 +2458,7 @@ Sprintf(buf, "#define _ion_di%sdv\t_nt_data[_ppvar[%d*_STRIDE]]\n", sion->name, 
 	ITERATE(q, nrnpointers) {
 		sion = SYM(q);
 	    if (sion->nrntype & NRNPOINTER) {
-		Sprintf(buf, "#define %s	_nt_data[_ppvar[%d*_STRIDE]]\n",
+		Sprintf(buf, "#define %s	_nt->_data[_ppvar[%d*_STRIDE]]\n",
 			sion->name, ioncount + *p_pointercount);
 		ppvar_semantics(ioncount + *p_pointercount, "pointer");
 	    }
