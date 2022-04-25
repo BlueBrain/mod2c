@@ -734,8 +734,8 @@ static void pr_layout_for_p(int ivdep, int fun_type) {
 
 static void print_cuda_launcher_call(char *name) {
     P("\n#if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)\n");
-    P("  NrnThread* d_nt = acc_deviceptr(_nt);\n");
-    P("  Memb_list* d_ml = acc_deviceptr(_ml);\n");
+    P("  NrnThread* d_nt = cnrn_target_deviceptr(_nt);\n");
+    P("  Memb_list* d_ml = cnrn_target_deviceptr(_ml);\n");
     Fprintf(fcout, "  nrn_%s_launcher(d_nt, d_ml, _type, _cntml_actual);\n", name);
     P("  return;\n");
     P("#endif\n\n");
@@ -802,10 +802,11 @@ void c_out_vectorize()
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("_thread = _ml->_thread;\n");
 
+	// _nt->compute_gpu instead of acc_is_present?
 	P("  if(_ml->global_variables) {\n");
 	P("    #ifdef _OPENACC\n");
 	P("      if(acc_is_present(_ml->global_variables, sizeof(_global_variables_t))) {\n");
-	P("        acc_delete(_ml->global_variables, sizeof(_global_variables_t));\n");
+	P("        cnrn_target_delete(static_cast<_global_variables_t*>(_ml->global_variables));\n");
 	P("      }\n");
 	P("    #endif\n");
 	P("    delete static_cast<_global_variables_t*>(_ml->global_variables);\n");
