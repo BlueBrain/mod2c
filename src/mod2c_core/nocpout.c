@@ -1046,7 +1046,7 @@ static const char *_mechanism[] = {\n\
 	
 #if BBCORE
     // start printing struct that contail all global variables
-    Lappendstr(globals_update_list, "struct _global_variables_t {\n");
+    Lappendstr(globals_update_list, "struct _global_variables_t : public MemoryManaged {\n");
     for(int i=0; i < global_variables_count; i++) {
         // individual member declaration: type name [len]
         if(global_variables[i].is_array) {
@@ -1074,7 +1074,7 @@ static const char *_mechanism[] = {\n\
     Lappendstr(globals_update_list, "    return;\n");
     Lappendstr(globals_update_list, "  }\n");
 
-    Lappendstr(globals_update_list, "  _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->global_variables);\n");
+    Lappendstr(globals_update_list, "  auto* _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);\n");
     Lappendstr(globals_update_list, "  _global_variables->_ml_mechtype = _mechtype;\n");
     for(int i=0; i < global_variables_count; i++) {
         // variables like slist/dlist are directly initialized
@@ -1107,9 +1107,9 @@ static const char *_mechanism[] = {\n\
     if (!artificial_cell) {
         Lappendstr(globals_update_list, "#ifdef CORENEURON_ENABLE_GPU\n");
         Lappendstr(globals_update_list, "  if (_nt->compute_gpu) {\n");
-        Lappendstr(globals_update_list, "      auto* _d_global_variables = cnrn_target_copyin(_global_variables);\n");
-        Lappendstr(globals_update_list, "      auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));\n");
-        Lappendstr(globals_update_list, "      cnrn_target_memcpy_to_device(&(_d_ml->global_variables), (void**)&(_d_global_variables));\n");
+        Lappendstr(globals_update_list, "      void* _d_global_variables = cnrn_target_copyin(_global_variables);\n");
+        Lappendstr(globals_update_list, "      auto* _d_ml = cnrn_target_deviceptr(_ml);\n");
+        Lappendstr(globals_update_list, "      cnrn_target_memcpy_to_device(&(_d_ml->global_variables), &(_d_global_variables));\n");
         Lappendstr(globals_update_list, "  }\n");
         Lappendstr(globals_update_list, "#endif\n");
     }
@@ -1121,12 +1121,12 @@ static const char *_mechanism[] = {\n\
     // especially global_variables_ptr because access via pointer is possible on
     // cpu side or GPU side. Hence, this is usual macro magic.
     for(int i=0; i < global_variables_count; i++) {
-        Sprintf(buf, "#define %s reinterpret_cast<_global_variables_t*>(_ml->global_variables)->%s\n",
+        Sprintf(buf, "#define %s static_cast<_global_variables_t*>(_ml->global_variables)->%s\n",
                 global_variables[i].name,
                 global_variables[i].name);
         Lappendstr(globals_update_list, buf);
     }
-    Lappendstr(globals_update_list, "#define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype\n");
+    Lappendstr(globals_update_list, "#define _ml_mechtype static_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype\n");
     Lappendstr(globals_update_list, "\n");
 
 #endif

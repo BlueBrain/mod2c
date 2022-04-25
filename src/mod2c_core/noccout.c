@@ -808,12 +808,12 @@ void c_out_vectorize()
 	P("        acc_delete(_ml->global_variables, sizeof(_global_variables_t));\n");
 	P("      }\n");
 	P("    #endif\n");
-	P("    free(_ml->global_variables);\n");
+	P("    delete static_cast<_global_variables_t*>(_ml->global_variables);\n");
 	P("    _ml->global_variables = nullptr;\n");
 	P("  }\n");
 
 	// TODO: check with Michael if calling _initlists multiple times will have any side effects
-	P("  _ml->global_variables = malloc(sizeof(_global_variables_t));\n");
+	P("  _ml->global_variables = new _global_variables_t{};\n");
 	P("  _ml->global_variables_size = sizeof(_global_variables_t);\n");
 	P("  _initlists(_ml);\n");
 	P("  _update_global_variables(_nt, _ml);\n");
