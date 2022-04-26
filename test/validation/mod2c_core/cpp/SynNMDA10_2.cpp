@@ -174,8 +174,8 @@ void _net_buf_receive(NrnThread*);
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
  extern double celsius;
- #define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius) 
-#if 0 /*BBCORE*/
+ #define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)
+ #if 0 /*BBCORE*/
  /* declaration of user functions */
  static double _hoc_release();
  static double _hoc_rates();
@@ -368,7 +368,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  set_pnt_receive(_mechtype, _net_receive, nullptr, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
- struct _global_variables_t {
+ struct _global_variables_t : public MemoryManaged {
    int _slist1[10];
    int _dlist1[10];
    double celsius;
@@ -397,7 +397,7 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    if(_nt == nullptr || _ml == nullptr) {
      return;
    }
-   _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->global_variables);
+   auto* _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->_ml_mechtype = _mechtype;
    _global_variables->celsius = celsius;
    _global_variables->Rc = Rc;
@@ -420,35 +420,35 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    _global_variables->delta_t = delta_t;
  #ifdef CORENEURON_ENABLE_GPU
    if (_nt->compute_gpu) {
-       auto* _d_global_variables = cnrn_target_copyin(_global_variables);
-       auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));
-       cnrn_target_memcpy_to_device(&(_d_ml->global_variables), (void**)&(_d_global_variables));
+       void* _d_global_variables = cnrn_target_copyin(_global_variables);
+       auto* _d_ml = cnrn_target_deviceptr(_ml);
+       cnrn_target_memcpy_to_device(&(_d_ml->global_variables), &(_d_global_variables));
    }
  #endif
  }
 
- #define _slist1 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_slist1
- #define _dlist1 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
- #define celsius reinterpret_cast<_global_variables_t*>(_ml->global_variables)->celsius
- #define Rc reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rc
- #define Ro reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Ro
- #define Rr reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rr
- #define Rd reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rd
- #define Ru reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Ru
- #define Rb reinterpret_cast<_global_variables_t*>(_ml->global_variables)->Rb
- #define mg reinterpret_cast<_global_variables_t*>(_ml->global_variables)->mg
- #define CB20 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->CB20
- #define CB10 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->CB10
- #define CB00 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->CB00
- #define C20 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->C20
- #define C10 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->C10
- #define C00 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->C00
- #define DB0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->DB0
- #define D0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->D0
- #define OB0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->OB0
- #define O0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->O0
- #define delta_t reinterpret_cast<_global_variables_t*>(_ml->global_variables)->delta_t
- #define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype
+ #define _slist1 static_cast<_global_variables_t*>(_ml->global_variables)->_slist1
+ #define _dlist1 static_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
+ #define celsius static_cast<_global_variables_t*>(_ml->global_variables)->celsius
+ #define Rc static_cast<_global_variables_t*>(_ml->global_variables)->Rc
+ #define Ro static_cast<_global_variables_t*>(_ml->global_variables)->Ro
+ #define Rr static_cast<_global_variables_t*>(_ml->global_variables)->Rr
+ #define Rd static_cast<_global_variables_t*>(_ml->global_variables)->Rd
+ #define Ru static_cast<_global_variables_t*>(_ml->global_variables)->Ru
+ #define Rb static_cast<_global_variables_t*>(_ml->global_variables)->Rb
+ #define mg static_cast<_global_variables_t*>(_ml->global_variables)->mg
+ #define CB20 static_cast<_global_variables_t*>(_ml->global_variables)->CB20
+ #define CB10 static_cast<_global_variables_t*>(_ml->global_variables)->CB10
+ #define CB00 static_cast<_global_variables_t*>(_ml->global_variables)->CB00
+ #define C20 static_cast<_global_variables_t*>(_ml->global_variables)->C20
+ #define C10 static_cast<_global_variables_t*>(_ml->global_variables)->C10
+ #define C00 static_cast<_global_variables_t*>(_ml->global_variables)->C00
+ #define DB0 static_cast<_global_variables_t*>(_ml->global_variables)->DB0
+ #define D0 static_cast<_global_variables_t*>(_ml->global_variables)->D0
+ #define OB0 static_cast<_global_variables_t*>(_ml->global_variables)->OB0
+ #define O0 static_cast<_global_variables_t*>(_ml->global_variables)->O0
+ #define delta_t static_cast<_global_variables_t*>(_ml->global_variables)->delta_t
+ #define _ml_mechtype static_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype
  
 static const char *modelname = "detailed model of glutamate NMDA receptors";
 
@@ -975,13 +975,13 @@ _thread = _ml->_thread;
   if(_ml->global_variables) {
     #ifdef _OPENACC
       if(acc_is_present(_ml->global_variables, sizeof(_global_variables_t))) {
-        acc_delete(_ml->global_variables, sizeof(_global_variables_t));
+        cnrn_target_delete(static_cast<_global_variables_t*>(_ml->global_variables));
       }
     #endif
-    free(_ml->global_variables);
+    delete static_cast<_global_variables_t*>(_ml->global_variables);
     _ml->global_variables = nullptr;
   }
-  _ml->global_variables = malloc(sizeof(_global_variables_t));
+  _ml->global_variables = new _global_variables_t{};
   _ml->global_variables_size = sizeof(_global_variables_t);
   _initlists(_ml);
   _update_global_variables(_nt, _ml);
@@ -989,9 +989,9 @@ _thread = _ml->_thread;
     _thread[_spth1]._pvoid = nrn_cons_sparseobj(_kinetic_kstates_NMDA10_2, 10, _ml, _threadargs_);
     #ifdef _OPENACC
     if (_nt->compute_gpu) {
-      void* _d_so = (void*) acc_deviceptr(_thread[_spth1]._pvoid);
-      ThreadDatum* _d_td = (ThreadDatum*)acc_deviceptr(_thread);
-      acc_memcpy_to_device(&(_d_td[_spth1]._pvoid), &_d_so, sizeof(void*));
+      void* _d_so = cnrn_target_deviceptr(_thread[_spth1]._pvoid);
+      ThreadDatum* _d_td = cnrn_target_deviceptr(_thread);
+      cnrn_target_memcpy_to_device(&(_d_td[_spth1]._pvoid), &_d_so);
     }
     #endif
   }
@@ -1052,8 +1052,8 @@ double * _vec_shadow_rhs = _nt->_shadow_rhs;
 double * _vec_shadow_d = _nt->_shadow_d;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  NrnThread* d_nt = acc_deviceptr(_nt);
-  Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = cnrn_target_deviceptr(_nt);
+  Memb_list* d_ml = cnrn_target_deviceptr(_ml);
   nrn_cur_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif
@@ -1129,8 +1129,8 @@ _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  NrnThread* d_nt = acc_deviceptr(_nt);
-  Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = cnrn_target_deviceptr(_nt);
+  Memb_list* d_ml = cnrn_target_deviceptr(_ml);
   nrn_state_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif

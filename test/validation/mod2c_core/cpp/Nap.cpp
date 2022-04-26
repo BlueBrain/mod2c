@@ -142,8 +142,8 @@
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
  extern double celsius;
- #define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius) 
-#if 0 /*BBCORE*/
+ #define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)
+ #if 0 /*BBCORE*/
  /* declaration of user functions */
  static void _hoc_trates(void);
  
@@ -251,7 +251,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   hoc_register_dparam_semantics(_mechtype, 2, "na_ion");
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
- struct _global_variables_t {
+ struct _global_variables_t : public MemoryManaged {
    int _slist1[1];
    int _dlist1[1];
    double celsius;
@@ -265,7 +265,7 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    if(_nt == nullptr || _ml == nullptr) {
      return;
    }
-   _global_variables_t* _global_variables = reinterpret_cast<_global_variables_t*>(_ml->global_variables);
+   auto* _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->_ml_mechtype = _mechtype;
    _global_variables->celsius = celsius;
    _global_variables->eNa = eNa;
@@ -273,20 +273,20 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    _global_variables->m0 = m0;
  #ifdef CORENEURON_ENABLE_GPU
    if (_nt->compute_gpu) {
-       auto* _d_global_variables = cnrn_target_copyin(_global_variables);
-       auto* _d_ml = reinterpret_cast<Memb_list*>(acc_deviceptr(_ml));
-       cnrn_target_memcpy_to_device(&(_d_ml->global_variables), (void**)&(_d_global_variables));
+       void* _d_global_variables = cnrn_target_copyin(_global_variables);
+       auto* _d_ml = cnrn_target_deviceptr(_ml);
+       cnrn_target_memcpy_to_device(&(_d_ml->global_variables), &(_d_global_variables));
    }
  #endif
  }
 
- #define _slist1 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_slist1
- #define _dlist1 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
- #define celsius reinterpret_cast<_global_variables_t*>(_ml->global_variables)->celsius
- #define eNa reinterpret_cast<_global_variables_t*>(_ml->global_variables)->eNa
- #define delta_t reinterpret_cast<_global_variables_t*>(_ml->global_variables)->delta_t
- #define m0 reinterpret_cast<_global_variables_t*>(_ml->global_variables)->m0
- #define _ml_mechtype reinterpret_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype
+ #define _slist1 static_cast<_global_variables_t*>(_ml->global_variables)->_slist1
+ #define _dlist1 static_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
+ #define celsius static_cast<_global_variables_t*>(_ml->global_variables)->celsius
+ #define eNa static_cast<_global_variables_t*>(_ml->global_variables)->eNa
+ #define delta_t static_cast<_global_variables_t*>(_ml->global_variables)->delta_t
+ #define m0 static_cast<_global_variables_t*>(_ml->global_variables)->m0
+ #define _ml_mechtype static_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype
  
 static const char *modelname = "nap";
 
@@ -365,13 +365,13 @@ _thread = _ml->_thread;
   if(_ml->global_variables) {
     #ifdef _OPENACC
       if(acc_is_present(_ml->global_variables, sizeof(_global_variables_t))) {
-        acc_delete(_ml->global_variables, sizeof(_global_variables_t));
+        cnrn_target_delete(static_cast<_global_variables_t*>(_ml->global_variables));
       }
     #endif
-    free(_ml->global_variables);
+    delete static_cast<_global_variables_t*>(_ml->global_variables);
     _ml->global_variables = nullptr;
   }
-  _ml->global_variables = malloc(sizeof(_global_variables_t));
+  _ml->global_variables = new _global_variables_t{};
   _ml->global_variables_size = sizeof(_global_variables_t);
   _initlists(_ml);
   _update_global_variables(_nt, _ml);
@@ -432,8 +432,8 @@ double * _vec_rhs = _nt->_actual_rhs;
 double * _vec_d = _nt->_actual_d;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  NrnThread* d_nt = acc_deviceptr(_nt);
-  Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = cnrn_target_deviceptr(_nt);
+  Memb_list* d_ml = cnrn_target_deviceptr(_ml);
   nrn_cur_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif
@@ -483,8 +483,8 @@ _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  NrnThread* d_nt = acc_deviceptr(_nt);
-  Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = cnrn_target_deviceptr(_nt);
+  Memb_list* d_ml = cnrn_target_deviceptr(_ml);
   nrn_state_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif

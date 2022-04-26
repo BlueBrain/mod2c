@@ -571,10 +571,10 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	}
 	// TODO: decide if this should be overload
 	if (redefine_nrn_ghk) {
-		Lappendstr(defs_list, "#define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)");
+		Lappendstr(defs_list, "#define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)\n");
 	}
 #if BBCORE
-	Lappendstr(defs_list, "\n#if 0 /*BBCORE*/\n");
+	Lappendstr(defs_list, "#if 0 /*BBCORE*/\n");
 #endif
 	Lappendstr(defs_list, "/* declaration of user functions */\n");
 	SYMLISTITER {
