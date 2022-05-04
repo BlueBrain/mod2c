@@ -16,9 +16,11 @@
 #include "coreneuron/mechanism/mech/cfile/scoplib.h"
 
 #include "coreneuron/sim/scopmath/newton_struct.h"
+#include "coreneuron/sim/scopmath/newton_thread.hpp"
+#include "coreneuron/sim/scopmath/sparse_thread.hpp"
+#include "coreneuron/sim/scopmath/ssimplic_thread.hpp"
 #include "coreneuron/nrnoc/md2redef.h"
 #include "coreneuron/mechanism/register_mech.hpp"
-#include "_kinderiv.h"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
@@ -620,7 +622,10 @@ int* _dlist1;
 #define INSIDE_NMODL
 #endif
  
-int kstates (void* _so, double* _rhs, _threadargsproto_)
+struct kstates_NMDA16_2 {
+  int operator()(SparseObj* _so, double* _rhs, _threadargsproto_) const;
+};
+int kstates_NMDA16_2::operator() (SparseObj* _so, double* _rhs, _threadargsproto_) const
  {int _reset=0;
  {
    double b_flux, f_flux, _term; int _i;
@@ -1410,7 +1415,7 @@ _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
   #pragma acc update device (_mechtype) if(_nt->compute_gpu)
   if (!_thread[_spth1]._pvoid) {
-    _thread[_spth1]._pvoid = nrn_cons_sparseobj(_kinetic_kstates_NMDA16_2, 16, _ml, _threadargs_);
+    _thread[_spth1]._pvoid = nrn_cons_sparseobj(kstates_NMDA16_2{}, 16, _ml, _threadargs_);
     #ifdef _OPENACC
     if (_nt->compute_gpu) {
       void* _d_so = (void*) acc_deviceptr(_thread[_spth1]._pvoid);
@@ -1604,10 +1609,7 @@ for (;;) { /* help clang-format properly indent */
 {
   nao = _ion_nao;
  {  
-  #if !defined(_kinetic_kstates_NMDA16_2)
-    #define _kinetic_kstates_NMDA16_2 0
-  #endif
-  sparse_thread((SparseObj*)_thread[_spth1]._pvoid, 16, _slist1, _dlist1, &t, dt, _kinetic_kstates_NMDA16_2, _linmat1, _threadargs_);
+  sparse_thread(static_cast<SparseObj*>(_thread[_spth1]._pvoid), 16, _slist1, _dlist1, &t, dt, kstates_NMDA16_2{}, _linmat1, _threadargs_);
   }}}
 
 }

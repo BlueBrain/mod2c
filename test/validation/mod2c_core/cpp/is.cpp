@@ -16,9 +16,11 @@
 #include "coreneuron/mechanism/mech/cfile/scoplib.h"
 
 #include "coreneuron/sim/scopmath/newton_struct.h"
+#include "coreneuron/sim/scopmath/newton_thread.hpp"
+#include "coreneuron/sim/scopmath/sparse_thread.hpp"
+#include "coreneuron/sim/scopmath/ssimplic_thread.hpp"
 #include "coreneuron/nrnoc/md2redef.h"
 #include "coreneuron/mechanism/register_mech.hpp"
-#include "_kinderiv.h"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
@@ -327,7 +329,10 @@ static int _ode_spec1(_threadargsproto_);
 #ifndef INSIDE_NMODL
 #define INSIDE_NMODL
 #endif
- int _newton_states_Is(_threadargsproto_);
+ 
+struct _newton_states_Is {
+  int operator()(_threadargsproto_) const;
+};
  
 #define _slist2 _slist2_Is
 int* _slist2;
@@ -362,14 +367,14 @@ int states (_threadargsproto_) {int _reset=0; int error = 0;
  { double* _savstate1 = (double*)_thread[_dith1]._pval;
  double* _dlist2 = (double*)(_thread[_dith1]._pval) + (2*_cntml_padded);
  {int _id; for(_id=0; _id < 2; _id++) { _savstate1[_id*_STRIDE] = _p[_slist1[_id]*_STRIDE];}}
- #pragma acc routine(nrn_newton_thread) seq
-_reset = nrn_newton_thread((NewtonSpace*)_newtonspace1, 2,_slist2, _derivimplicit_states_Is, _dlist2,  _threadargs_);
+ _reset = nrn_newton_thread(static_cast<NewtonSpace*>(_newtonspace1), 2, _slist2, _newton_states_Is{}, _dlist2, _threadargs_);
  /*if(_reset) {abort_run(_reset);}*/ }
  
   return _reset;
 }
 
-int _newton_states_Is (_threadargsproto_) {  int _reset=0;
+int _newton_states_Is::operator()(_threadargsproto_) const {
+  int _reset=0;
  { double* _savstate1 = (double*)_thread[_dith1]._pval;
  double* _dlist2 = (double*)(_thread[_dith1]._pval) + (2*_cntml_padded);
  int _counte = -1;
@@ -674,10 +679,7 @@ for (;;) { /* help clang-format properly indent */
 {
   cai = _ion_cai;
  {  
-  #if !defined(_derivimplicit_states_Is)
-    #define _derivimplicit_states_Is 0
-  #endif
-  derivimplicit_thread(2, _slist1, _dlist1, _derivimplicit_states_Is, _threadargs_);
+  states_Is(_threadargs_);
   }   }}
 
 }

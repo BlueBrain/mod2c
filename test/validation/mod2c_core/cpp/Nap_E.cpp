@@ -16,9 +16,11 @@
 #include "coreneuron/mechanism/mech/cfile/scoplib.h"
 
 #include "coreneuron/sim/scopmath/newton_struct.h"
+#include "coreneuron/sim/scopmath/newton_thread.hpp"
+#include "coreneuron/sim/scopmath/sparse_thread.hpp"
+#include "coreneuron/sim/scopmath/ssimplic_thread.hpp"
 #include "coreneuron/nrnoc/md2redef.h"
 #include "coreneuron/mechanism/register_mech.hpp"
-#include "_kinderiv.h"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp

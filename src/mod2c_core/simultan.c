@@ -234,12 +234,12 @@ numlist, numlist-1, counts);
 		counts, numlist, SYM(q2)->name, suffix, numlist);
 	qret = insertstr(q3, buf);
 	Sprintf(buf, 
-	  "_reset = nrn_newton_thread(static_cast<NewtonSpace*>(_newtonspace%d), %d,_slist%d, _newton_%s%s{}, _dlist%d, _threadargs_);\n"
+	  "_reset = nrn_newton_thread(static_cast<NewtonSpace*>(_newtonspace%d), %d, _slist%d, _newton_%s%s{}, _dlist%d, _threadargs_);\n"
 	  , numlist-1, counts, numlist, SYM(q2)->name, suffix, numlist);
 	vectorize_substitute(qret, buf);
 	Insertstr(q3, "/*if(_reset) {abort_run(_reset);}*/ }\n");
 	Sprintf(buf,
-	  "struct _newton_%s%s { int operator()(_threadargsproto_) const; };\n"
+	  "\nstruct _newton_%s%s {\n  int operator()(_threadargsproto_) const;\n};\n"
 	  , SYM(q2)->name, suffix);
 	Linsertstr(procfunc, buf);
 
