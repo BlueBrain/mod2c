@@ -343,7 +343,9 @@ int* _slist1;
 #define _dlist1 _dlist1_Is
 int* _dlist1;
 #pragma acc declare create(_dlist1)
- extern int states(_threadargsproto_);
+ struct states_Is {
+  int operator()(_threadargsproto_) const;
+};
  
 /*CVODE*/
  static int _ode_spec1 (_threadargsproto_) {int _reset = 0; {
@@ -361,7 +363,9 @@ int* _dlist1;
 }
  /*END CVODE*/
  
-int states (_threadargsproto_) {int _reset=0; int error = 0;
+int states ::operator()(_threadargsproto_) const {
+ int _reset=0;
+ int error = 0;
  { double* _savstate1 = (double*)_thread[_dith1]._pval;
  double* _dlist2 = (double*)(_thread[_dith1]._pval) + (2*_cntml_padded);
  {int _id; for(_id=0; _id < 2; _id++) { _savstate1[_id*_STRIDE] = _p[_slist1[_id]*_STRIDE];}}
@@ -677,7 +681,7 @@ for (;;) { /* help clang-format properly indent */
 {
   cai = _ion_cai;
  {  
-  states_Is(_threadargs_);
+  derivimplicit_thread(2, _slist1, _dlist1, states_Is{}, _threadargs_);
   }   }}
 
 }
