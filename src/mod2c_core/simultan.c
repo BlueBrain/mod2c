@@ -234,17 +234,12 @@ numlist, numlist-1, counts);
 		counts, numlist, SYM(q2)->name, suffix, numlist);
 	qret = insertstr(q3, buf);
 	Sprintf(buf, 
-	  "#pragma acc routine(nrn_newton_thread) seq\n"
-#if 0
-	  "_reset = nrn_newton_thread(_newtonspace%d, %d,_slist%d, _newton_%s%s, _dlist%d,  _threadargs_);\n"
-#else
-	  "_reset = nrn_newton_thread((NewtonSpace*)_newtonspace%d, %d,_slist%d, _derivimplicit_%s%s, _dlist%d,  _threadargs_);\n"
-#endif
+	  "_reset = nrn_newton_thread(static_cast<NewtonSpace*>(_newtonspace%d), %d, _slist%d, _newton_%s%s{}, _dlist%d, _threadargs_);\n"
 	  , numlist-1, counts, numlist, SYM(q2)->name, suffix, numlist);
 	vectorize_substitute(qret, buf);
 	Insertstr(q3, "/*if(_reset) {abort_run(_reset);}*/ }\n");
 	Sprintf(buf,
-	  "int _newton_%s%s(_threadargsproto_);\n"
+	  "\nstruct _newton_%s%s {\n  int operator()(_threadargsproto_) const;\n};\n"
 	  , SYM(q2)->name, suffix);
 	Linsertstr(procfunc, buf);
 
@@ -257,7 +252,7 @@ numlist, numlist-1, counts);
 	  , SYM(q2)->name, suffix);
 	Linsertstr(procfunc, buf);
 
-	Sprintf(buf, "\n  return _reset;\n}\n\nint _newton_%s%s (_threadargsproto_) {  int _reset=0;\n", SYM(q2)->name, suffix);
+	Sprintf(buf, "\n  return _reset;\n}\n\nint _newton_%s%s::operator()(_threadargsproto_) const {\n  int _reset=0;\n", SYM(q2)->name, suffix);
 	Insertstr(q3, buf);
 	q = insertstr(q3, "{ int _counte = -1;\n");
 	sprintf(buf, "{ double* _savstate%d = (double*)_thread[_dith%d]._pval;\n\
