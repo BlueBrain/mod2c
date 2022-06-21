@@ -3129,7 +3129,7 @@ static void emit_nrn_watch_check_code() {
 "        if ((_watch_array(%d)&1) == 0) {\n"
 "          _untriggered = false;\n"
 "          #if NET_RECEIVE_BUFFERING\n"
-"          _net_send_buffering(_ml->_net_send_buffer, 0, _tqitem, 0, _ppvar[1*_STRIDE], t +  0.0 , %s );\n"
+"          _net_send_buffering(_ml->_net_send_buffer, 0, _tqitem, -1, _ppvar[1*_STRIDE], t +  0.0 , %s );\n"
 "          #else\n"
 "          net_send ( _tqitem, -1, (Point_process*) _nt->_vdata[_ppvar[1*_STRIDE]], t +  0.0 , %s ) ;\n"
 "          #endif\n"
