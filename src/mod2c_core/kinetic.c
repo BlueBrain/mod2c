@@ -357,13 +357,16 @@ void massagekinetic(q1, q2, q3, q4, sensused) /*KINETIC NAME stmtlist '}'*/
 	  "#endif\n"
 	  , SYM(q2)->name, suffix);
 	Linsertstr(procfunc, buf);
-	replacstr(q1, "\nint");
+	Sprintf(buf, "\nstruct %s%s {\n  int operator()(SparseObj* _so, double* _rhs, _threadargsproto_) const;\n};\nint", SYM(q2)->name, suffix);
+	replacstr(q1, buf);
+	Sprintf(buf, "%s%s::operator()", SYM(q2)->name, suffix);
+	replacstr(q2, buf);
 #endif
 	qv = insertstr(q3, "()\n");
 #if VECTORIZE
 if (vectorize) {
 	kin_vect1(q1, q2, q4);
-vectorize_substitute(qv, "(void* _so, double* _rhs, _threadargsproto_)\n");
+	vectorize_substitute(qv, "(SparseObj* _so, double* _rhs, _threadargsproto_) const\n");
 }
 #endif
 	qv = insertstr(q3, "{_reset=0;\n");

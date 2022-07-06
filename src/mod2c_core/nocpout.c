@@ -341,11 +341,12 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#include \"coreneuron/utils/ivocvect.hpp\"\
 \n#include \"coreneuron/utils/nrnoc_aux.hpp\"\
 \n#include \"coreneuron/gpu/nrn_acc_manager.hpp\"\
-\n#include \"coreneuron/mechanism/mech/cfile/scoplib.h\"\n\
 \n#include \"coreneuron/sim/scopmath/newton_struct.h\"\
+\n#include \"coreneuron/sim/scopmath/newton_thread.hpp\"\
+\n#include \"coreneuron/sim/scopmath/sparse_thread.hpp\"\
+\n#include \"coreneuron/sim/scopmath/ssimplic_thread.hpp\"\
 \n#include \"coreneuron/nrnoc/md2redef.h\"\
 \n#include \"coreneuron/mechanism/register_mech.hpp\"\
-\n#include \"_kinderiv.h\"\
 \n#if !NRNGPU\
 \n#if !defined(DISABLE_HOC_EXP)\
 \n#undef exp\
@@ -3186,7 +3187,7 @@ static void emit_nrn_watch_check_code() {
 "        if ((_watch_array(%d)&1) == 0) {\n"
 "          _untriggered = false;\n"
 "          #if NET_RECEIVE_BUFFERING\n"
-"          _net_send_buffering(_ml->_net_send_buffer, 0, _tqitem, 0, _ppvar[1*_STRIDE], t +  0.0 , %s );\n"
+"          _net_send_buffering(_ml->_net_send_buffer, 0, _tqitem, -1, _ppvar[1*_STRIDE], t +  0.0 , %s );\n"
 "          #else\n"
 "          net_send ( _tqitem, -1, (Point_process*) _nt->_vdata[_ppvar[1*_STRIDE]], t +  0.0 , %s ) ;\n"
 "          #endif\n"

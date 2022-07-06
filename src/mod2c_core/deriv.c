@@ -156,7 +156,7 @@ fun->name, listnum, maxerr_str);
 	}else{
 	  Sprintf(buf,
 	    "  if (!_thread[_spth%d]._pvoid) {\n"
-	    "    _thread[_spth%d]._pvoid = nrn_cons_sparseobj(_kinetic_%s%s, %d, _ml, _threadargs_);\n"
+	    "    _thread[_spth%d]._pvoid = nrn_cons_sparseobj(%s%s{}, %d, _ml, _threadargs_);\n"
 	    "    #ifdef _OPENACC\n"
 	    "    if (_nt->compute_gpu) {\n"
 	    "      void* _d_so = cnrn_target_deviceptr(_thread[_spth%d]._pvoid);\n"
@@ -177,39 +177,13 @@ dindepname, fun->name, listnum, listnum);
 	replacstr(qsol, buf);
 #if VECTORIZE
 	if (method->subtype & DERF) { /* derivimplicit */
-Sprintf(buf,
-"\n"
-"  #if !defined(_%s_%s%s)\n"
-"    #define _%s_%s%s 0\n"
-"  #endif\n"
-"  %s%s_thread(%d, _slist%d, _dlist%d, _%s_%s%s, _threadargs_);\n",
-method->name, fun->name, suffix, method->name, fun->name,
-suffix, ssprefix, method->name,
-numeqn, listnum, listnum, method->name, fun->name, suffix);
+	Sprintf(buf, "\n  %s%s_thread(%d, _slist%d, _dlist%d, %s%s{}, _threadargs_);\n",
+		ssprefix, method->name, numeqn, listnum, listnum, fun->name, suffix);
 	vectorize_substitute(qsol, buf);
-
-    // euler_thread is defined externally and need a callback function
-    // selection of callback is using switch-case implemented in _kinderiv.h
-    if(strcmp(method->name, "euler") == 0) {
-        Sprintf(buf,
-          "\n"
-          "/* _euler_ %s %s */\n"
-          "#ifndef INSIDE_NMODL\n"
-          "#define INSIDE_NMODL\n"
-          "#endif\n"
-          , fun->name, suffix);
-        Linsertstr(procfunc, buf);
-    }
-
 	}else{ /* kinetic */
    if (vectorize) {
 Sprintf(buf,
-"\n"
-"  #if !defined(_kinetic_%s%s)\n"
-"    #define _kinetic_%s%s 0\n"
-"  #endif\n"
-"  %s%s_thread((SparseObj*)_thread[_spth%d]._pvoid, %d, _slist%d, _dlist%d, &%s, %s, _kinetic_%s%s, _linmat%d, _threadargs_);\n",
-fun->name, suffix, fun->name, suffix,
+"\n  %s%s_thread(static_cast<SparseObj*>(_thread[_spth%d]._pvoid), %d, _slist%d, _dlist%d, &%s, %s, %s%s{}, _linmat%d, _threadargs_);\n",
 ssprefix, method->name, listnum, numeqn, listnum, listnum, indepsym->name,
 dindepname, fun->name, suffix, listnum);
 	vectorize_substitute(qsol, buf);
@@ -536,7 +510,7 @@ void massagederiv(q1, q2, q3, q4, sensused)
 	/* all this junk is still in the intoken list */
 	Sprintf(buf, "static inline int %s(_threadargsproto_);\n", SYM(q2)->name);
 	if (deriv_implicit_really == 1) {
-	  Sprintf(buf, "extern int %s(_threadargsproto_);\n", SYM(q2)->name);
+	  Sprintf(buf, "struct %s%s {\n  int operator()(_threadargsproto_) const;\n};\n", SYM(q2)->name, suffix);
 	}
 	Linsertstr(procfunc, buf);
 	if (deriv_implicit_really == 1) {
@@ -544,7 +518,7 @@ void massagederiv(q1, q2, q3, q4, sensused)
 	}else{
 	  replacstr(q1, "\nstatic int"); q = insertstr(q3, "() {_reset=0;\n");
 	}
-	vectorize_substitute(q, "(_threadargsproto_) {int _reset=0; int error = 0;\n");
+	vectorize_substitute(q, "::operator()(_threadargsproto_) const {\n int _reset=0;\n int error = 0;\n");
 
 	if (derfun->subtype & DERF && derfun->u.i) {
 		diag("DERIVATIVE merging not implemented", (char *)0);

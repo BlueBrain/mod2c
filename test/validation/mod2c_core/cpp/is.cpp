@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #undef PI
- 
+
 #include "coreneuron/utils/randoms/nrnran123.h"
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
@@ -13,12 +13,12 @@
 #include "coreneuron/utils/ivocvect.hpp"
 #include "coreneuron/utils/nrnoc_aux.hpp"
 #include "coreneuron/gpu/nrn_acc_manager.hpp"
-#include "coreneuron/mechanism/mech/cfile/scoplib.h"
-
 #include "coreneuron/sim/scopmath/newton_struct.h"
+#include "coreneuron/sim/scopmath/newton_thread.hpp"
+#include "coreneuron/sim/scopmath/sparse_thread.hpp"
+#include "coreneuron/sim/scopmath/ssimplic_thread.hpp"
 #include "coreneuron/nrnoc/md2redef.h"
 #include "coreneuron/mechanism/register_mech.hpp"
-#include "_kinderiv.h"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
@@ -26,9 +26,9 @@
 #endif
 #endif
  namespace coreneuron {
- 
-#define _thread_present_ /**/ , _thread[0:4] 
- 
+
+#define _thread_present_ /**/ , _thread[0:4]
+
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include <openacc.h>
 #define _PRAGMA_FOR_INIT_ACC_LOOP_ _Pragma("acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], nrn_ion_global_map[0:nrn_ion_global_map_size][0:ion_global_map_member_size], _nt[0:1] _thread_present_) if(_nt->compute_gpu)")
@@ -43,7 +43,7 @@
 #define _PRAGMA_FOR_CUR_SYN_ACC_LOOP_ _Pragma("")
 #define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma("")
 #endif
- 
+
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("ivdep")
 #elif defined(__IBMC__) || defined(__IBMCPP__)
@@ -59,7 +59,7 @@
 #else
 #define _PRAGMA_FOR_VECTOR_LOOP_
 #endif // _PRAGMA_FOR_VECTOR_LOOP_
- 
+
 #if !defined(LAYOUT)
 /* 1 means AoS, >1 means AoSoA, <= 0 means SOA */
 #define LAYOUT 1
@@ -69,7 +69,7 @@
 #else
 #define _STRIDE _cntml_padded + _iml
 #endif
- 
+
 #define nrn_init _nrn_init__Is
 #define nrn_cur _nrn_cur__Is
 #define _nrn_current _nrn_current__Is
@@ -80,15 +80,15 @@
 #define _net_init _net_init__Is
 #define nrn_state_launcher nrn_state_Is_launcher
 #define nrn_cur_launcher nrn_cur_Is_launcher
-#define nrn_jacob_launcher nrn_jacob_Is_launcher 
-#define rates rates_Is 
-#define states states_Is 
- 
+#define nrn_jacob_launcher nrn_jacob_Is_launcher
+#define rates rates_Is
+#define states states_Is
+
 #undef _threadargscomma_
 #undef _threadargsprotocomma_
 #undef _threadargs_
 #undef _threadargsproto_
- 
+
 #define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v,
 #define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v,
 #define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v
@@ -98,7 +98,7 @@
 	/*SUPPRESS 763*/
 	/*SUPPRESS 765*/
 	 /* Thread safe. No static _p or _ppvar. */
- 
+
 #define t _nt->_t
 #define dt _nt->_dt
 #define gsbar _p[0*_STRIDE]
@@ -113,7 +113,7 @@
 #define lca _p[9*_STRIDE]
 #define _v_unused _p[10*_STRIDE]
 #define _g_unused _p[11*_STRIDE]
- 
+
 #ifndef NRN_PRCELLSTATE
 #define NRN_PRCELLSTATE 0
 #endif
@@ -131,7 +131,7 @@
 #define _ion_dicsdv	_nt_data[_ppvar[4*_STRIDE]]
 #define _ion_ins	_nt_data[_ppvar[5*_STRIDE]]
 #define _ion_dinsdv	_nt_data[_ppvar[6*_STRIDE]]
- 
+
 #if MAC
 #if !defined(v)
 #define v _mlhv
@@ -150,10 +150,10 @@
  static void _hoc_alp(void);
  static void _hoc_bet(void);
  static void _hoc_rates(void);
- 
+
 #endif /*BBCORE*/
  static int _mechtype;
- 
+
 #if 0 /*BBCORE*/
  /* connect user functions to hoc names */
  static VoidFunc hoc_intfunc[] = {
@@ -163,7 +163,7 @@
  "rates_Is", _hoc_rates,
  0, 0
 };
- 
+
 #endif /*BBCORE*/
 #define alp alp_Is
 #define bet bet_Is
@@ -183,7 +183,7 @@ static double _thread1data[4];
 #define ntau _thread[_gth]._pval[2]
 #define ninf_Is _thread1data[3]
 #define ninf _thread[_gth]._pval[3]
- 
+
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
  static HocParmLimits _hoc_parm_limits[] = {
@@ -198,7 +198,7 @@ static double _thread1data[4];
  "ics_Is", "mA/cm2",
  0,0
 };
- 
+
 #endif /*BBCORE*/
  static double delta_t = 0.01;
  static double m0 = 0;
@@ -235,9 +235,9 @@ void nrn_state(NrnThread*, Memb_list*, int);
  static int _ca_type;
  static int _cs_type;
  static int _ns_type;
- 
+
 static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
- 
+
 #if 0 /*BBCORE*/
  	/*initialize range parameters*/
  	gsbar = 5e-05;
@@ -252,15 +252,15 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  prop_ion = need_memb(_ns_sym);
  	_ppvar[5]._pval = &prop_ion->param[3]; /* ins */
  	_ppvar[6]._pval = &prop_ion->param[4]; /* _ion_dinsdv */
- 
+
 #endif /* BBCORE */
- 
+
 }
  static void _initlists(Memb_list *_ml);
  static void _thread_mem_init(ThreadDatum*);
  static void _thread_cleanup(ThreadDatum*);
  static void _update_ion_pointer(Datum*);
- 
+
 #define _psize 12
 #define _ppsize 7
  void _is_reg() {
@@ -268,7 +268,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   _mechtype = nrn_get_mechtype(_mechanism[1]);
  if (_mechtype == -1) return;
  _nrn_layout_reg(_mechtype, LAYOUT);
- _ca_type = nrn_get_mechtype("ca_ion"); _cs_type = nrn_get_mechtype("cs_ion"); _ns_type = nrn_get_mechtype("ns_ion"); 
+ _ca_type = nrn_get_mechtype("ca_ion"); _cs_type = nrn_get_mechtype("cs_ion"); _ns_type = nrn_get_mechtype("ns_ion");
 #if 0 /*BBCORE*/
  	ion_reg("ca", -10000.);
  	ion_reg("cs", 2.0);
@@ -276,7 +276,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  	_ca_sym = hoc_lookup("ca_ion");
  	_cs_sym = hoc_lookup("cs_ion");
  	_ns_sym = hoc_lookup("ns_ion");
- 
+
 #endif /*BBCORE*/
  	register_mech(_mechanism, nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init, hoc_nrnpointerindex, 5);
   _extcall_thread = (ThreadDatum*)ecalloc(4, sizeof(ThreadDatum));
@@ -304,7 +304,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
    double n0;
    int _ml_mechtype; };
 
- 
+
 static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    if(_nt == nullptr || _ml == nullptr) {
      return;
@@ -332,7 +332,7 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
  #define m0 static_cast<_global_variables_t*>(_ml->global_variables)->m0
  #define n0 static_cast<_global_variables_t*>(_ml->global_variables)->n0
  #define _ml_mechtype static_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype
- 
+
 static const char *modelname = "Cardiac L-type Calcium channel";
 
 static int error;
@@ -340,21 +340,27 @@ static int _ninits = 0;
 static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
 static inline int rates(_threadargsprotocomma_ double);
- 
+
 #define _deriv1_advance _thread[0]._i
 #define _dith1 1
 #define _newtonspace1 _thread[2]._pvoid
- 
+
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
- 
+
 /* _derivimplicit_ states _Is */
 #ifndef INSIDE_NMODL
 #define INSIDE_NMODL
 #endif
- int _newton_states_Is(_threadargsproto_);
-  extern int states(_threadargsproto_);
- 
+struct _newton_states_Is {
+  int operator()(_threadargsproto_) const;
+};
+
+ struct states_Is {
+  int operator()(_threadargsproto_) const;
+};
+>>>>>>> origin/master
+
 /*CVODE*/
  static int _ode_spec1 (_threadargsproto_) {int _reset = 0; {
    rates ( _threadargscomma_ v ) ;
@@ -370,19 +376,21 @@ static int _ode_spec1(_threadargsproto_);
  return 0;
 }
  /*END CVODE*/
- 
-int states (_threadargsproto_) {int _reset=0; int error = 0;
+
+int states ::operator()(_threadargsproto_) const {
+ int _reset=0;
+ int error = 0;
  { double* _savstate1 = (double*)_thread[_dith1]._pval;
  double* _dlist2 = (double*)(_thread[_dith1]._pval) + (2*_cntml_padded);
  {int _id; for(_id=0; _id < 2; _id++) { _savstate1[_id*_STRIDE] = _p[_slist1[_id]*_STRIDE];}}
- #pragma acc routine(nrn_newton_thread) seq
-_reset = nrn_newton_thread((NewtonSpace*)_newtonspace1, 2,_slist2, _derivimplicit_states_Is, _dlist2,  _threadargs_);
+ _reset = nrn_newton_thread(static_cast<NewtonSpace*>(_newtonspace1), 2, _slist2, _newton_states_Is{}, _dlist2, _threadargs_);
  /*if(_reset) {abort_run(_reset);}*/ }
- 
+
   return _reset;
 }
 
-int _newton_states_Is (_threadargsproto_) {  int _reset=0;
+int _newton_states_Is::operator()(_threadargsproto_) const {
+  int _reset=0;
  { double* _savstate1 = (double*)_thread[_dith1]._pval;
  double* _dlist2 = (double*)(_thread[_dith1]._pval) + (2*_cntml_padded);
  int _counte = -1;
@@ -395,10 +403,10 @@ if (_deriv1_advance) {
  _dlist2[(++_counte)*_STRIDE] = _p[_dlist1[_id]*_STRIDE] - (_p[_slist1[_id]*_STRIDE] - _savstate1[_id*_STRIDE])/dt;
  }else{
 _dlist2[(++_counte)*_STRIDE] = _p[_slist1[_id]*_STRIDE] - _savstate1[_id*_STRIDE];}}}
- 
+
   } }
  return _reset;}
- 
+
 double alp ( _threadargsprotocomma_ double _lv , double _li ) {
    double _lalp;
  if ( _li  == 0.0 ) {
@@ -407,12 +415,12 @@ double alp ( _threadargsprotocomma_ double _lv , double _li ) {
    else if ( _li  == 1.0 ) {
      _lalp = 0.012 * exp ( - 0.008 * ( _lv + 28.0 ) ) / ( exp ( 0.15 * ( _lv + 28.0 ) ) + 1.0 ) ;
      }
-   
+
 return _lalp;
  }
- 
+
 #if 0 /*BBCORE*/
- 
+
 static void _hoc_alp(void) {
   double _r;
    double* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;
@@ -422,9 +430,9 @@ static void _hoc_alp(void) {
  _r =  alp ( _threadargs_, *getarg(1) , *getarg(2) ;
  hoc_retpushx(_r);
 }
- 
+
 #endif /*BBCORE*/
- 
+
 double bet ( _threadargsprotocomma_ double _lv , double _li ) {
    double _lbet;
  if ( _li  == 0.0 ) {
@@ -433,12 +441,12 @@ double bet ( _threadargsprotocomma_ double _lv , double _li ) {
    else if ( _li  == 1.0 ) {
      _lbet = 0.0065 * exp ( - 0.02 * ( _lv + 30.0 ) ) / ( exp ( - 0.2 * ( _lv + 30.0 ) ) + 1.0 ) ;
      }
-   
+
 return _lbet;
  }
- 
+
 #if 0 /*BBCORE*/
- 
+
 static void _hoc_bet(void) {
   double _r;
    double* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;
@@ -448,9 +456,9 @@ static void _hoc_bet(void) {
  _r =  bet ( _threadargs_, *getarg(1) , *getarg(2) ;
  hoc_retpushx(_r);
 }
- 
+
 #endif /*BBCORE*/
- 
+
 static int  rates ( _threadargsprotocomma_ double _lv ) {
    double _la , _lb ;
  _la = alp ( _threadargscomma_ _lv , 0.0 ) ;
@@ -462,9 +470,9 @@ static int  rates ( _threadargsprotocomma_ double _lv ) {
    ntau = 1.0 / ( _la + _lb ) ;
    ninf = _la / ( _la + _lb ) ;
     return 0; }
- 
+
 #if 0 /*BBCORE*/
- 
+
 static void _hoc_rates(void) {
   double _r;
    double* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;
@@ -475,16 +483,16 @@ static void _hoc_rates(void) {
  rates ( _threadargs_, *getarg(1) ;
  hoc_retpushx(_r);
 }
- 
+
 #endif /*BBCORE*/
- 
+
 static void _thread_mem_init(ThreadDatum* _thread) {
    _thread[_dith1]._pval = NULL;  if (_thread1data_inuse) {_thread[_gth]._pval = (double*)ecalloc(4, sizeof(double));
  }else{
  _thread[_gth]._pval = _thread1data; _thread1data_inuse = 1;
  }
  }
- 
+
 static void _thread_cleanup(ThreadDatum* _thread) {
    free( _thread[_dith1]._pval);
    nrn_destroy_newtonspace((NewtonSpace*) _newtonspace1);
@@ -506,7 +514,7 @@ static inline void initmodel(_threadargsproto_) {
    m = minf ;
    n = ninf ;
    }
- 
+
 }
 }
 
@@ -656,9 +664,9 @@ for (;;) { /* help clang-format properly indent */
  _PRCELLSTATE_G
 	_vec_rhs[_nd_idx] -= _rhs;
 	_vec_d[_nd_idx] += _g;
- 
+
 }
- 
+
 }
 
 void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type) {
@@ -698,11 +706,8 @@ for (;;) { /* help clang-format properly indent */
  v=_v;
 {
   cai = _ion_cai;
- {  
-  #if !defined(_derivimplicit_states_Is)
-    #define _derivimplicit_states_Is 0
-  #endif
-  derivimplicit_thread(2, _slist1, _dlist1, _derivimplicit_states_Is, _threadargs_);
+ {
+  derivimplicit_thread(2, _slist1, _dlist1, states_Is{}, _threadargs_);
   }   }}
 
 }

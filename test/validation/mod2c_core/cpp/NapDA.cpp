@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <math.h>
 #undef PI
- 
+
 #include "coreneuron/utils/randoms/nrnran123.h"
 #include "coreneuron/nrnoc/md1redef.h"
 #include "coreneuron/nrnconf.h"
@@ -13,12 +13,12 @@
 #include "coreneuron/utils/ivocvect.hpp"
 #include "coreneuron/utils/nrnoc_aux.hpp"
 #include "coreneuron/gpu/nrn_acc_manager.hpp"
-#include "coreneuron/mechanism/mech/cfile/scoplib.h"
-
 #include "coreneuron/sim/scopmath/newton_struct.h"
+#include "coreneuron/sim/scopmath/newton_thread.hpp"
+#include "coreneuron/sim/scopmath/sparse_thread.hpp"
+#include "coreneuron/sim/scopmath/ssimplic_thread.hpp"
 #include "coreneuron/nrnoc/md2redef.h"
 #include "coreneuron/mechanism/register_mech.hpp"
-#include "_kinderiv.h"
 #if !NRNGPU
 #if !defined(DISABLE_HOC_EXP)
 #undef exp
@@ -26,9 +26,9 @@
 #endif
 #endif
  namespace coreneuron {
- 
-#define _thread_present_ /**/ , _thread[0:3] 
- 
+
+#define _thread_present_ /**/ , _thread[0:3]
+
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include <openacc.h>
 #define _PRAGMA_FOR_INIT_ACC_LOOP_ _Pragma("acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], nrn_ion_global_map[0:nrn_ion_global_map_size][0:ion_global_map_member_size], _nt[0:1] _thread_present_) if(_nt->compute_gpu)")
@@ -43,7 +43,7 @@
 #define _PRAGMA_FOR_CUR_SYN_ACC_LOOP_ _Pragma("")
 #define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma("")
 #endif
- 
+
 #if defined(__ICC) || defined(__INTEL_COMPILER)
 #define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("ivdep")
 #elif defined(__IBMC__) || defined(__IBMCPP__)
@@ -59,7 +59,7 @@
 #else
 #define _PRAGMA_FOR_VECTOR_LOOP_
 #endif // _PRAGMA_FOR_VECTOR_LOOP_
- 
+
 #if !defined(LAYOUT)
 /* 1 means AoS, >1 means AoSoA, <= 0 means SOA */
 #define LAYOUT 1
@@ -69,7 +69,7 @@
 #else
 #define _STRIDE _cntml_padded + _iml
 #endif
- 
+
 #define nrn_init _nrn_init__NapDA
 #define nrn_cur _nrn_cur__NapDA
 #define _nrn_current _nrn_current__NapDA
@@ -80,14 +80,14 @@
 #define _net_init _net_init__NapDA
 #define nrn_state_launcher nrn_state_NapDA_launcher
 #define nrn_cur_launcher nrn_cur_NapDA_launcher
-#define nrn_jacob_launcher nrn_jacob_NapDA_launcher 
-#define states states_NapDA 
- 
+#define nrn_jacob_launcher nrn_jacob_NapDA_launcher
+#define states states_NapDA
+
 #undef _threadargscomma_
 #undef _threadargsprotocomma_
 #undef _threadargs_
 #undef _threadargsproto_
- 
+
 #define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v,
 #define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v,
 #define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v
@@ -97,7 +97,7 @@
 	/*SUPPRESS 763*/
 	/*SUPPRESS 765*/
 	 /* Thread safe. No static _p or _ppvar. */
- 
+
 #define t _nt->_t
 #define dt _nt->_dt
 #define gNapbar _p[0*_STRIDE]
@@ -110,7 +110,7 @@
 #define Dh _p[7*_STRIDE]
 #define _v_unused _p[8*_STRIDE]
 #define _g_unused _p[9*_STRIDE]
- 
+
 #ifndef NRN_PRCELLSTATE
 #define NRN_PRCELLSTATE 0
 #endif
@@ -123,7 +123,7 @@
 #endif
 #define _ion_ina	_nt_data[_ppvar[0*_STRIDE]]
 #define _ion_dinadv	_nt_data[_ppvar[1*_STRIDE]]
- 
+
 #if MAC
 #if !defined(v)
 #define v _mlhv
@@ -143,10 +143,10 @@
  static void _hoc_half(void);
  static void _hoc_mbet(void);
  static void _hoc_malf(void);
- 
+
 #endif /*BBCORE*/
  static int _mechtype;
- 
+
 #if 0 /*BBCORE*/
  /* connect user functions to hoc names */
  static VoidFunc hoc_intfunc[] = {
@@ -157,7 +157,7 @@
  "malf_NapDA", _hoc_malf,
  0, 0
 };
- 
+
 #endif /*BBCORE*/
 #define hbet hbet_NapDA
 #define half half_NapDA
@@ -172,7 +172,7 @@
  #pragma acc routine seq
  inline double malf( _threadargsprotocomma_ double );
  /* declare global and static user variables */
- 
+
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
  static HocParmLimits _hoc_parm_limits[] = {
@@ -185,7 +185,7 @@
  "gna_NapDA", "mho/cm2",
  0,0
 };
- 
+
 #endif /*BBCORE*/
  static double delta_t = 0.01;
  static double h0 = 0;
@@ -216,9 +216,9 @@ void nrn_state(NrnThread*, Memb_list*, int);
  0,
  0};
  static int _na_type;
- 
+
 static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
- 
+
 #if 0 /*BBCORE*/
  	/*initialize range parameters*/
  	gNapbar = 0.0022;
@@ -226,15 +226,15 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  prop_ion = need_memb(_na_sym);
  	_ppvar[0]._pval = &prop_ion->param[3]; /* ina */
  	_ppvar[1]._pval = &prop_ion->param[4]; /* _ion_dinadv */
- 
+
 #endif /* BBCORE */
- 
+
 }
  static void _initlists(Memb_list *_ml);
  static void _thread_mem_init(ThreadDatum*);
  static void _thread_cleanup(ThreadDatum*);
  static void _update_ion_pointer(Datum*);
- 
+
 #define _psize 10
 #define _ppsize 2
  void _NapDA_reg() {
@@ -242,11 +242,11 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   _mechtype = nrn_get_mechtype(_mechanism[1]);
  if (_mechtype == -1) return;
  _nrn_layout_reg(_mechtype, LAYOUT);
- _na_type = nrn_get_mechtype("na_ion"); 
+ _na_type = nrn_get_mechtype("na_ion");
 #if 0 /*BBCORE*/
  	ion_reg("na", -10000.);
  	_na_sym = hoc_lookup("na_ion");
- 
+
 #endif /*BBCORE*/
  	register_mech(_mechanism, nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init, hoc_nrnpointerindex, 4);
   _extcall_thread = (ThreadDatum*)ecalloc(3, sizeof(ThreadDatum));
@@ -268,7 +268,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
    double m0;
    int _ml_mechtype; };
 
- 
+
 static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    if(_nt == nullptr || _ml == nullptr) {
      return;
@@ -296,28 +296,29 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
  #define h0 static_cast<_global_variables_t*>(_ml->global_variables)->h0
  #define m0 static_cast<_global_variables_t*>(_ml->global_variables)->m0
  #define _ml_mechtype static_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype
- 
+
 static const char *modelname = "";
 
 static int error;
 static int _ninits = 0;
 static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
- 
+
 #define _deriv1_advance _thread[0]._i
 #define _dith1 1
 #define _newtonspace1 _thread[2]._pvoid
- 
+
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
- 
+
 /* _derivimplicit_ states _NapDA */
 #ifndef INSIDE_NMODL
 #define INSIDE_NMODL
 #endif
- int _newton_states_NapDA(_threadargsproto_);
-  extern int states(_threadargsproto_);
- 
+ struct states_NapDA {
+  int operator()(_threadargsproto_) const;
+};
+
 /*CVODE*/
  static int _ode_spec1 (_threadargsproto_) {int _reset = 0; {
    Dm = ( 1.0 - m ) * malf ( _threadargscomma_ v ) - m * mbet ( _threadargscomma_ v ) ;
@@ -331,19 +332,21 @@ static int _ode_spec1(_threadargsproto_);
  return 0;
 }
  /*END CVODE*/
- 
-int states (_threadargsproto_) {int _reset=0; int error = 0;
+
+int states ::operator()(_threadargsproto_) const {
+ int _reset=0;
+ int error = 0;
  { double* _savstate1 = (double*)_thread[_dith1]._pval;
  double* _dlist2 = (double*)(_thread[_dith1]._pval) + (2*_cntml_padded);
  {int _id; for(_id=0; _id < 2; _id++) { _savstate1[_id*_STRIDE] = _p[_slist1[_id]*_STRIDE];}}
- #pragma acc routine(nrn_newton_thread) seq
-_reset = nrn_newton_thread((NewtonSpace*)_newtonspace1, 2,_slist2, _derivimplicit_states_NapDA, _dlist2,  _threadargs_);
+ _reset = nrn_newton_thread(static_cast<NewtonSpace*>(_newtonspace1), 2, _slist2, _newton_states_NapDA{}, _dlist2, _threadargs_);
  /*if(_reset) {abort_run(_reset);}*/ }
- 
+
   return _reset;
 }
 
-int _newton_states_NapDA (_threadargsproto_) {  int _reset=0;
+int _newton_states_NapDA::operator()(_threadargsproto_) const {
+  int _reset=0;
  { double* _savstate1 = (double*)_thread[_dith1]._pval;
  double* _dlist2 = (double*)(_thread[_dith1]._pval) + (2*_cntml_padded);
  int _counte = -1;
@@ -355,10 +358,10 @@ if (_deriv1_advance) {
  _dlist2[(++_counte)*_STRIDE] = _p[_dlist1[_id]*_STRIDE] - (_p[_slist1[_id]*_STRIDE] - _savstate1[_id*_STRIDE])/dt;
  }else{
 _dlist2[(++_counte)*_STRIDE] = _p[_slist1[_id]*_STRIDE] - _savstate1[_id*_STRIDE];}}}
- 
+
   } }
  return _reset;}
- 
+
 double malf ( _threadargsprotocomma_ double _lv ) {
    double _lmalf;
  double _lva ;
@@ -369,12 +372,12 @@ double malf ( _threadargsprotocomma_ double _lv ) {
    else {
      _lmalf = - 0.2816 * _lva / ( - 1.0 + exp ( - _lva / 9.3 ) ) ;
      }
-   
+
 return _lmalf;
  }
- 
+
 #if 0 /*BBCORE*/
- 
+
 static void _hoc_malf(void) {
   double _r;
    double* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;
@@ -384,9 +387,9 @@ static void _hoc_malf(void) {
  _r =  malf ( _threadargs_, *getarg(1) ;
  hoc_retpushx(_r);
 }
- 
+
 #endif /*BBCORE*/
- 
+
 double mbet ( _threadargsprotocomma_ double _lv ) {
    double _lmbet;
  double _lvb ;
@@ -397,12 +400,12 @@ double mbet ( _threadargsprotocomma_ double _lv ) {
    else {
      _lmbet = 0.2464 * _lvb / ( - 1.0 + exp ( _lvb / 6.0 ) ) ;
      }
-   
+
 return _lmbet;
  }
- 
+
 #if 0 /*BBCORE*/
- 
+
 static void _hoc_mbet(void) {
   double _r;
    double* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;
@@ -412,18 +415,18 @@ static void _hoc_mbet(void) {
  _r =  mbet ( _threadargs_, *getarg(1) ;
  hoc_retpushx(_r);
 }
- 
+
 #endif /*BBCORE*/
- 
+
 double half ( _threadargsprotocomma_ double _lv ) {
    double _lhalf;
  _lhalf = 2.8e-5 * ( exp ( - ( _lv + 42.8477 ) / 4.0248 ) ) ;
-   
+
 return _lhalf;
  }
- 
+
 #if 0 /*BBCORE*/
- 
+
 static void _hoc_half(void) {
   double _r;
    double* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;
@@ -433,18 +436,18 @@ static void _hoc_half(void) {
  _r =  half ( _threadargs_, *getarg(1) ;
  hoc_retpushx(_r);
 }
- 
+
 #endif /*BBCORE*/
- 
+
 double hbet ( _threadargsprotocomma_ double _lv ) {
    double _lhbet;
  _lhbet = 0.02 / ( 1.0 + exp ( - ( _lv - 413.9284 ) / 148.2589 ) ) ;
-   
+
 return _lhbet;
  }
- 
+
 #if 0 /*BBCORE*/
- 
+
 static void _hoc_hbet(void) {
   double _r;
    double* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;
@@ -454,12 +457,12 @@ static void _hoc_hbet(void) {
  _r =  hbet ( _threadargs_, *getarg(1) ;
  hoc_retpushx(_r);
 }
- 
+
 #endif /*BBCORE*/
- 
+
 static void _thread_mem_init(ThreadDatum* _thread) {
    _thread[_dith1]._pval = NULL; }
- 
+
 static void _thread_cleanup(ThreadDatum* _thread) {
    free( _thread[_dith1]._pval);
    nrn_destroy_newtonspace((NewtonSpace*) _newtonspace1);
@@ -475,7 +478,7 @@ static inline void initmodel(_threadargsproto_) {
    m = malf ( _threadargscomma_ v ) / ( malf ( _threadargscomma_ v ) + mbet ( _threadargscomma_ v ) ) ;
    h = half ( _threadargscomma_ v ) / ( half ( _threadargscomma_ v ) + hbet ( _threadargscomma_ v ) ) ;
    }
- 
+
 }
 }
 
@@ -610,9 +613,9 @@ for (;;) { /* help clang-format properly indent */
  _PRCELLSTATE_G
 	_vec_rhs[_nd_idx] -= _rhs;
 	_vec_d[_nd_idx] += _g;
- 
+
 }
- 
+
 }
 
 void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type) {
@@ -651,11 +654,8 @@ for (;;) { /* help clang-format properly indent */
     _PRCELLSTATE_V
  v=_v;
 {
- {  
-  #if !defined(_derivimplicit_states_NapDA)
-    #define _derivimplicit_states_NapDA 0
-  #endif
-  derivimplicit_thread(2, _slist1, _dlist1, _derivimplicit_states_NapDA, _threadargs_);
+ {
+  derivimplicit_thread(2, _slist1, _dlist1, states_NapDA{}, _threadargs_);
   } }}
 
 }
