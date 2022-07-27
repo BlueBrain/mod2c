@@ -611,7 +611,7 @@ int check_tables_threads(List* p) {
 			sprintf(buf, "\nstatic void %s(_threadargsproto_);", STR(q));
 			lappendstr(p, buf);
 		}
-		lappendstr(p, "\nstatic void _check_table_thread(int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, int v) {\n");
+		lappendstr(p, "\nstatic void _check_table_thread(int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, int v) {\n");
 		ITERATE(q, check_table_thread_list) {
 			sprintf(buf, "  %s(_threadargs_);\n", STR(q));
 			lappendstr(p, buf);
