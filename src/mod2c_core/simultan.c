@@ -236,7 +236,7 @@ numlist, numlist-1, counts);
 	  "#endif\n"
 	  , SYM(q2)->name, suffix);
 	Linsertstr(procfunc, buf);
-
+	// TODO may need to play coreneuron::scopmath::enabled_code games here
 	Sprintf(buf, "\n  return _reset;\n}\n\nint _newton_%s%s::operator()(_threadargsproto_) const {\n  int _reset=0;\n", SYM(q2)->name, suffix);
 	Insertstr(q3, buf);
 	q = insertstr(q3, "{ int _counte = -1;\n");

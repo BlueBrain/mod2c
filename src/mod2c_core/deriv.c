@@ -510,7 +510,7 @@ void massagederiv(q1, q2, q3, q4, sensused)
 	/* all this junk is still in the intoken list */
 	Sprintf(buf, "static inline int %s(_threadargsproto_);\n", SYM(q2)->name);
 	if (deriv_implicit_really == 1) {
-	  Sprintf(buf, "template <coreneuron::scopmath::enabled_code code_to_enable = coreneuron::scopmath::enabled_code::all>\nstruct %s%s {\n  int operator()(_threadargsproto_) const;\n};\n", SYM(q2)->name, suffix);
+	  Sprintf(buf, "\nstruct %s%s {\n  int operator()(_threadargsproto_) const;\n};\n", SYM(q2)->name, suffix);
 	}
 	Linsertstr(procfunc, buf);
 	if (deriv_implicit_really == 1) {
