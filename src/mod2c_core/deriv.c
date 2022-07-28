@@ -183,7 +183,7 @@ dindepname, fun->name, listnum, listnum);
 	}else{ /* kinetic */
    if (vectorize) {
 Sprintf(buf,
-"\n  %s%s_thread(static_cast<SparseObj*>(_thread[_spth%d]._pvoid), %d, _slist%d, _dlist%d, &%s, %s, %s%s{}, _linmat%d, _threadargs_);\n",
+"\n  %s%s_thread(static_cast<SparseObj*>(_thread[_spth%d]._pvoid), %d, _slist%d, _dlist%d, &%s, %s, %s%s<coreneuron::scopmath::enabled_code::compute_only>{}, _linmat%d, _threadargs_);\n",
 ssprefix, method->name, listnum, numeqn, listnum, listnum, indepsym->name,
 dindepname, fun->name, suffix, listnum);
 	vectorize_substitute(qsol, buf);
@@ -510,7 +510,7 @@ void massagederiv(q1, q2, q3, q4, sensused)
 	/* all this junk is still in the intoken list */
 	Sprintf(buf, "static inline int %s(_threadargsproto_);\n", SYM(q2)->name);
 	if (deriv_implicit_really == 1) {
-	  Sprintf(buf, "struct %s%s {\n  int operator()(_threadargsproto_) const;\n};\n", SYM(q2)->name, suffix);
+	  Sprintf(buf, "template <coreneuron::scopmath::enabled_code code_to_enable = coreneuron::scopmath::enabled_code::all>\nstruct %s%s {\n  int operator()(_threadargsproto_) const;\n};\n", SYM(q2)->name, suffix);
 	}
 	Linsertstr(procfunc, buf);
 	if (deriv_implicit_really == 1) {
