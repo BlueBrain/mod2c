@@ -457,12 +457,13 @@ static void _modl_cleanup(){ _match_recurse=1;}
 static inline int release(_threadargsprotocomma_ double);
 static inline int rates(_threadargsprotocomma_ double);
  
-#define _MATELM1(_row,_col) _nrn_thread_getelm((SparseObj*)_so, _row + 1, _col + 1, _iml)[_iml]
+constexpr coreneuron::scopmath::enabled_code code_to_enable{coreneuron::scopmath::enabled_code::all};
+#define _MATELM1(_row,_col) coreneuron::scopmath::sparse::thread_getelm<code_to_enable>(static_cast<SparseObj*>(_so), _row + 1, _col + 1, _iml)[_iml]
  
 #define _RHS1(_arg) _rhs[(_arg+1)*_STRIDE]
   
 #define _linmat1  1
- static int _spth1 = 1;
+ static constexpr int _spth1 = 1;
  static int _cvspth1 = 0;
  
 static int _ode_spec1(_threadargsproto_);
@@ -473,10 +474,12 @@ static int _ode_spec1(_threadargsproto_);
 #define INSIDE_NMODL
 #endif
  
+template <coreneuron::scopmath::enabled_code code_to_enable = coreneuron::scopmath::enabled_code::all>
 struct kstates_NMDA10_2_2 {
   int operator()(SparseObj* _so, double* _rhs, _threadargsproto_) const;
 };
-int kstates_NMDA10_2_2::operator() (SparseObj* _so, double* _rhs, _threadargsproto_) const
+template <coreneuron::scopmath::enabled_code code_to_enable>
+int kstates_NMDA10_2_2<code_to_enable>::operator() (SparseObj* _so, double* _rhs, _threadargsproto_) const
  {int _reset=0;
  {
    double b_flux, f_flux, _term; int _i;
@@ -1237,7 +1240,7 @@ for (;;) { /* help clang-format properly indent */
  v=_v;
 {
  {  
-  sparse_thread(static_cast<SparseObj*>(_thread[_spth1]._pvoid), 10, _slist1, _dlist1, &t, dt, kstates_NMDA10_2_2{}, _linmat1, _threadargs_);
+  sparse_thread(static_cast<SparseObj*>(_thread[_spth1]._pvoid), 10, _slist1, _dlist1, &t, dt, kstates_NMDA10_2_2<coreneuron::scopmath::enabled_code::compute_only>{}, _linmat1, _threadargs_);
   }}}
 
 }

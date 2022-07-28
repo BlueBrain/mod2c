@@ -319,7 +319,8 @@ static int _ode_spec1(_threadargsproto_);
 struct _newton_states_NapDA {
   int operator()(_threadargsproto_) const;
 };
-  struct states_NapDA {
+  
+struct states_NapDA {
   int operator()(_threadargsproto_) const;
 };
  
