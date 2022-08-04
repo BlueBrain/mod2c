@@ -871,8 +871,10 @@ diag("No statics allowed for thread safe models:", s->name);
 
 	/******** what normally goes into cabvars.h structures */
 	
-	/* declare the private destructor function as its definition comes after
-	 * mechanism registration for point processes */
+	/* declare the private constructor/destructor functions as their definitions
+	 * come after mechanism registration for point processes
+	 */
+	Lappendstr(defs_list, "static void _create_global_variables(NrnThread*, Memb_list*, int);\n");
 	Lappendstr(defs_list, "static void _destroy_global_variables(NrnThread*, Memb_list*, int);\n");
 	/*declaration of the range variables names to HOC */
 	Lappendstr(defs_list, "static void nrn_alloc(double*, Datum*, int);\nvoid nrn_init(NrnThread*, Memb_list*, int);\nvoid nrn_state(NrnThread*, Memb_list*, int);\n\
@@ -1051,7 +1053,6 @@ static const char *_mechanism[] = {\n\
 #if BBCORE
     // start printing struct that contail all global variables
     Lappendstr(globals_update_list, "struct _global_variables_t : public MemoryManaged {\n");
-    Lappendstr(globals_update_list, "  bool _present_on_device{};\n");
     for(int i=0; i < global_variables_count; i++) {
         // individual member declaration: type name [len]
         if(global_variables[i].is_array) {
@@ -1071,18 +1072,20 @@ static const char *_mechanism[] = {\n\
     Lappendstr(globals_update_list, "  int _ml_mechtype;\n");
     Lappendstr(globals_update_list, "};\n\n");
 
+    // print a function that will create the global variables associated with
+    // the given _ml
+    Lappendstr(globals_update_list, "\nstatic void _create_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {\n");
+    Lappendstr(globals_update_list, "  assert(!_ml->global_variables);\n");
+    Lappendstr(globals_update_list, "  _ml->global_variables = new _global_variables_t{};\n");
+    Lappendstr(globals_update_list, "  _ml->global_variables_size = sizeof(_global_variables_t);\n");
+    Lappendstr(globals_update_list, "}\n"); // end of _create_global_variables function
+
     // print a function that will delete the global variables associated with
     // the given _ml
     Lappendstr(globals_update_list, "\nstatic void _destroy_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {\n");
-    Lappendstr(globals_update_list, "  if (auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables)) {\n");
-    Lappendstr(globals_update_list, "    #ifdef CORENEURON_ENABLE_GPU\n");
-    Lappendstr(globals_update_list, "    if (_global_variables->_present_on_device) {\n");
-    Lappendstr(globals_update_list, "      cnrn_target_delete(_global_variables);\n");
-    Lappendstr(globals_update_list, "    }\n");
-    Lappendstr(globals_update_list, "    #endif\n");
-    Lappendstr(globals_update_list, "    delete _global_variables;\n");
-    Lappendstr(globals_update_list, "    _ml->global_variables = nullptr;\n");
-    Lappendstr(globals_update_list, "  }\n");
+    Lappendstr(globals_update_list, "  delete static_cast<_global_variables_t*>(_ml->global_variables);\n");
+    Lappendstr(globals_update_list, "  _ml->global_variables = nullptr;\n");
+    Lappendstr(globals_update_list, "  _ml->global_variables_size = 0;\n");
     Lappendstr(globals_update_list, "}\n"); // end of _destroy_global_variables function
 
     // now print function that is going to initialize all global variables into
@@ -1127,10 +1130,9 @@ static const char *_mechanism[] = {\n\
     if (!artificial_cell) {
         Lappendstr(globals_update_list, "#ifdef CORENEURON_ENABLE_GPU\n");
         Lappendstr(globals_update_list, "  if (_nt->compute_gpu) {\n");
-        Lappendstr(globals_update_list, "      _global_variables->_present_on_device = true;\n");
-        Lappendstr(globals_update_list, "      void* _d_global_variables = cnrn_target_copyin(_global_variables);\n");
-        Lappendstr(globals_update_list, "      auto* _d_ml = cnrn_target_deviceptr(_ml);\n");
-        Lappendstr(globals_update_list, "      cnrn_target_memcpy_to_device(&(_d_ml->global_variables), &(_d_global_variables));\n");
+        // Sync the content of the struct from the host to the device
+        Lappendstr(globals_update_list, "      auto* const _d_glob_vars = cnrn_target_deviceptr(_global_variables);\n");
+        Lappendstr(globals_update_list, "      cnrn_target_memcpy_to_device(_d_glob_vars, _global_variables);\n");
         Lappendstr(globals_update_list, "  }\n");
         Lappendstr(globals_update_list, "#endif\n");
     }
@@ -1388,7 +1390,7 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 	 nrn_alloc,%s, nrn_init,\n\
 	 hoc_nrnpointerindex,\n\
 	 NULL/*_hoc_create_pnt*/, NULL/*_hoc_destroy_pnt*/, /*_member_func,*/\n\
-	 %d, _destroy_global_variables);\n", brkpnt_str_, vectorize ? 1 + thread_data_index : 0);
+	 %d, _create_global_variables, _destroy_global_variables);\n", brkpnt_str_, vectorize ? 1 + thread_data_index : 0);
 	 	Lappendstr(defs_list, buf);
 		if (destructorfunc->next != destructorfunc) {
 			Lappendstr(defs_list, 
@@ -1398,7 +1400,7 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 			);
 		}
 	}else{
-		sprintf(buf, " register_mech(_mechanism, nrn_alloc,%s, nrn_init, hoc_nrnpointerindex, %d, _destroy_global_variables);\n",
+		sprintf(buf, " register_mech(_mechanism, nrn_alloc,%s, nrn_init, hoc_nrnpointerindex, %d, _create_global_variables, _destroy_global_variables);\n",
 						brkpnt_str_, vectorize ? 1 + thread_data_index : 0);
 	 	Lappendstr(defs_list, buf);
 	}

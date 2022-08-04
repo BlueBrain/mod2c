@@ -358,6 +358,7 @@ void _net_buf_receive(NrnThread*);
  0,0,0
 };
  static double _sav_indep;
+ static void _create_global_variables(NrnThread*, Memb_list*, int);
  static void _destroy_global_variables(NrnThread*, Memb_list*, int);
  static void nrn_alloc(double*, Datum*, int);
 void nrn_init(NrnThread*, Memb_list*, int);
@@ -441,7 +442,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 	 nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init,
 	 hoc_nrnpointerindex,
 	 NULL/*_hoc_create_pnt*/, NULL/*_hoc_destroy_pnt*/, /*_member_func,*/
-	 3, _destroy_global_variables);
+	 3, _create_global_variables, _destroy_global_variables);
   _extcall_thread = (ThreadDatum*)ecalloc(2, sizeof(ThreadDatum));
      _nrn_thread_reg0(_mechtype, _thread_cleanup);
   hoc_register_prop_size(_mechtype, _psize, _ppsize);
@@ -455,7 +456,6 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
  struct _global_variables_t : public MemoryManaged {
-   bool _present_on_device{};
    int _slist1[10];
    int _dlist1[10];
    double celsius;
@@ -503,16 +503,16 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  };
 
  
+static void _create_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
+   assert(!_ml->global_variables);
+   _ml->global_variables = new _global_variables_t{};
+   _ml->global_variables_size = sizeof(_global_variables_t);
+ }
+ 
 static void _destroy_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
-   if (auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables)) {
-     #ifdef CORENEURON_ENABLE_GPU
-     if (_global_variables->_present_on_device) {
-       cnrn_target_delete(_global_variables);
-     }
-     #endif
-     delete _global_variables;
-     _ml->global_variables = nullptr;
-   }
+   delete static_cast<_global_variables_t*>(_ml->global_variables);
+   _ml->global_variables = nullptr;
+   _ml->global_variables_size = 0;
  }
  
 static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
@@ -564,10 +564,8 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    _global_variables->delta_t = delta_t;
  #ifdef CORENEURON_ENABLE_GPU
    if (_nt->compute_gpu) {
-       _global_variables->_present_on_device = true;
-       void* _d_global_variables = cnrn_target_copyin(_global_variables);
-       auto* _d_ml = cnrn_target_deviceptr(_ml);
-       cnrn_target_memcpy_to_device(&(_d_ml->global_variables), &(_d_global_variables));
+       auto* const _d_glob_vars = cnrn_target_deviceptr(_global_variables);
+       cnrn_target_memcpy_to_device(_d_glob_vars, _global_variables);
    }
  #endif
  }
@@ -1252,8 +1250,8 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-  _destroy_global_variables(_nt, _ml, _type);
-  _ml->global_variables = new _global_variables_t{};
+  assert(_ml->global_variables);
+  assert(_ml->global_variables_size);
   _initlists(_ml);
   _update_global_variables(_nt, _ml);
   if (!_thread[_spth1]._pvoid) {

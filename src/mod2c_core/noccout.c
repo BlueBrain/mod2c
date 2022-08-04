@@ -802,8 +802,11 @@ void c_out_vectorize()
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("_thread = _ml->_thread;\n");
 
-	P("  _destroy_global_variables(_nt, _ml, _type);\n");
-	P("  _ml->global_variables = new _global_variables_t{};\n");
+	// The global variable struct should already have been created by
+	// _create_global_variables, which is set as the mechanism's "private
+	// constructor" in CoreNEURON.
+	P("  assert(_ml->global_variables);\n");
+	P("  assert(_ml->global_variables_size);\n");
 	// TODO: check with Michael if calling _initlists multiple times will have any side effects
 	P("  _initlists(_ml);\n");
 	P("  _update_global_variables(_nt, _ml);\n");
