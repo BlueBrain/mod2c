@@ -802,20 +802,9 @@ void c_out_vectorize()
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("_thread = _ml->_thread;\n");
 
-	// _nt->compute_gpu instead of acc_is_present?
-	P("  if(_ml->global_variables) {\n");
-	P("    #ifdef _OPENACC\n");
-	P("      if(acc_is_present(_ml->global_variables, sizeof(_global_variables_t))) {\n");
-	P("        cnrn_target_delete(static_cast<_global_variables_t*>(_ml->global_variables));\n");
-	P("      }\n");
-	P("    #endif\n");
-	P("    delete static_cast<_global_variables_t*>(_ml->global_variables);\n");
-	P("    _ml->global_variables = nullptr;\n");
-	P("  }\n");
-
-	// TODO: check with Michael if calling _initlists multiple times will have any side effects
+	P("  _destroy_global_variables(_nt, _ml, _type);\n");
 	P("  _ml->global_variables = new _global_variables_t{};\n");
-	P("  _ml->global_variables_size = sizeof(_global_variables_t);\n");
+	// TODO: check with Michael if calling _initlists multiple times will have any side effects
 	P("  _initlists(_ml);\n");
 	P("  _update_global_variables(_nt, _ml);\n");
 
