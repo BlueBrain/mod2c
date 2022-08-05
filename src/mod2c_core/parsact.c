@@ -733,7 +733,7 @@ diag("FUNCTION or PROCEDURE containing a TABLE stmt\n",
   if(!_t_%s[_i]) { _t_%s[_i] = makevector(%d*sizeof(double)); } }\n",
 				s->araydim, s->name, s->name, ntab+1);
 		}else{
-			Sprintf(buf, "  if (!_t_%s) { _t_%s = makevector(%d*sizeof(double)) };\n",
+			Sprintf(buf, "  if (!_t_%s) { _t_%s = makevector(%d*sizeof(double)); }\n",
 				s->name, s->name, ntab+1);
 		}
 		Lappendstr(initlist, buf);
