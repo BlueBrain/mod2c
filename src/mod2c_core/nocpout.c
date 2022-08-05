@@ -1387,10 +1387,10 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 	if (point_process) {
 		sprintf(buf, "\
 	_pointtype = point_register_mech(_mechanism,\n\
-	 nrn_alloc,%s, nrn_init,\n\
+	 nrn_alloc,%s, nrn_init, _create_global_variables, _destroy_global_variables,\n\
 	 hoc_nrnpointerindex,\n\
 	 NULL/*_hoc_create_pnt*/, NULL/*_hoc_destroy_pnt*/, /*_member_func,*/\n\
-	 %d, _create_global_variables, _destroy_global_variables);\n", brkpnt_str_, vectorize ? 1 + thread_data_index : 0);
+	 %d);\n", brkpnt_str_, vectorize ? 1 + thread_data_index : 0);
 	 	Lappendstr(defs_list, buf);
 		if (destructorfunc->next != destructorfunc) {
 			Lappendstr(defs_list, 
@@ -1400,7 +1400,7 @@ Sprintf(buf, "\"%s\", %g,\n", s->name, d1);
 			);
 		}
 	}else{
-		sprintf(buf, " register_mech(_mechanism, nrn_alloc,%s, nrn_init, hoc_nrnpointerindex, %d, _create_global_variables, _destroy_global_variables);\n",
+		sprintf(buf, " register_mech(_mechanism, nrn_alloc,%s, nrn_init, _create_global_variables, _destroy_global_variables, hoc_nrnpointerindex, %d);\n",
 						brkpnt_str_, vectorize ? 1 + thread_data_index : 0);
 	 	Lappendstr(defs_list, buf);
 	}
