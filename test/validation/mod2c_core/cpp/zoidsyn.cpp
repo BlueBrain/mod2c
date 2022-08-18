@@ -313,7 +313,6 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  }
  struct _global_variables_t : public MemoryManaged {
    double celsius;
-   int _ml_mechtype;
  };
 
  
@@ -334,7 +333,6 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
      return;
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);
-   _global_variables->_ml_mechtype = _mechtype;
    _global_variables->celsius = celsius;
  #ifdef CORENEURON_ENABLE_GPU
    if (_nt->compute_gpu) {
@@ -344,7 +342,6 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
  }
 
  #define celsius static_cast<_global_variables_t*>(_ml->instance)->celsius
- #define _ml_mechtype static_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
  
 static const char *modelname = "";
 

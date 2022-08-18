@@ -499,7 +499,6 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
    double UMg0;
    double U0;
    double delta_t;
-   int _ml_mechtype;
  };
 
  
@@ -520,7 +519,6 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
      return;
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);
-   _global_variables->_ml_mechtype = _mechtype;
    _global_variables->celsius = celsius;
    _global_variables->Rmc2u = Rmc2u;
    _global_variables->Rmc2b = Rmc2b;
@@ -612,7 +610,6 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
  #define UMg0 static_cast<_global_variables_t*>(_ml->instance)->UMg0
  #define U0 static_cast<_global_variables_t*>(_ml->instance)->U0
  #define delta_t static_cast<_global_variables_t*>(_ml->instance)->delta_t
- #define _ml_mechtype static_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
  
 static const char *modelname = "kinetic NMDA receptor model";
 

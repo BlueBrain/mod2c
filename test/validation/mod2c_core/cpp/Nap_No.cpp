@@ -250,7 +250,6 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
    double celsius;
    double delta_t;
    double p0;
-   int _ml_mechtype;
  };
 
  
@@ -271,7 +270,6 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
      return;
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);
-   _global_variables->_ml_mechtype = _mechtype;
    _global_variables->celsius = celsius;
    _global_variables->delta_t = delta_t;
    _global_variables->p0 = p0;
@@ -287,7 +285,6 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
  #define celsius static_cast<_global_variables_t*>(_ml->instance)->celsius
  #define delta_t static_cast<_global_variables_t*>(_ml->instance)->delta_t
  #define p0 static_cast<_global_variables_t*>(_ml->instance)->p0
- #define _ml_mechtype static_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
  
 static const char *modelname = "Nap_No.mod   persistent sodium current";
 

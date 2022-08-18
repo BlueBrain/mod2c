@@ -259,7 +259,6 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
    double tom;
    double delta_t;
    double m0;
-   int _ml_mechtype;
  };
 
  
@@ -280,7 +279,6 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
      return;
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);
-   _global_variables->_ml_mechtype = _mechtype;
    _global_variables->celsius = celsius;
    _global_variables->Etemp = Etemp;
    _global_variables->Vtm = Vtm;
@@ -310,7 +308,6 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
  #define tom static_cast<_global_variables_t*>(_ml->instance)->tom
  #define delta_t static_cast<_global_variables_t*>(_ml->instance)->delta_t
  #define m0 static_cast<_global_variables_t*>(_ml->instance)->m0
- #define _ml_mechtype static_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
  
 static const char *modelname = "A slow Sodium current";
 

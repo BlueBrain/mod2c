@@ -1067,9 +1067,6 @@ static const char *_mechanism[] = {\n\
         }
         Lappendstr(globals_update_list, buf);
     }
-    //TODO: always have _ml_mechtype variable but it seems like we don't
-    // need to use _mechtype anywhere in the GPU kernel. So remove this.
-    Lappendstr(globals_update_list, "  int _ml_mechtype;\n");
     Lappendstr(globals_update_list, "};\n\n");
 
     // print a function that will create the global variables associated with
@@ -1098,7 +1095,6 @@ static const char *_mechanism[] = {\n\
     Lappendstr(globals_update_list, "  }\n");
 
     Lappendstr(globals_update_list, "  auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);\n");
-    Lappendstr(globals_update_list, "  _global_variables->_ml_mechtype = _mechtype;\n");
     for(int i=0; i < global_variables_count; i++) {
         // variables like slist/dlist are directly initialized
         // in global_variables and doesn't have additional global
@@ -1148,7 +1144,6 @@ static const char *_mechanism[] = {\n\
                 global_variables[i].name);
         Lappendstr(globals_update_list, buf);
     }
-    Lappendstr(globals_update_list, "#define _ml_mechtype static_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype\n");
     Lappendstr(globals_update_list, "\n");
 
 #endif

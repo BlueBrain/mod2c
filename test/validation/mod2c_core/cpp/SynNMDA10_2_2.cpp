@@ -402,7 +402,6 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
    double OB0;
    double O0;
    double delta_t;
-   int _ml_mechtype;
  };
 
  
@@ -423,7 +422,6 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
      return;
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);
-   _global_variables->_ml_mechtype = _mechtype;
    _global_variables->celsius = celsius;
    _global_variables->mg = mg;
    _global_variables->CB20 = CB20;
@@ -459,7 +457,6 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
  #define OB0 static_cast<_global_variables_t*>(_ml->instance)->OB0
  #define O0 static_cast<_global_variables_t*>(_ml->instance)->O0
  #define delta_t static_cast<_global_variables_t*>(_ml->instance)->delta_t
- #define _ml_mechtype static_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
  
 static const char *modelname = "detailed model of glutamate NMDA receptors";
 
