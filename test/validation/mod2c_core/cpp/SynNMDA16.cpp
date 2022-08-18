@@ -468,10 +468,10 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  
 #endif /*BBCORE*/
  	_pointtype = point_register_mech(_mechanism,
-	 nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init,
+	 nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init, _create_global_variables, _destroy_global_variables,
 	 hoc_nrnpointerindex,
 	 NULL/*_hoc_create_pnt*/, NULL/*_hoc_destroy_pnt*/, /*_member_func,*/
-	 4, _create_global_variables, _destroy_global_variables);
+	 4);
   _extcall_thread = (ThreadDatum*)ecalloc(3, sizeof(ThreadDatum));
   _thread_mem_init(_extcall_thread);
   _thread1data_inuse = 0;
@@ -533,22 +533,22 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 
  
 static void _create_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
-   assert(!_ml->global_variables);
-   _ml->global_variables = new _global_variables_t{};
-   _ml->global_variables_size = sizeof(_global_variables_t);
+   assert(!_ml->instance);
+   _ml->instance = new _global_variables_t{};
+   _ml->instance_size = sizeof(_global_variables_t);
  }
  
 static void _destroy_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
-   delete static_cast<_global_variables_t*>(_ml->global_variables);
-   _ml->global_variables = nullptr;
-   _ml->global_variables_size = 0;
+   delete static_cast<_global_variables_t*>(_ml->instance);
+   _ml->instance = nullptr;
+   _ml->instance_size = 0;
  }
  
 static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    if(!_nt || !_ml) {
      return;
    }
-   auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
+   auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);
    _global_variables->_ml_mechtype = _mechtype;
    _global_variables->celsius = celsius;
    _global_variables->Kcs0 = Kcs0;
@@ -589,52 +589,51 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    _global_variables->delta_t = delta_t;
  #ifdef CORENEURON_ENABLE_GPU
    if (_nt->compute_gpu) {
-       auto* const _d_glob_vars = cnrn_target_deviceptr(_global_variables);
-       cnrn_target_memcpy_to_device(_d_glob_vars, _global_variables);
+       cnrn_target_update_on_device(_global_variables);
    }
  #endif
  }
 
- #define _slist1 static_cast<_global_variables_t*>(_ml->global_variables)->_slist1
- #define _dlist1 static_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
- #define celsius static_cast<_global_variables_t*>(_ml->global_variables)->celsius
- #define Kcs0 static_cast<_global_variables_t*>(_ml->global_variables)->Kcs0
- #define Kna static_cast<_global_variables_t*>(_ml->global_variables)->Kna
- #define Mg static_cast<_global_variables_t*>(_ml->global_variables)->Mg
- #define V0 static_cast<_global_variables_t*>(_ml->global_variables)->V0
- #define Vdep static_cast<_global_variables_t*>(_ml->global_variables)->Vdep
- #define a static_cast<_global_variables_t*>(_ml->global_variables)->a
- #define b static_cast<_global_variables_t*>(_ml->global_variables)->b
- #define c static_cast<_global_variables_t*>(_ml->global_variables)->c
- #define d static_cast<_global_variables_t*>(_ml->global_variables)->d
- #define gmax static_cast<_global_variables_t*>(_ml->global_variables)->gmax
- #define kNi0 static_cast<_global_variables_t*>(_ml->global_variables)->kNi0
- #define kNo0 static_cast<_global_variables_t*>(_ml->global_variables)->kNo0
- #define kP0 static_cast<_global_variables_t*>(_ml->global_variables)->kP0
- #define kfB0 static_cast<_global_variables_t*>(_ml->global_variables)->kfB0
- #define kfF0 static_cast<_global_variables_t*>(_ml->global_variables)->kfF0
- #define ksB0 static_cast<_global_variables_t*>(_ml->global_variables)->ksB0
- #define ksF0 static_cast<_global_variables_t*>(_ml->global_variables)->ksF0
- #define koff static_cast<_global_variables_t*>(_ml->global_variables)->koff
- #define kon static_cast<_global_variables_t*>(_ml->global_variables)->kon
- #define OMg0 static_cast<_global_variables_t*>(_ml->global_variables)->OMg0
- #define O0 static_cast<_global_variables_t*>(_ml->global_variables)->O0
- #define RA2sMg0 static_cast<_global_variables_t*>(_ml->global_variables)->RA2sMg0
- #define RA2fMg0 static_cast<_global_variables_t*>(_ml->global_variables)->RA2fMg0
- #define RA2d2Mg0 static_cast<_global_variables_t*>(_ml->global_variables)->RA2d2Mg0
- #define RA2d1Mg0 static_cast<_global_variables_t*>(_ml->global_variables)->RA2d1Mg0
- #define RA2Mg0 static_cast<_global_variables_t*>(_ml->global_variables)->RA2Mg0
- #define RAMg0 static_cast<_global_variables_t*>(_ml->global_variables)->RAMg0
- #define RMg0 static_cast<_global_variables_t*>(_ml->global_variables)->RMg0
- #define RA2s0 static_cast<_global_variables_t*>(_ml->global_variables)->RA2s0
- #define RA2f0 static_cast<_global_variables_t*>(_ml->global_variables)->RA2f0
- #define RA2d20 static_cast<_global_variables_t*>(_ml->global_variables)->RA2d20
- #define RA2d10 static_cast<_global_variables_t*>(_ml->global_variables)->RA2d10
- #define RA20 static_cast<_global_variables_t*>(_ml->global_variables)->RA20
- #define RA0 static_cast<_global_variables_t*>(_ml->global_variables)->RA0
- #define R0 static_cast<_global_variables_t*>(_ml->global_variables)->R0
- #define delta_t static_cast<_global_variables_t*>(_ml->global_variables)->delta_t
- #define _ml_mechtype static_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype
+ #define _slist1 static_cast<_global_variables_t*>(_ml->instance)->_slist1
+ #define _dlist1 static_cast<_global_variables_t*>(_ml->instance)->_dlist1
+ #define celsius static_cast<_global_variables_t*>(_ml->instance)->celsius
+ #define Kcs0 static_cast<_global_variables_t*>(_ml->instance)->Kcs0
+ #define Kna static_cast<_global_variables_t*>(_ml->instance)->Kna
+ #define Mg static_cast<_global_variables_t*>(_ml->instance)->Mg
+ #define V0 static_cast<_global_variables_t*>(_ml->instance)->V0
+ #define Vdep static_cast<_global_variables_t*>(_ml->instance)->Vdep
+ #define a static_cast<_global_variables_t*>(_ml->instance)->a
+ #define b static_cast<_global_variables_t*>(_ml->instance)->b
+ #define c static_cast<_global_variables_t*>(_ml->instance)->c
+ #define d static_cast<_global_variables_t*>(_ml->instance)->d
+ #define gmax static_cast<_global_variables_t*>(_ml->instance)->gmax
+ #define kNi0 static_cast<_global_variables_t*>(_ml->instance)->kNi0
+ #define kNo0 static_cast<_global_variables_t*>(_ml->instance)->kNo0
+ #define kP0 static_cast<_global_variables_t*>(_ml->instance)->kP0
+ #define kfB0 static_cast<_global_variables_t*>(_ml->instance)->kfB0
+ #define kfF0 static_cast<_global_variables_t*>(_ml->instance)->kfF0
+ #define ksB0 static_cast<_global_variables_t*>(_ml->instance)->ksB0
+ #define ksF0 static_cast<_global_variables_t*>(_ml->instance)->ksF0
+ #define koff static_cast<_global_variables_t*>(_ml->instance)->koff
+ #define kon static_cast<_global_variables_t*>(_ml->instance)->kon
+ #define OMg0 static_cast<_global_variables_t*>(_ml->instance)->OMg0
+ #define O0 static_cast<_global_variables_t*>(_ml->instance)->O0
+ #define RA2sMg0 static_cast<_global_variables_t*>(_ml->instance)->RA2sMg0
+ #define RA2fMg0 static_cast<_global_variables_t*>(_ml->instance)->RA2fMg0
+ #define RA2d2Mg0 static_cast<_global_variables_t*>(_ml->instance)->RA2d2Mg0
+ #define RA2d1Mg0 static_cast<_global_variables_t*>(_ml->instance)->RA2d1Mg0
+ #define RA2Mg0 static_cast<_global_variables_t*>(_ml->instance)->RA2Mg0
+ #define RAMg0 static_cast<_global_variables_t*>(_ml->instance)->RAMg0
+ #define RMg0 static_cast<_global_variables_t*>(_ml->instance)->RMg0
+ #define RA2s0 static_cast<_global_variables_t*>(_ml->instance)->RA2s0
+ #define RA2f0 static_cast<_global_variables_t*>(_ml->instance)->RA2f0
+ #define RA2d20 static_cast<_global_variables_t*>(_ml->instance)->RA2d20
+ #define RA2d10 static_cast<_global_variables_t*>(_ml->instance)->RA2d10
+ #define RA20 static_cast<_global_variables_t*>(_ml->instance)->RA20
+ #define RA0 static_cast<_global_variables_t*>(_ml->instance)->RA0
+ #define R0 static_cast<_global_variables_t*>(_ml->instance)->R0
+ #define delta_t static_cast<_global_variables_t*>(_ml->instance)->delta_t
+ #define _ml_mechtype static_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype
  
 static const char *modelname = "Voltage-dependent kinetic model of NMDA receptor";
 
@@ -1390,8 +1389,8 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-  assert(_ml->global_variables);
-  assert(_ml->global_variables_size);
+  assert(_ml->instance);
+  assert(_ml->instance_size);
   _initlists(_ml);
   _update_global_variables(_nt, _ml);
   if (!_thread[_spth1]._pvoid) {

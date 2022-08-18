@@ -805,9 +805,8 @@ void c_out_vectorize()
 	// The global variable struct should already have been created by
 	// _create_global_variables, which is set as the mechanism's "private
 	// constructor" in CoreNEURON.
-	P("  assert(_ml->global_variables);\n");
-	P("  assert(_ml->global_variables_size);\n");
-	// TODO: check with Michael if calling _initlists multiple times will have any side effects
+	P("  assert(_ml->instance);\n");
+	P("  assert(_ml->instance_size);\n");
 	P("  _initlists(_ml);\n");
 	P("  _update_global_variables(_nt, _ml);\n");
 
@@ -1069,9 +1068,6 @@ void c_out_vectorize()
 	*/
 	/* initlists() is called once to setup slist and dlist pointers */
 	P("\nstatic void _initlists(Memb_list *_ml){\n");
-	// _initlists is called first from the _reg function
-	// and hence setup global variable pointer here so
-	// that it's valid to begin with
 	P(" double _x; double* _p = &_x;\n");
 	P(" int _i;\n");
 	P(" int _cntml_actual=1;\n");

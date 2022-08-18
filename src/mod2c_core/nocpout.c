@@ -1075,17 +1075,17 @@ static const char *_mechanism[] = {\n\
     // print a function that will create the global variables associated with
     // the given _ml
     Lappendstr(globals_update_list, "\nstatic void _create_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {\n");
-    Lappendstr(globals_update_list, "  assert(!_ml->global_variables);\n");
-    Lappendstr(globals_update_list, "  _ml->global_variables = new _global_variables_t{};\n");
-    Lappendstr(globals_update_list, "  _ml->global_variables_size = sizeof(_global_variables_t);\n");
+    Lappendstr(globals_update_list, "  assert(!_ml->instance);\n");
+    Lappendstr(globals_update_list, "  _ml->instance = new _global_variables_t{};\n");
+    Lappendstr(globals_update_list, "  _ml->instance_size = sizeof(_global_variables_t);\n");
     Lappendstr(globals_update_list, "}\n"); // end of _create_global_variables function
 
     // print a function that will delete the global variables associated with
     // the given _ml
     Lappendstr(globals_update_list, "\nstatic void _destroy_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {\n");
-    Lappendstr(globals_update_list, "  delete static_cast<_global_variables_t*>(_ml->global_variables);\n");
-    Lappendstr(globals_update_list, "  _ml->global_variables = nullptr;\n");
-    Lappendstr(globals_update_list, "  _ml->global_variables_size = 0;\n");
+    Lappendstr(globals_update_list, "  delete static_cast<_global_variables_t*>(_ml->instance);\n");
+    Lappendstr(globals_update_list, "  _ml->instance = nullptr;\n");
+    Lappendstr(globals_update_list, "  _ml->instance_size = 0;\n");
     Lappendstr(globals_update_list, "}\n"); // end of _destroy_global_variables function
 
     // now print function that is going to initialize all global variables into
@@ -1097,7 +1097,7 @@ static const char *_mechanism[] = {\n\
     Lappendstr(globals_update_list, "    return;\n");
     Lappendstr(globals_update_list, "  }\n");
 
-    Lappendstr(globals_update_list, "  auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);\n");
+    Lappendstr(globals_update_list, "  auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);\n");
     Lappendstr(globals_update_list, "  _global_variables->_ml_mechtype = _mechtype;\n");
     for(int i=0; i < global_variables_count; i++) {
         // variables like slist/dlist are directly initialized
@@ -1131,8 +1131,7 @@ static const char *_mechanism[] = {\n\
         Lappendstr(globals_update_list, "#ifdef CORENEURON_ENABLE_GPU\n");
         Lappendstr(globals_update_list, "  if (_nt->compute_gpu) {\n");
         // Sync the content of the struct from the host to the device
-        Lappendstr(globals_update_list, "      auto* const _d_glob_vars = cnrn_target_deviceptr(_global_variables);\n");
-        Lappendstr(globals_update_list, "      cnrn_target_memcpy_to_device(_d_glob_vars, _global_variables);\n");
+        Lappendstr(globals_update_list, "      cnrn_target_update_on_device(_global_variables);\n");
         Lappendstr(globals_update_list, "  }\n");
         Lappendstr(globals_update_list, "#endif\n");
     }
@@ -1144,12 +1143,12 @@ static const char *_mechanism[] = {\n\
     // especially global_variables_ptr because access via pointer is possible on
     // cpu side or GPU side. Hence, this is usual macro magic.
     for(int i=0; i < global_variables_count; i++) {
-        Sprintf(buf, "#define %s static_cast<_global_variables_t*>(_ml->global_variables)->%s\n",
+        Sprintf(buf, "#define %s static_cast<_global_variables_t*>(_ml->instance)->%s\n",
                 global_variables[i].name,
                 global_variables[i].name);
         Lappendstr(globals_update_list, buf);
     }
-    Lappendstr(globals_update_list, "#define _ml_mechtype static_cast<_global_variables_t*>(_ml->global_variables)->_ml_mechtype\n");
+    Lappendstr(globals_update_list, "#define _ml_mechtype static_cast<_global_variables_t*>(_ml->instance)->_ml_mechtype\n");
     Lappendstr(globals_update_list, "\n");
 
 #endif
@@ -2378,7 +2377,9 @@ Sprintf(buf, " _ion_%s = %s;\n", SYM(q1)->name, SYM(q1)->name);
 			Lappendstr(l, buf);
 			Sprintf(buf, "    Memb_list* _%s_ml;\n", in);
 			Lappendstr(l, buf);
-			// TODO: here _type is a static global variable even though warning is not shown. Fix this.
+			// _%s_type is a static global variable, and this code is emitted in a
+			// compute region, but it seems to work even when linked dynamically (see
+			// BlueBrain/CoreNeuron#795)
 			Sprintf(buf, "    _%s_ml = _nt->_ml_list[_%s_type];\n", in, in);
 			Lappendstr(l, buf);
 			Sprintf(buf, "    %s _tmp_cntml = _%s_ml->_nodecount_padded;\n", declared ? "" : "int", in);
