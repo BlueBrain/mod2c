@@ -3094,8 +3094,8 @@ sprintf(buf, "\
 
 	insertstr(q, "\n}\n");
 
-    // note that atomic capture required strucutre block because of the issue
-    //   https://forums.developer.nvidia.com/t/segfault-and-missing-branch-target-block-error-while-compiling-larger-functions-with-o1-vs-o2-opt-levels/212264/2
+    //  Note that atomic capture required strucutre block because of the issue with NVHPC version < 22.7:
+    //  https://forums.developer.nvidia.com/t/segfault-and-missing-branch-target-block-error-while-compiling-larger-functions-with-o1-vs-o2-opt-levels/212264/2
 	if (net_send_seen_ || net_event_seen_) {
 		sprintf(buf, "\
 \nstatic void _net_send_buffering(NetSendBuffer_t* _nsb, int _sendtype, int _i_vdata, int _weight_index,\
