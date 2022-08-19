@@ -779,11 +779,6 @@ void c_out_vectorize()
 
 	P("\nstatic inline void initmodel(_threadargsproto_) {\n  int _i; double _save;");
 	P("{\n");
-    //TODO: we are now passing _ml as an argument so `_ml_list[_mechtype]` is same
-    // as what is passed as an argument. Confirm this with Michael!
-	//if (net_send_seen_ && !artificial_cell) {
-	//  P("  Memb_list* _ml = _nt->_ml_list[_mechtype];\n");
-	//}
 	initstates();
 	printlist(initfunc);
 	if (match_bound) {

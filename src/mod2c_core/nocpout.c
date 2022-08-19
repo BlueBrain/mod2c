@@ -570,7 +570,6 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 		Lappendstr(defs_list, "extern double celsius;\n");
 		add_global_var("double", "celsius", 0, 0, 0);
 	}
-	// TODO: decide if this should be overload
 	if (redefine_nrn_ghk) {
 		Lappendstr(defs_list, "#define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)\n");
 	}
@@ -1036,9 +1035,6 @@ static const char *_mechanism[] = {\n\
 		Lappendstr(defs_list, "extern Node* nrn_alloc_node_;\n");
 	}
 #endif
-    // TODO: these variables aldo declared as global (e.g. _ca_type in case of CaDynamics_E2.mod
-    // and used for nrn_wrote_conc function inside initmodel(). But I didn't see typical warning
-    // about usage of static variable?
 	ITERATE(q, useion) {
 		sion = SYM(q);
 		Sprintf(buf, "static int _%s_type;\n",sion->name);

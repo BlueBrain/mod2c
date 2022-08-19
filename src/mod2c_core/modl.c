@@ -84,7 +84,6 @@ int global_variables_count = 0;
 int global_variables_capacity = 0;
 
 // add new global variable that needs to be printed
-// TODO: add function for deallocation/cleanup of global_variables
 void add_global_var(const char* type,
         const char* name,
         int is_array,
@@ -115,6 +114,12 @@ void add_global_var(const char* type,
     global_variables_count++;
 }
 
+void free_global_variables() {
+    if (global_variables) {
+        free(global_variables);
+        global_variables = NULL;
+    }
+}
 
 extern int yyparse();
 extern int mkdir_p();
@@ -231,6 +236,8 @@ int main(int argc, char** argv) {
   c_out();   /* print .c file */
 
   IGNORE(fclose(fcout));
+
+  free_global_variables();
 
 #if NMODL && VECTORIZE
   if (vectorize) {

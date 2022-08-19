@@ -347,3 +347,6 @@ extern int global_variables_capacity;
 
 // add new global variable
 void add_global_var(const char* type, const char* name, int is_array, int array_length, int skip_initialisation);
+
+// free global variable object
+void free_global_variables();
