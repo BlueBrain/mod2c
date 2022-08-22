@@ -3006,7 +3006,7 @@ const char* net_boilerplate(int flag) {
 	sprintf(buf, "%s\
    _thread = (ThreadDatum*)0; \n\
    double *_weights = _nt->_weights;\n\
-   _args = _weights + _weight_index;\n\
+   _args = _weights ? _weights + _weight_index : nullptr;\n\
    _ml = _nt->_ml_list[_pnt->_type];\n\
    _cntml_actual = _ml->_nodecount;\n\
    _cntml_padded = _ml->_nodecount_padded;\n\

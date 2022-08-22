@@ -915,7 +915,7 @@ void _net_receive (Point_process* _pnt, int _weight_index, double _lflag)
    _nt = nrn_threads + _tid;
    _thread = (ThreadDatum*)0; 
    double *_weights = _nt->_weights;
-   _args = _weights + _weight_index;
+   _args = _weights ? _weights + _weight_index : nullptr;
    _ml = _nt->_ml_list[_pnt->_type];
    _cntml_actual = _ml->_nodecount;
    _cntml_padded = _ml->_nodecount_padded;
