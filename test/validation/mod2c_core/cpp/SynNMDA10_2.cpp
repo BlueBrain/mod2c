@@ -396,22 +396,22 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 
  
 static void _create_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
-   assert(!_ml->instance);
-   _ml->instance = new _global_variables_t{};
-   _ml->instance_size = sizeof(_global_variables_t);
+   assert(!_ml->global_variables);
+   _ml->global_variables = new _global_variables_t{};
+   _ml->global_variables_size = sizeof(_global_variables_t);
  }
  
 static void _destroy_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
-   delete static_cast<_global_variables_t*>(_ml->instance);
-   _ml->instance = nullptr;
-   _ml->instance_size = 0;
+   delete static_cast<_global_variables_t*>(_ml->global_variables);
+   _ml->global_variables = nullptr;
+   _ml->global_variables_size = 0;
  }
  
 static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    if(!_nt || !_ml) {
      return;
    }
-   auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);
+   auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->celsius = celsius;
    _global_variables->Rc = Rc;
    _global_variables->Ro = Ro;
@@ -438,27 +438,27 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
  #endif
  }
 
- #define _slist1 static_cast<_global_variables_t*>(_ml->instance)->_slist1
- #define _dlist1 static_cast<_global_variables_t*>(_ml->instance)->_dlist1
- #define celsius static_cast<_global_variables_t*>(_ml->instance)->celsius
- #define Rc static_cast<_global_variables_t*>(_ml->instance)->Rc
- #define Ro static_cast<_global_variables_t*>(_ml->instance)->Ro
- #define Rr static_cast<_global_variables_t*>(_ml->instance)->Rr
- #define Rd static_cast<_global_variables_t*>(_ml->instance)->Rd
- #define Ru static_cast<_global_variables_t*>(_ml->instance)->Ru
- #define Rb static_cast<_global_variables_t*>(_ml->instance)->Rb
- #define mg static_cast<_global_variables_t*>(_ml->instance)->mg
- #define CB20 static_cast<_global_variables_t*>(_ml->instance)->CB20
- #define CB10 static_cast<_global_variables_t*>(_ml->instance)->CB10
- #define CB00 static_cast<_global_variables_t*>(_ml->instance)->CB00
- #define C20 static_cast<_global_variables_t*>(_ml->instance)->C20
- #define C10 static_cast<_global_variables_t*>(_ml->instance)->C10
- #define C00 static_cast<_global_variables_t*>(_ml->instance)->C00
- #define DB0 static_cast<_global_variables_t*>(_ml->instance)->DB0
- #define D0 static_cast<_global_variables_t*>(_ml->instance)->D0
- #define OB0 static_cast<_global_variables_t*>(_ml->instance)->OB0
- #define O0 static_cast<_global_variables_t*>(_ml->instance)->O0
- #define delta_t static_cast<_global_variables_t*>(_ml->instance)->delta_t
+ #define _slist1 static_cast<_global_variables_t*>(_ml->global_variables)->_slist1
+ #define _dlist1 static_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
+ #define celsius static_cast<_global_variables_t*>(_ml->global_variables)->celsius
+ #define Rc static_cast<_global_variables_t*>(_ml->global_variables)->Rc
+ #define Ro static_cast<_global_variables_t*>(_ml->global_variables)->Ro
+ #define Rr static_cast<_global_variables_t*>(_ml->global_variables)->Rr
+ #define Rd static_cast<_global_variables_t*>(_ml->global_variables)->Rd
+ #define Ru static_cast<_global_variables_t*>(_ml->global_variables)->Ru
+ #define Rb static_cast<_global_variables_t*>(_ml->global_variables)->Rb
+ #define mg static_cast<_global_variables_t*>(_ml->global_variables)->mg
+ #define CB20 static_cast<_global_variables_t*>(_ml->global_variables)->CB20
+ #define CB10 static_cast<_global_variables_t*>(_ml->global_variables)->CB10
+ #define CB00 static_cast<_global_variables_t*>(_ml->global_variables)->CB00
+ #define C20 static_cast<_global_variables_t*>(_ml->global_variables)->C20
+ #define C10 static_cast<_global_variables_t*>(_ml->global_variables)->C10
+ #define C00 static_cast<_global_variables_t*>(_ml->global_variables)->C00
+ #define DB0 static_cast<_global_variables_t*>(_ml->global_variables)->DB0
+ #define D0 static_cast<_global_variables_t*>(_ml->global_variables)->D0
+ #define OB0 static_cast<_global_variables_t*>(_ml->global_variables)->OB0
+ #define O0 static_cast<_global_variables_t*>(_ml->global_variables)->O0
+ #define delta_t static_cast<_global_variables_t*>(_ml->global_variables)->delta_t
  
 static const char *modelname = "detailed model of glutamate NMDA receptors";
 
@@ -988,8 +988,8 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-  assert(_ml->instance);
-  assert(_ml->instance_size);
+  assert(_ml->global_variables);
+  assert(_ml->global_variables_size != 0);
   _initlists(_ml);
   _update_global_variables(_nt, _ml);
   if (!_thread[_spth1]._pvoid) {

@@ -317,22 +317,22 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 
  
 static void _create_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
-   assert(!_ml->instance);
-   _ml->instance = new _global_variables_t{};
-   _ml->instance_size = sizeof(_global_variables_t);
+   assert(!_ml->global_variables);
+   _ml->global_variables = new _global_variables_t{};
+   _ml->global_variables_size = sizeof(_global_variables_t);
  }
  
 static void _destroy_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
-   delete static_cast<_global_variables_t*>(_ml->instance);
-   _ml->instance = nullptr;
-   _ml->instance_size = 0;
+   delete static_cast<_global_variables_t*>(_ml->global_variables);
+   _ml->global_variables = nullptr;
+   _ml->global_variables_size = 0;
  }
  
 static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    if(!_nt || !_ml) {
      return;
    }
-   auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);
+   auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->celsius = celsius;
  #ifdef CORENEURON_ENABLE_GPU
    if (_nt->compute_gpu) {
@@ -341,7 +341,7 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
  #endif
  }
 
- #define celsius static_cast<_global_variables_t*>(_ml->instance)->celsius
+ #define celsius static_cast<_global_variables_t*>(_ml->global_variables)->celsius
  
 static const char *modelname = "";
 
@@ -577,8 +577,8 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-  assert(_ml->instance);
-  assert(_ml->instance_size);
+  assert(_ml->global_variables);
+  assert(_ml->global_variables_size != 0);
   _initlists(_ml);
   _update_global_variables(_nt, _ml);
 double * _nt_data = _nt->_data;

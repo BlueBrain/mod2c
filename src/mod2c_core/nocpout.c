@@ -1068,17 +1068,17 @@ static const char *_mechanism[] = {\n\
     // print a function that will create the global variables associated with
     // the given _ml
     Lappendstr(globals_update_list, "\nstatic void _create_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {\n");
-    Lappendstr(globals_update_list, "  assert(!_ml->instance);\n");
-    Lappendstr(globals_update_list, "  _ml->instance = new _global_variables_t{};\n");
-    Lappendstr(globals_update_list, "  _ml->instance_size = sizeof(_global_variables_t);\n");
+    Lappendstr(globals_update_list, "  assert(!_ml->global_variables);\n");
+    Lappendstr(globals_update_list, "  _ml->global_variables = new _global_variables_t{};\n");
+    Lappendstr(globals_update_list, "  _ml->global_variables_size = sizeof(_global_variables_t);\n");
     Lappendstr(globals_update_list, "}\n"); // end of _create_global_variables function
 
     // print a function that will delete the global variables associated with
     // the given _ml
     Lappendstr(globals_update_list, "\nstatic void _destroy_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {\n");
-    Lappendstr(globals_update_list, "  delete static_cast<_global_variables_t*>(_ml->instance);\n");
-    Lappendstr(globals_update_list, "  _ml->instance = nullptr;\n");
-    Lappendstr(globals_update_list, "  _ml->instance_size = 0;\n");
+    Lappendstr(globals_update_list, "  delete static_cast<_global_variables_t*>(_ml->global_variables);\n");
+    Lappendstr(globals_update_list, "  _ml->global_variables = nullptr;\n");
+    Lappendstr(globals_update_list, "  _ml->global_variables_size = 0;\n");
     Lappendstr(globals_update_list, "}\n"); // end of _destroy_global_variables function
 
     // now print function that is going to initialize all global variables into
@@ -1090,7 +1090,7 @@ static const char *_mechanism[] = {\n\
     Lappendstr(globals_update_list, "    return;\n");
     Lappendstr(globals_update_list, "  }\n");
 
-    Lappendstr(globals_update_list, "  auto* const _global_variables = static_cast<_global_variables_t*>(_ml->instance);\n");
+    Lappendstr(globals_update_list, "  auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);\n");
     for(int i=0; i < global_variables_count; i++) {
         // variables like slist/dlist are directly initialized
         // in global_variables and doesn't have additional global
@@ -1135,7 +1135,7 @@ static const char *_mechanism[] = {\n\
     // especially global_variables_ptr because access via pointer is possible on
     // cpu side or GPU side. Hence, this is usual macro magic.
     for(int i=0; i < global_variables_count; i++) {
-        Sprintf(buf, "#define %s static_cast<_global_variables_t*>(_ml->instance)->%s\n",
+        Sprintf(buf, "#define %s static_cast<_global_variables_t*>(_ml->global_variables)->%s\n",
                 global_variables[i].name,
                 global_variables[i].name);
         Lappendstr(globals_update_list, buf);

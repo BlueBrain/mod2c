@@ -800,8 +800,8 @@ void c_out_vectorize()
 	// The global variable struct should already have been created by
 	// _create_global_variables, which is set as the mechanism's "private
 	// constructor" in CoreNEURON.
-	P("  assert(_ml->instance);\n");
-	P("  assert(_ml->instance_size);\n");
+	P("  assert(_ml->global_variables);\n");
+	P("  assert(_ml->global_variables_size != 0);\n");
 	P("  _initlists(_ml);\n");
 	P("  _update_global_variables(_nt, _ml);\n");
 
