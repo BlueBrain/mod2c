@@ -1047,7 +1047,7 @@ static const char *_mechanism[] = {\n\
 	}
 	
 #if BBCORE
-    // start printing struct that contail all global variables
+    // start printing struct that contain all global variables
     Lappendstr(globals_update_list, "struct _global_variables_t : public MemoryManaged {\n");
     for(int i=0; i < global_variables_count; i++) {
         // individual member declaration: type name [len]
