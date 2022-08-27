@@ -50,6 +50,7 @@ extern List	*begin_dion_stmt(), *end_dion_stmt();
 extern List* conductance_;
 extern List* breakpoint_local_current_;
 extern List* newtonspace_list;
+extern List* globals_update_list;
 static void conductance_cout();
 extern int net_send_buffer_in_initial;
 #endif
@@ -733,8 +734,8 @@ static void pr_layout_for_p(int ivdep, int fun_type) {
 
 static void print_cuda_launcher_call(char *name) {
     P("\n#if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)\n");
-    P("  NrnThread* d_nt = acc_deviceptr(_nt);\n");
-    P("  Memb_list* d_ml = acc_deviceptr(_ml);\n");
+    P("  NrnThread* d_nt = cnrn_target_deviceptr(_nt);\n");
+    P("  Memb_list* d_ml = cnrn_target_deviceptr(_ml);\n");
     Fprintf(fcout, "  nrn_%s_launcher(d_nt, d_ml, _type, _cntml_actual);\n", name);
     P("  return;\n");
     P("#endif\n\n");
@@ -751,6 +752,7 @@ void c_out_vectorize()
 	P("#undef PI\n");
 	printlist(defs_list);
 	printlist(firstlist);
+	printlist(globals_update_list);
 	if (modelline) {
 		Fprintf(fcout, "static const char *modelname = \"%s\";\n\n", modelline);
 	} else {
@@ -777,9 +779,6 @@ void c_out_vectorize()
 
 	P("\nstatic inline void initmodel(_threadargsproto_) {\n  int _i; double _save;");
 	P("{\n");
-	if (net_send_seen_ && !artificial_cell) {
-	  P("  Memb_list* _ml = _nt->_ml_list[_mechtype];\n");
-	}
 	initstates();
 	printlist(initfunc);
 	if (match_bound) {
@@ -797,6 +796,15 @@ void c_out_vectorize()
 	  P("_cntml_actual = _ml->_nodecount;\n");
 	  P("_cntml_padded = _ml->_nodecount_padded;\n");
 	  P("_thread = _ml->_thread;\n");
+
+	// The global variable struct should already have been created by
+	// _create_global_variables, which is set as the mechanism's "private
+	// constructor" in CoreNEURON.
+	P("  assert(_ml->global_variables);\n");
+	P("  assert(_ml->global_variables_size != 0);\n");
+	P("  _initlists(_ml);\n");
+	P("  _update_global_variables(_nt, _ml);\n");
+
 	if (derivimplic_listnum) {
 	  sprintf(buf,
 	  "  _deriv%d_advance = 0;\n"
@@ -806,29 +814,10 @@ void c_out_vectorize()
 	  , derivimplic_listnum, derivimplic_listnum);
  	  P(buf);
 	}
-	  if (net_send_seen_ && !artificial_cell) {
-	    P("  #pragma acc update device (_mechtype) if(_nt->compute_gpu)\n");
-	  }
 	ITERATE(q, newtonspace_list) {
 	  P(STR(q));
 	}
 	/*check_tables();*/
-
-     /* @todo: will be done once anyway but it seems like this is bein copied
-      * in many other places. See CNEUR-134 */
-      /* added data region in main fuction, need to verify that values are
-       * correctly being used.
-       * While testing with PGI compiler, we have seen incorrect spike if we
-       * don't update celsius, not sure the reason. */
-	/* also PGI 16.3 (but not later) has the bizarre issue that celsius
-	   is 0 when an non file function, e.g. derivimplicit_thread,
-	   is called which calls back into the mod file. But the problem
-	   does not seem to impact other global variable defined in the
-	   mod file.
-       With c++ files we declare routine seq in which case static variables
-       can't be used. So, introducing _celsius_ as default implementation.
-	*/
-	P("_acc_globals_update();\n");
 
 	 pr_layout_for_p(1, NRN_INIT);
 
@@ -1073,15 +1062,14 @@ void c_out_vectorize()
 	   things.
 	*/
 	/* initlists() is called once to setup slist and dlist pointers */
-	P("\nstatic void _initlists(){\n");
+	P("\nstatic void _initlists(Memb_list *_ml){\n");
 	P(" double _x; double* _p = &_x;\n");
-	P(" int _i; static int _first = 1;\n");
+	P(" int _i;\n");
 	P(" int _cntml_actual=1;\n");
 	P(" int _cntml_padded=1;\n");
 	P(" int _iml=0;\n");
-	P("  if (!_first) return;\n");
 	printlist(initlist);
-	P("_first = 0;\n}\n");
+    P(" }\n");
     P("} // namespace coreneuron_lib\n");
 }
 

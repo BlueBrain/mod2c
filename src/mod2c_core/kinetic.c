@@ -357,9 +357,9 @@ void massagekinetic(q1, q2, q3, q4, sensused) /*KINETIC NAME stmtlist '}'*/
 	  "#endif\n"
 	  , SYM(q2)->name, suffix);
 	Linsertstr(procfunc, buf);
-	Sprintf(buf, "\nstruct %s%s {\n  int operator()(SparseObj* _so, double* _rhs, _threadargsproto_) const;\n};\nint", SYM(q2)->name, suffix);
+	Sprintf(buf, "\ntemplate <coreneuron::scopmath::enabled_code code_to_enable = coreneuron::scopmath::enabled_code::all>\nstruct %s%s {\n  int operator()(SparseObj* _so, double* _rhs, _threadargsproto_) const;\n};\ntemplate <coreneuron::scopmath::enabled_code code_to_enable>\nint", SYM(q2)->name, suffix);
 	replacstr(q1, buf);
-	Sprintf(buf, "%s%s::operator()", SYM(q2)->name, suffix);
+	Sprintf(buf, "%s%s<code_to_enable>::operator()", SYM(q2)->name, suffix);
 	replacstr(q2, buf);
 #endif
 	qv = insertstr(q3, "()\n");
@@ -458,21 +458,12 @@ Sprintf(buf, "{int _reset=0;\n");
 		diag("KINETIC contains no reactions", (char *)0);
 	}
 	fun->used = count;
-	Sprintf(buf, ", _slist%d[0:%d], _dlist%d[0:%d]",
-	  numlist, count, numlist, count);
-	Lappendstr(acc_present_list, buf);
-	Sprintf(buf,
-	  "\n#define _slist%d _slist%d%s\n"
-	  "int* _slist%d;\n"    
-	  "#pragma acc declare create(_slist%d)\n"
-	  "\n#define _dlist%d _dlist%d%s\n"
-	  "int* _dlist%d;\n"   
-	  "#pragma acc declare create(_dlist%d)\n"
-	  , numlist, numlist, suffix, numlist, numlist
-	  , numlist, numlist, suffix, numlist, numlist
-	  );
 
-	Linsertstr(procfunc, buf);
+	Sprintf(buf, "_slist%d", numlist);
+	add_global_var("int", buf, 1, count, 1);
+	Sprintf(buf, "_dlist%d", numlist);
+	add_global_var("int", buf, 1, count, 1);
+
 	insertstr(q4, "  } return _reset;\n");
 	movelist(q1, q4, procfunc);
 
@@ -795,7 +786,7 @@ void kinetic_implicit(fun, dt, mname)
 		Lappendsym(done_list1, fun);
 		Sprintf(buf, "static void* _sparseobj%d;\n", fun->u.i);
 		q = linsertstr(procfunc, buf);
-		sprintf(buf, "static int _spth%d = %d;\n", fun->u.i, thread_data_index++);
+		sprintf(buf, "static constexpr int _spth%d = %d;\n", fun->u.i, thread_data_index++);
 		vectorize_substitute(q, buf);
 		sprintf(buf, "  _nrn_destroy_sparseobj_thread((SparseObj*)_thread[_spth%d]._pvoid);\n", fun->u.i);
 		lappendstr(thread_cleanup_list, buf);
@@ -969,7 +960,7 @@ Insertstr(rlst->position, "}");
 	*(_getelm(_row + 1, _col + 1))\n", fun->u.i);
 	qv = linsertstr(procfunc, buf);
 #if VECTORIZE
-	Sprintf(buf, "\n#define _MATELM%d(_row,_col) _nrn_thread_getelm((SparseObj*)_so, _row + 1, _col + 1, _iml)[_iml]\n", fun->u.i);
+	Sprintf(buf, "\nconstexpr coreneuron::scopmath::enabled_code code_to_enable{coreneuron::scopmath::enabled_code::all};\n#define _MATELM%d(_row,_col) coreneuron::scopmath::sparse::thread_getelm<code_to_enable>(static_cast<SparseObj*>(_so), _row + 1, _col + 1, _iml)[_iml]\n", fun->u.i);
 	vectorize_substitute(qv, buf);
 #endif
 	{static int first = 1; if (first) {
@@ -1221,12 +1212,6 @@ static void kinlist(fun, rlst)
 			count++;
 		}
 	}
-	Sprintf(buf,
-	  "\n _slist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  " _dlist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  , fun->u.i, count, fun->u.i, count);
-	Lappendstr(initlist, buf);
-
 	for (i=0; i < rlst->nsym; i++) {
 		s = rlst->symorder[i];
 #if CVODE
@@ -1277,12 +1262,6 @@ if (vectorize){
 }
 		s->used = 0;
 	}
-	Sprintf(buf,
-	 "#pragma acc enter data copyin(_slist%d[0:%d])\n"
-	 " #pragma acc enter data copyin(_dlist%d[0:%d])\n\n"
-	 , fun->u.i, count, fun->u.i, count);
-	Lappendstr(initlist, buf);
-
 }
 
 /* for now we only check CONSERVE and COMPARTMENT */

@@ -1023,10 +1023,10 @@ void nrnunit_dynamic_str(char* buf, const char* name, char* u1, char* u2) {
   unit_pop();
 
 #if USE_LEGACY_UNITS
-  sprintf(buf, "\ndouble %s = %g;\n", name, u);
+  sprintf(buf, "\nstatic double %s = %g;\n", name, u);
 #else
   /* compiler can't read %a format til c++17 (or c99) */
-  sprintf(buf, "\ndouble %s = /* %a; */ %.18g;\n", name, u, u);
+  sprintf(buf, "\nstatic double %s = /* %a; */ %.18g;\n", name, u, u);
 #endif
 }
 

@@ -27,7 +27,7 @@
 #endif
  namespace coreneuron {
  
-#define _thread_present_ /**/ , _thread[0:2] , _slist1[0:10], _dlist1[0:10] 
+#define _thread_present_ /**/ , _thread[0:2] 
  
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include <openacc.h>
@@ -100,10 +100,10 @@ void _net_buf_receive(NrnThread*);
 #undef _threadargs_
 #undef _threadargsproto_
  
-#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
-#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
+#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v,
+#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -178,17 +178,15 @@ void _net_buf_receive(NrnThread*);
  static int hoc_nrnpointerindex =  -1;
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
- 
-#if 0 /*BBCORE*/
+ extern double celsius;
+ #define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)
+ #if 0 /*BBCORE*/
  /* declaration of user functions */
  static double _hoc_release();
  static double _hoc_rates();
  
 #endif /*BBCORE*/
- 
-#define _mechtype _mechtype_NMDA10_2_2
-int _mechtype;
-#pragma acc declare copyin (_mechtype)
+ static int _mechtype;
  static int _pointtype;
  
 #if 0 /*BBCORE*/
@@ -224,14 +222,7 @@ int _mechtype;
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
-#define mg mg_NMDA10_2_2
- double mg = 1;
- #pragma acc declare copyin (mg)
- 
-static void _acc_globals_update() {
- #pragma acc update device (mg) if(nrn_threads->compute_gpu)
- }
-
+ static double mg = 1;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -263,36 +254,27 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double CB20 = 0;
-#pragma acc declare copyin(CB20)
  static double CB10 = 0;
-#pragma acc declare copyin(CB10)
  static double CB00 = 0;
-#pragma acc declare copyin(CB00)
  static double C20 = 0;
-#pragma acc declare copyin(C20)
  static double C10 = 0;
-#pragma acc declare copyin(C10)
  static double C00 = 0;
-#pragma acc declare copyin(C00)
  static double DB0 = 0;
-#pragma acc declare copyin(DB0)
  static double D0 = 0;
-#pragma acc declare copyin(D0)
  static double OB0 = 0;
-#pragma acc declare copyin(OB0)
  static double O0 = 0;
-#pragma acc declare copyin(O0)
  static double delta_t = 1;
-#pragma acc declare copyin(delta_t)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "mg_NMDA10_2_2", &mg_NMDA10_2_2,
+ "mg_NMDA10_2_2", &mg,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
  0,0,0
 };
  static double _sav_indep;
+ static void _create_global_variables(NrnThread*, Memb_list*, int);
+ static void _destroy_global_variables(NrnThread*, Memb_list*, int);
  static void nrn_alloc(double*, Datum*, int);
 void nrn_init(NrnThread*, Memb_list*, int);
 void nrn_state(NrnThread*, Memb_list*, int);
@@ -359,7 +341,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #endif /* BBCORE */
  
 }
- static void _initlists();
+ static void _initlists(Memb_list *_ml);
  
 #define _tqitem &(_nt->_vdata[_ppvar[2*_STRIDE]])
  
@@ -375,8 +357,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #define _ppsize 3
  void _SynNMDA10_2_2_reg() {
 	int _vectorized = 1;
-  _initlists();
- _mechtype = nrn_get_mechtype(_mechanism[1]);
+  _mechtype = nrn_get_mechtype(_mechanism[1]);
  if (_mechtype == -1) return;
  _nrn_layout_reg(_mechtype, LAYOUT);
  
@@ -384,7 +365,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  
 #endif /*BBCORE*/
  	_pointtype = point_register_mech(_mechanism,
-	 nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init,
+	 nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init, _create_global_variables, _destroy_global_variables,
 	 hoc_nrnpointerindex,
 	 NULL/*_hoc_create_pnt*/, NULL/*_hoc_destroy_pnt*/, /*_member_func,*/
 	 3);
@@ -405,6 +386,78 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  set_pnt_receive(_mechtype, _net_receive, nullptr, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
+ struct _global_variables_t : public MemoryManaged {
+   int _slist1[10];
+   int _dlist1[10];
+   double celsius;
+   double mg;
+   double CB20;
+   double CB10;
+   double CB00;
+   double C20;
+   double C10;
+   double C00;
+   double DB0;
+   double D0;
+   double OB0;
+   double O0;
+   double delta_t;
+ };
+
+ 
+static void _create_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
+   assert(!_ml->global_variables);
+   _ml->global_variables = new _global_variables_t{};
+   _ml->global_variables_size = sizeof(_global_variables_t);
+ }
+ 
+static void _destroy_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
+   delete static_cast<_global_variables_t*>(_ml->global_variables);
+   _ml->global_variables = nullptr;
+   _ml->global_variables_size = 0;
+ }
+ 
+static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
+   if(!_nt || !_ml) {
+     return;
+   }
+   auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
+   _global_variables->celsius = celsius;
+   _global_variables->mg = mg;
+   _global_variables->CB20 = CB20;
+   _global_variables->CB10 = CB10;
+   _global_variables->CB00 = CB00;
+   _global_variables->C20 = C20;
+   _global_variables->C10 = C10;
+   _global_variables->C00 = C00;
+   _global_variables->DB0 = DB0;
+   _global_variables->D0 = D0;
+   _global_variables->OB0 = OB0;
+   _global_variables->O0 = O0;
+   _global_variables->delta_t = delta_t;
+ #ifdef CORENEURON_ENABLE_GPU
+   if (_nt->compute_gpu) {
+       cnrn_target_update_on_device(_global_variables);
+   }
+ #endif
+ }
+
+ #define _slist1 static_cast<_global_variables_t*>(_ml->global_variables)->_slist1
+ #define _dlist1 static_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
+ #define celsius static_cast<_global_variables_t*>(_ml->global_variables)->celsius
+ #define mg static_cast<_global_variables_t*>(_ml->global_variables)->mg
+ #define CB20 static_cast<_global_variables_t*>(_ml->global_variables)->CB20
+ #define CB10 static_cast<_global_variables_t*>(_ml->global_variables)->CB10
+ #define CB00 static_cast<_global_variables_t*>(_ml->global_variables)->CB00
+ #define C20 static_cast<_global_variables_t*>(_ml->global_variables)->C20
+ #define C10 static_cast<_global_variables_t*>(_ml->global_variables)->C10
+ #define C00 static_cast<_global_variables_t*>(_ml->global_variables)->C00
+ #define DB0 static_cast<_global_variables_t*>(_ml->global_variables)->DB0
+ #define D0 static_cast<_global_variables_t*>(_ml->global_variables)->D0
+ #define OB0 static_cast<_global_variables_t*>(_ml->global_variables)->OB0
+ #define O0 static_cast<_global_variables_t*>(_ml->global_variables)->O0
+ #define delta_t static_cast<_global_variables_t*>(_ml->global_variables)->delta_t
+ 
 static const char *modelname = "detailed model of glutamate NMDA receptors";
 
 static int error;
@@ -414,34 +467,29 @@ static void _modl_cleanup(){ _match_recurse=1;}
 static inline int release(_threadargsprotocomma_ double);
 static inline int rates(_threadargsprotocomma_ double);
  
-#define _MATELM1(_row,_col) _nrn_thread_getelm((SparseObj*)_so, _row + 1, _col + 1, _iml)[_iml]
+constexpr coreneuron::scopmath::enabled_code code_to_enable{coreneuron::scopmath::enabled_code::all};
+#define _MATELM1(_row,_col) coreneuron::scopmath::sparse::thread_getelm<code_to_enable>(static_cast<SparseObj*>(_so), _row + 1, _col + 1, _iml)[_iml]
  
 #define _RHS1(_arg) _rhs[(_arg+1)*_STRIDE]
   
 #define _linmat1  1
- static int _spth1 = 1;
+ static constexpr int _spth1 = 1;
  static int _cvspth1 = 0;
  
 static int _ode_spec1(_threadargsproto_);
 /*static int _ode_matsol1(_threadargsproto_);*/
- 
-#define _slist1 _slist1_NMDA10_2_2
-int* _slist1;
-#pragma acc declare create(_slist1)
-
-#define _dlist1 _dlist1_NMDA10_2_2
-int* _dlist1;
-#pragma acc declare create(_dlist1)
  
 /* _kinetic_ kstates _NMDA10_2_2 */
 #ifndef INSIDE_NMODL
 #define INSIDE_NMODL
 #endif
  
+template <coreneuron::scopmath::enabled_code code_to_enable = coreneuron::scopmath::enabled_code::all>
 struct kstates_NMDA10_2_2 {
   int operator()(SparseObj* _so, double* _rhs, _threadargsproto_) const;
 };
-int kstates_NMDA10_2_2::operator() (SparseObj* _so, double* _rhs, _threadargsproto_) const
+template <coreneuron::scopmath::enabled_code code_to_enable>
+int kstates_NMDA10_2_2<code_to_enable>::operator() (SparseObj* _so, double* _rhs, _threadargsproto_) const
  {int _reset=0;
  {
    double b_flux, f_flux, _term; int _i;
@@ -594,7 +642,7 @@ for(_i=1;_i<10;_i++){
 #if NET_RECEIVE_BUFFERING 
 #undef t
 #define t _nrb_t
-static inline void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
+static inline void _net_receive_kernel(NrnThread*, double, Point_process*, int _weight_index, double _flag);
 void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
   Memb_list* _ml = _nt->_ml_list[_mechtype];
@@ -616,7 +664,7 @@ void _net_buf_receive(NrnThread* _nt) {
       int _k = _nrb->_weight_index[_i];
       double _nrt = _nrb->_nrb_t[_i];
       double _nrflag = _nrb->_nrb_flag[_i];
-      _net_receive_kernel(_nrt, _pnt + _j, _k, _nrflag);
+      _net_receive_kernel(nrn_threads, _nrt, _pnt + _j, _k, _nrflag);
     }
   }
   #pragma acc wait(stream_id)
@@ -648,7 +696,9 @@ static void _net_send_buffering(NetSendBuffer_t* _nsb, int _sendtype, int _i_vda
  int _ipnt, double _t, double _flag) {
   int _i = 0;
   #pragma acc atomic capture
-  _i = _nsb->_cnt++;
+  {
+    _i = _nsb->_cnt++;
+  }
 #if !defined(_OPENACC)
   if (_i >= _nsb->_size) {
     _nsb->grow();
@@ -677,7 +727,7 @@ void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {
   ++_nrb->_cnt;
 }
  
-static void _net_receive_kernel(double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
+static void _net_receive_kernel(NrnThread* nrn_threads, double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
 #else
  
 void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) 
@@ -691,7 +741,7 @@ void _net_receive (Point_process* _pnt, int _weight_index, double _lflag)
    _nt = nrn_threads + _tid;
    _thread = (ThreadDatum*)0; 
    double *_weights = _nt->_weights;
-   _args = _weights + _weight_index;
+   _args = _weights ? _weights + _weight_index : nullptr;
    _ml = _nt->_ml_list[_pnt->_type];
    _cntml_actual = _ml->_nodecount;
    _cntml_padded = _ml->_nodecount_padded;
@@ -952,7 +1002,6 @@ static void _thread_cleanup(ThreadDatum* _thread) {
 
 static inline void initmodel(_threadargsproto_) {
   int _i; double _save;{
-  Memb_list* _ml = _nt->_ml_list[_mechtype];
   CB2 = CB20;
   CB1 = CB10;
   CB0 = CB00;
@@ -997,18 +1046,20 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-  #pragma acc update device (_mechtype) if(_nt->compute_gpu)
+  assert(_ml->global_variables);
+  assert(_ml->global_variables_size != 0);
+  _initlists(_ml);
+  _update_global_variables(_nt, _ml);
   if (!_thread[_spth1]._pvoid) {
     _thread[_spth1]._pvoid = nrn_cons_sparseobj(kstates_NMDA10_2_2{}, 10, _ml, _threadargs_);
     #ifdef _OPENACC
     if (_nt->compute_gpu) {
-      void* _d_so = (void*) acc_deviceptr(_thread[_spth1]._pvoid);
-      ThreadDatum* _d_td = (ThreadDatum*)acc_deviceptr(_thread);
-      acc_memcpy_to_device(&(_d_td[_spth1]._pvoid), &_d_so, sizeof(void*));
+      void* _d_so = cnrn_target_deviceptr(_thread[_spth1]._pvoid);
+      ThreadDatum* _d_td = cnrn_target_deviceptr(_thread);
+      cnrn_target_memcpy_to_device(&(_d_td[_spth1]._pvoid), &_d_so);
     }
     #endif
   }
-_acc_globals_update();
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -1085,8 +1136,8 @@ double * _vec_shadow_rhs = _nt->_shadow_rhs;
 double * _vec_shadow_d = _nt->_shadow_d;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  NrnThread* d_nt = acc_deviceptr(_nt);
-  Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = cnrn_target_deviceptr(_nt);
+  Memb_list* d_ml = cnrn_target_deviceptr(_ml);
   nrn_cur_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif
@@ -1162,8 +1213,8 @@ _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  NrnThread* d_nt = acc_deviceptr(_nt);
-  Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = cnrn_target_deviceptr(_nt);
+  Memb_list* d_ml = cnrn_target_deviceptr(_ml);
   nrn_state_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif
@@ -1190,23 +1241,19 @@ for (;;) { /* help clang-format properly indent */
  v=_v;
 {
  {  
-  sparse_thread(static_cast<SparseObj*>(_thread[_spth1]._pvoid), 10, _slist1, _dlist1, &t, dt, kstates_NMDA10_2_2{}, _linmat1, _threadargs_);
+  sparse_thread(static_cast<SparseObj*>(_thread[_spth1]._pvoid), 10, _slist1, _dlist1, &t, dt, kstates_NMDA10_2_2<coreneuron::scopmath::enabled_code::compute_only>{}, _linmat1, _threadargs_);
   }}}
 
 }
 
 static void terminal(){}
 
-static void _initlists(){
+static void _initlists(Memb_list *_ml){
  double _x; double* _p = &_x;
- int _i; static int _first = 1;
+ int _i;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
-  if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*10);
- _dlist1 = (int*)malloc(sizeof(int)*10);
  _slist1[0] = &(OB) - _p;  _dlist1[0] = &(DOB) - _p;
  _slist1[1] = &(CB2) - _p;  _dlist1[1] = &(DCB2) - _p;
  _slist1[2] = &(CB1) - _p;  _dlist1[2] = &(DCB1) - _p;
@@ -1217,9 +1264,5 @@ static void _initlists(){
  _slist1[7] = &(DB) - _p;  _dlist1[7] = &(DDB) - _p;
  _slist1[8] = &(D) - _p;  _dlist1[8] = &(DD) - _p;
  _slist1[9] = &(O) - _p;  _dlist1[9] = &(DO) - _p;
- #pragma acc enter data copyin(_slist1[0:10])
- #pragma acc enter data copyin(_dlist1[0:10])
-
-_first = 0;
-}
+ }
 } // namespace coreneuron_lib

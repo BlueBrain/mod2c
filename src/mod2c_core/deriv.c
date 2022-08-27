@@ -131,11 +131,11 @@ if (deriv_imp_list) {	/* make sure deriv block translation matches method */
           "    _thread[_dith%d]._pval = makevector(2*%d*_cntml_padded*sizeof(double));\n"
 	  "    #ifdef _OPENACC\n"
 	  "    if (_nt->compute_gpu) {\n"
-	  "      void* _d_ns = (void*)acc_deviceptr(_newtonspace%d);\n"
-	  "      double* _d_pd = (double*)acc_copyin(_thread[_dith%d]._pval,2*%d*_cntml_padded* sizeof(double));\n"
-	  "      ThreadDatum* _d_td = (ThreadDatum*)acc_deviceptr(_thread);\n"
-	  "      acc_memcpy_to_device(&(_d_td[%d]._pvoid), &_d_ns, sizeof(void*));\n"
-	  "      acc_memcpy_to_device(&(_d_td[_dith%d]._pval), &_d_pd, sizeof(double*));\n"
+	  "      void* _d_ns = cnrn_target_deviceptr(_newtonspace%d);\n"
+	  "      double* _d_pd = cnrn_target_copyin(_thread[_dith%d]._pval, 2*%d*_cntml_padded);\n"
+	  "      ThreadDatum* _d_td = cnrn_target_deviceptr(_thread);\n"
+	  "      cnrn_target_memcpy_to_device(&(_d_td[%d]._pvoid), &_d_ns);\n"
+	  "      cnrn_target_memcpy_to_device(&(_d_td[_dith%d]._pval), &_d_pd);\n"
 	  "    }\n"
 	  "    #endif\n"
           "  }\n"
@@ -159,9 +159,9 @@ fun->name, listnum, maxerr_str);
 	    "    _thread[_spth%d]._pvoid = nrn_cons_sparseobj(%s%s{}, %d, _ml, _threadargs_);\n"
 	    "    #ifdef _OPENACC\n"
 	    "    if (_nt->compute_gpu) {\n"
-	    "      void* _d_so = (void*) acc_deviceptr(_thread[_spth%d]._pvoid);\n"
-	    "      ThreadDatum* _d_td = (ThreadDatum*)acc_deviceptr(_thread);\n"
-	    "      acc_memcpy_to_device(&(_d_td[_spth%d]._pvoid), &_d_so, sizeof(void*));\n"
+	    "      void* _d_so = cnrn_target_deviceptr(_thread[_spth%d]._pvoid);\n"
+	    "      ThreadDatum* _d_td = cnrn_target_deviceptr(_thread);\n"
+	    "      cnrn_target_memcpy_to_device(&(_d_td[_spth%d]._pvoid), &_d_so);\n"
 	    "    }\n"
 	    "    #endif\n"
 	    "  }\n"
@@ -183,7 +183,7 @@ dindepname, fun->name, listnum, listnum);
 	}else{ /* kinetic */
    if (vectorize) {
 Sprintf(buf,
-"\n  %s%s_thread(static_cast<SparseObj*>(_thread[_spth%d]._pvoid), %d, _slist%d, _dlist%d, &%s, %s, %s%s{}, _linmat%d, _threadargs_);\n",
+"\n  %s%s_thread(static_cast<SparseObj*>(_thread[_spth%d]._pvoid), %d, _slist%d, _dlist%d, &%s, %s, %s%s<coreneuron::scopmath::enabled_code::compute_only>{}, _linmat%d, _threadargs_);\n",
 ssprefix, method->name, listnum, numeqn, listnum, listnum, indepsym->name,
 dindepname, fun->name, suffix, listnum);
 	vectorize_substitute(qsol, buf);
@@ -510,7 +510,7 @@ void massagederiv(q1, q2, q3, q4, sensused)
 	/* all this junk is still in the intoken list */
 	Sprintf(buf, "static inline int %s(_threadargsproto_);\n", SYM(q2)->name);
 	if (deriv_implicit_really == 1) {
-	  Sprintf(buf, "struct %s%s {\n  int operator()(_threadargsproto_) const;\n};\n", SYM(q2)->name, suffix);
+	  Sprintf(buf, "\nstruct %s%s {\n  int operator()(_threadargsproto_) const;\n};\n", SYM(q2)->name, suffix);
 	}
 	Linsertstr(procfunc, buf);
 	if (deriv_implicit_really == 1) {
@@ -538,13 +538,6 @@ void massagederiv(q1, q2, q3, q4, sensused)
 			count++;
 		}
 	}
-	Sprintf(buf,
-	  "\n"
-	  " _slist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  " _dlist%d = (int*)malloc(sizeof(int)*%d);\n"
-	  , numlist, count, numlist, count
-	);
-	Lappendstr(initlist, buf);
 
 	count = 0;
 	ITERATE(qs, deriv_used_list) {
@@ -592,31 +585,15 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 		}
 	}
 
-	Sprintf(buf,
-	  "#pragma acc enter data copyin(_slist%d[0:%d])\n"
-	  " #pragma acc enter data copyin(_dlist%d[0:%d])\n\n"
-	  , numlist, count, numlist, count);
-	Lappendstr(initlist, buf);
-
 	if (count == 0) {
 		diag("DERIVATIVE contains no derivatives", (char *)0);
 	}
 	derfun->used = count;
-	Sprintf(buf, ", _slist%d[0:%d], _dlist%d[0:%d]",
-	  numlist, count, numlist, count);
-	Lappendstr(acc_present_list, buf);
-	Sprintf(buf,
 
-	  "\n#define _slist%d _slist%d%s\n"
-	  "int* _slist%d;\n"
-	  "#pragma acc declare create(_slist%d)\n"
-	  "\n#define _dlist%d _dlist%d%s\n"
-	  "int* _dlist%d;\n"
-	  "#pragma acc declare create(_dlist%d)\n"
-	  , numlist, numlist, suffix, numlist, numlist
-	  , numlist, numlist, suffix, numlist, numlist
-	  );
-		Linsertstr(procfunc, buf);
+	Sprintf(buf, "_slist%d", numlist);
+	add_global_var("int", buf, 1, count, 1);
+	Sprintf(buf, "_dlist%d", numlist);
+	add_global_var("int", buf, 1, count, 1);
 	
 #if CVODE
 	Lappendstr(procfunc, "\n/*CVODE*/\n");

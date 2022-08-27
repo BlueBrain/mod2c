@@ -97,10 +97,10 @@ void _net_buf_receive(NrnThread*);
 #undef _threadargs_
 #undef _threadargsproto_
  
-#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
-#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
+#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v,
+#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -151,15 +151,13 @@ void _net_buf_receive(NrnThread*);
  static int hoc_nrnpointerindex =  -1;
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
- 
-#if 0 /*BBCORE*/
+ extern double celsius;
+ #define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)
+ #if 0 /*BBCORE*/
  /* declaration of user functions */
  
 #endif /*BBCORE*/
- 
-#define _mechtype _mechtype_ZoidSyn
-int _mechtype;
-#pragma acc declare copyin (_mechtype)
+ static int _mechtype;
  static int _pointtype;
  
 #if 0 /*BBCORE*/
@@ -194,10 +192,6 @@ int _mechtype;
 #endif /*BBCORE*/
  /* declare global and static user variables */
  
-static void _acc_globals_update() {
- }
-
- 
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
  static HocParmLimits _hoc_parm_limits[] = {
@@ -229,6 +223,8 @@ static void _acc_globals_update() {
  0,0,0
 };
  static double _sav_indep;
+ static void _create_global_variables(NrnThread*, Memb_list*, int);
+ static void _destroy_global_variables(NrnThread*, Memb_list*, int);
  static void nrn_alloc(double*, Datum*, int);
 void nrn_init(NrnThread*, Memb_list*, int);
 void nrn_state(NrnThread*, Memb_list*, int);
@@ -273,7 +269,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #endif /* BBCORE */
  
 }
- static void _initlists();
+ static void _initlists(Memb_list *_ml);
  
 #define _tqitem &(_nt->_vdata[_ppvar[2*_STRIDE]])
  
@@ -288,8 +284,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #define _ppsize 3
  void _zoidsyn_reg() {
 	int _vectorized = 1;
-  _initlists();
- _mechtype = nrn_get_mechtype(_mechanism[1]);
+  _mechtype = nrn_get_mechtype(_mechanism[1]);
  if (_mechtype == -1) return;
  _nrn_layout_reg(_mechtype, LAYOUT);
  
@@ -297,7 +292,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  
 #endif /*BBCORE*/
  	_pointtype = point_register_mech(_mechanism,
-	 nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init,
+	 nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init, _create_global_variables, _destroy_global_variables,
 	 hoc_nrnpointerindex,
 	 NULL/*_hoc_create_pnt*/, NULL/*_hoc_destroy_pnt*/, /*_member_func,*/
 	 1);
@@ -316,6 +311,38 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  set_pnt_receive(_mechtype, _net_receive, nullptr, 1);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
+ struct _global_variables_t : public MemoryManaged {
+   double celsius;
+ };
+
+ 
+static void _create_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
+   assert(!_ml->global_variables);
+   _ml->global_variables = new _global_variables_t{};
+   _ml->global_variables_size = sizeof(_global_variables_t);
+ }
+ 
+static void _destroy_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
+   delete static_cast<_global_variables_t*>(_ml->global_variables);
+   _ml->global_variables = nullptr;
+   _ml->global_variables_size = 0;
+ }
+ 
+static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
+   if(!_nt || !_ml) {
+     return;
+   }
+   auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
+   _global_variables->celsius = celsius;
+ #ifdef CORENEURON_ENABLE_GPU
+   if (_nt->compute_gpu) {
+       cnrn_target_update_on_device(_global_variables);
+   }
+ #endif
+ }
+
+ #define celsius static_cast<_global_variables_t*>(_ml->global_variables)->celsius
+ 
 static const char *modelname = "";
 
 static int error;
@@ -326,7 +353,7 @@ static void _modl_cleanup(){ _match_recurse=1;}
 #if NET_RECEIVE_BUFFERING 
 #undef t
 #define t _nrb_t
-static inline void _net_receive_kernel(double, Point_process*, int _weight_index, double _flag);
+static inline void _net_receive_kernel(NrnThread*, double, Point_process*, int _weight_index, double _flag);
 void _net_buf_receive(NrnThread* _nt) {
   if (!_nt->_ml_list) { return; }
   Memb_list* _ml = _nt->_ml_list[_mechtype];
@@ -348,7 +375,7 @@ void _net_buf_receive(NrnThread* _nt) {
       int _k = _nrb->_weight_index[_i];
       double _nrt = _nrb->_nrb_t[_i];
       double _nrflag = _nrb->_nrb_flag[_i];
-      _net_receive_kernel(_nrt, _pnt + _j, _k, _nrflag);
+      _net_receive_kernel(nrn_threads, _nrt, _pnt + _j, _k, _nrflag);
     }
   }
   #pragma acc wait(stream_id)
@@ -380,7 +407,9 @@ static void _net_send_buffering(NetSendBuffer_t* _nsb, int _sendtype, int _i_vda
  int _ipnt, double _t, double _flag) {
   int _i = 0;
   #pragma acc atomic capture
-  _i = _nsb->_cnt++;
+  {
+    _i = _nsb->_cnt++;
+  }
 #if !defined(_OPENACC)
   if (_i >= _nsb->_size) {
     _nsb->grow();
@@ -409,7 +438,7 @@ void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) {
   ++_nrb->_cnt;
 }
  
-static void _net_receive_kernel(double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
+static void _net_receive_kernel(NrnThread* nrn_threads, double _nrb_t, Point_process* _pnt, int _weight_index, double _lflag)
 #else
  
 void _net_receive (Point_process* _pnt, int _weight_index, double _lflag) 
@@ -423,7 +452,7 @@ void _net_receive (Point_process* _pnt, int _weight_index, double _lflag)
    _nt = nrn_threads + _tid;
    _thread = (ThreadDatum*)0; 
    double *_weights = _nt->_weights;
-   _args = _weights + _weight_index;
+   _args = _weights ? _weights + _weight_index : nullptr;
    _ml = _nt->_ml_list[_pnt->_type];
    _cntml_actual = _ml->_nodecount;
    _cntml_padded = _ml->_nodecount_padded;
@@ -505,7 +534,6 @@ void _net_receive (Point_process* _pnt, int _weight_index, double _lflag)
 
 static inline void initmodel(_threadargsproto_) {
   int _i; double _save;{
-  Memb_list* _ml = _nt->_ml_list[_mechtype];
  {
    if ( trf <= 0.0 ) {
      trf = 1.0 ;
@@ -549,8 +577,10 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
-  #pragma acc update device (_mechtype) if(_nt->compute_gpu)
-_acc_globals_update();
+  assert(_ml->global_variables);
+  assert(_ml->global_variables_size != 0);
+  _initlists(_ml);
+  _update_global_variables(_nt, _ml);
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -627,8 +657,8 @@ double * _vec_shadow_rhs = _nt->_shadow_rhs;
 double * _vec_shadow_d = _nt->_shadow_d;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  NrnThread* d_nt = acc_deviceptr(_nt);
-  Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = cnrn_target_deviceptr(_nt);
+  Memb_list* d_ml = cnrn_target_deviceptr(_ml);
   nrn_cur_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif
@@ -701,13 +731,11 @@ void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type) {
 
 static void terminal(){}
 
-static void _initlists(){
+static void _initlists(Memb_list *_ml){
  double _x; double* _p = &_x;
- int _i; static int _first = 1;
+ int _i;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
-  if (!_first) return;
-_first = 0;
-}
+ }
 } // namespace coreneuron_lib

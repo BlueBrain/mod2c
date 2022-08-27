@@ -611,7 +611,7 @@ int check_tables_threads(List* p) {
 			sprintf(buf, "\nstatic void %s(_threadargsproto_);", STR(q));
 			lappendstr(p, buf);
 		}
-		lappendstr(p, "\nstatic void _check_table_thread(int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, int v) {\n");
+		lappendstr(p, "\nstatic void _check_table_thread(int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, int v) {\n");
 		ITERATE(q, check_table_thread_list) {
 			sprintf(buf, "  %s(_threadargs_);\n", STR(q));
 			lappendstr(p, buf);
@@ -730,10 +730,11 @@ diag("FUNCTION or PROCEDURE containing a TABLE stmt\n",
 		s = SYM(q);
 		if (s->subtype & ARRAY) {
 			Sprintf(buf, " for (_i=0; _i < %d; _i++) {\
-  _t_%s[_i] = makevector(%d*sizeof(double)); }\n", s->araydim, s->name, ntab+1);
+  if(!_t_%s[_i]) { _t_%s[_i] = makevector(%d*sizeof(double)); } }\n",
+				s->araydim, s->name, s->name, ntab+1);
 		}else{
-			Sprintf(buf, "  _t_%s = makevector(%d*sizeof(double));\n",
-			s->name, ntab+1);
+			Sprintf(buf, "  if (!_t_%s) { _t_%s = makevector(%d*sizeof(double)); }\n",
+				s->name, s->name, ntab+1);
 		}
 		Lappendstr(initlist, buf);
 	}
@@ -957,10 +958,10 @@ s->name, s->name, s->name, s->name);
 	ITERATE(q, table) {
 		s = SYM(q);
 		if (s->subtype & ARRAY) {
-			Sprintf(buf, "static double *_t_%s[%d];\n",
+			Sprintf(buf, "static double *_t_%s[%d] = nullptr;\n",
 			 s->name, s->araydim);
 		}else{
-			Sprintf(buf, "static double *_t_%s;\n", s->name);
+			Sprintf(buf, "static double *_t_%s = nullptr;\n", s->name);
 		}
 		Lappendstr(firstlist, buf);
 	}

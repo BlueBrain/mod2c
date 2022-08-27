@@ -27,7 +27,7 @@
 #endif
  namespace coreneuron {
  
-#define _thread_present_ /**/ , _thread[0:4] , _slist1[0:2], _dlist1[0:2] , _slist2[0:2] 
+#define _thread_present_ /**/ , _thread[0:4] 
  
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include <openacc.h>
@@ -89,10 +89,10 @@
 #undef _threadargs_
 #undef _threadargsproto_
  
-#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v,
-#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v,
-#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, v
-#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, double v
+#define _threadargscomma_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v,
+#define _threadargsprotocomma_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v,
+#define _threadargs_ _iml, _cntml_padded, _p, _ppvar, _thread, _nt, _ml, v
+#define _threadargsproto_ int _iml, int _cntml_padded, double* _p, Datum* _ppvar, ThreadDatum* _thread, NrnThread* _nt, Memb_list* _ml, double v
  	/*SUPPRESS 761*/
 	/*SUPPRESS 762*/
 	/*SUPPRESS 763*/
@@ -144,11 +144,8 @@
  static ThreadDatum* _extcall_thread;
  /* external NEURON variables */
  extern double celsius;
- #define _celsius_ _celsius__Is
-double _celsius_;
-#pragma acc declare copyin(_celsius_)
- 
-#if 0 /*BBCORE*/
+ #define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)
+ #if 0 /*BBCORE*/
  /* declaration of user functions */
  static void _hoc_alp(void);
  static void _hoc_bet(void);
@@ -187,13 +184,6 @@ static double _thread1data[4];
 #define ninf_Is _thread1data[3]
 #define ninf _thread[_gth]._pval[3]
  
-static void _acc_globals_update() {
- _celsius_ = celsius;
- #pragma acc update device(_celsius_)
- }
-
- #define celsius _celsius_
- 
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
  static HocParmLimits _hoc_parm_limits[] = {
@@ -211,23 +201,22 @@ static void _acc_globals_update() {
  
 #endif /*BBCORE*/
  static double delta_t = 0.01;
-#pragma acc declare copyin(delta_t)
  static double m0 = 0;
-#pragma acc declare copyin(m0)
  static double n0 = 0;
-#pragma acc declare copyin(n0)
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "minf_Is", &minf_Is,
- "ninf_Is", &ninf_Is,
- "mtau_Is", &mtau_Is,
- "ntau_Is", &ntau_Is,
+ "minf_Is", &minf,
+ "ninf_Is", &ninf,
+ "mtau_Is", &mtau,
+ "ntau_Is", &ntau,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
  0,0,0
 };
  static double _sav_indep;
+ static void _create_global_variables(NrnThread*, Memb_list*, int);
+ static void _destroy_global_variables(NrnThread*, Memb_list*, int);
  static void nrn_alloc(double*, Datum*, int);
 void nrn_init(NrnThread*, Memb_list*, int);
 void nrn_state(NrnThread*, Memb_list*, int);
@@ -269,7 +258,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #endif /* BBCORE */
  
 }
- static void _initlists();
+ static void _initlists(Memb_list *_ml);
  static void _thread_mem_init(ThreadDatum*);
  static void _thread_cleanup(ThreadDatum*);
  static void _update_ion_pointer(Datum*);
@@ -278,8 +267,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
 #define _ppsize 7
  void _is_reg() {
 	int _vectorized = 1;
-  _initlists();
- _mechtype = nrn_get_mechtype(_mechanism[1]);
+  _mechtype = nrn_get_mechtype(_mechanism[1]);
  if (_mechtype == -1) return;
  _nrn_layout_reg(_mechtype, LAYOUT);
  _ca_type = nrn_get_mechtype("ca_ion"); _cs_type = nrn_get_mechtype("cs_ion"); _ns_type = nrn_get_mechtype("ns_ion"); 
@@ -292,7 +280,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  	_ns_sym = hoc_lookup("ns_ion");
  
 #endif /*BBCORE*/
- 	register_mech(_mechanism, nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init, hoc_nrnpointerindex, 5);
+  register_mech(_mechanism, nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init, _create_global_variables, _destroy_global_variables, hoc_nrnpointerindex, 5);
   _extcall_thread = (ThreadDatum*)ecalloc(4, sizeof(ThreadDatum));
   _thread_mem_init(_extcall_thread);
   _thread1data_inuse = 0;
@@ -308,6 +296,53 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   hoc_register_dparam_semantics(_mechtype, 6, "ns_ion");
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
+ struct _global_variables_t : public MemoryManaged {
+   int _slist1[2];
+   int _dlist1[2];
+   int _slist2[2];
+   double celsius;
+   double delta_t;
+   double m0;
+   double n0;
+ };
+
+ 
+static void _create_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
+   assert(!_ml->global_variables);
+   _ml->global_variables = new _global_variables_t{};
+   _ml->global_variables_size = sizeof(_global_variables_t);
+ }
+ 
+static void _destroy_global_variables(NrnThread *_nt, Memb_list *_ml, int _type) {
+   delete static_cast<_global_variables_t*>(_ml->global_variables);
+   _ml->global_variables = nullptr;
+   _ml->global_variables_size = 0;
+ }
+ 
+static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
+   if(!_nt || !_ml) {
+     return;
+   }
+   auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
+   _global_variables->celsius = celsius;
+   _global_variables->delta_t = delta_t;
+   _global_variables->m0 = m0;
+   _global_variables->n0 = n0;
+ #ifdef CORENEURON_ENABLE_GPU
+   if (_nt->compute_gpu) {
+       cnrn_target_update_on_device(_global_variables);
+   }
+ #endif
+ }
+
+ #define _slist1 static_cast<_global_variables_t*>(_ml->global_variables)->_slist1
+ #define _dlist1 static_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
+ #define _slist2 static_cast<_global_variables_t*>(_ml->global_variables)->_slist2
+ #define celsius static_cast<_global_variables_t*>(_ml->global_variables)->celsius
+ #define delta_t static_cast<_global_variables_t*>(_ml->global_variables)->delta_t
+ #define m0 static_cast<_global_variables_t*>(_ml->global_variables)->m0
+ #define n0 static_cast<_global_variables_t*>(_ml->global_variables)->n0
+ 
 static const char *modelname = "Cardiac L-type Calcium channel";
 
 static int error;
@@ -331,19 +366,8 @@ static int _ode_spec1(_threadargsproto_);
 struct _newton_states_Is {
   int operator()(_threadargsproto_) const;
 };
- 
-#define _slist2 _slist2_Is
-int* _slist2;
-#pragma acc declare create(_slist2)
   
-#define _slist1 _slist1_Is
-int* _slist1;
-#pragma acc declare create(_slist1)
-
-#define _dlist1 _dlist1_Is
-int* _dlist1;
-#pragma acc declare create(_dlist1)
- struct states_Is {
+struct states_Is {
   int operator()(_threadargsproto_) const;
 };
  
@@ -511,6 +535,10 @@ double _v, v; int* _ni; int _iml, _cntml_padded, _cntml_actual;
 _cntml_actual = _ml->_nodecount;
 _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
+  assert(_ml->global_variables);
+  assert(_ml->global_variables_size != 0);
+  _initlists(_ml);
+  _update_global_variables(_nt, _ml);
   _deriv1_advance = 0;
   #ifdef _OPENACC
   #pragma acc update device (_deriv1_advance) if (_nt->compute_gpu)
@@ -520,15 +548,14 @@ _thread = _ml->_thread;
     _thread[_dith1]._pval = makevector(2*2*_cntml_padded*sizeof(double));
     #ifdef _OPENACC
     if (_nt->compute_gpu) {
-      void* _d_ns = (void*)acc_deviceptr(_newtonspace1);
-      double* _d_pd = (double*)acc_copyin(_thread[_dith1]._pval,2*2*_cntml_padded* sizeof(double));
-      ThreadDatum* _d_td = (ThreadDatum*)acc_deviceptr(_thread);
-      acc_memcpy_to_device(&(_d_td[2]._pvoid), &_d_ns, sizeof(void*));
-      acc_memcpy_to_device(&(_d_td[_dith1]._pval), &_d_pd, sizeof(double*));
+      void* _d_ns = cnrn_target_deviceptr(_newtonspace1);
+      double* _d_pd = cnrn_target_copyin(_thread[_dith1]._pval, 2*2*_cntml_padded);
+      ThreadDatum* _d_td = cnrn_target_deviceptr(_thread);
+      cnrn_target_memcpy_to_device(&(_d_td[2]._pvoid), &_d_ns);
+      cnrn_target_memcpy_to_device(&(_d_td[_dith1]._pval), &_d_pd);
     }
     #endif
   }
-_acc_globals_update();
 double * _nt_data = _nt->_data;
 double * _vec_v = _nt->_actual_v;
 int stream_id = _nt->stream_id;
@@ -593,8 +620,8 @@ double * _vec_rhs = _nt->_actual_rhs;
 double * _vec_d = _nt->_actual_d;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  NrnThread* d_nt = acc_deviceptr(_nt);
-  Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = cnrn_target_deviceptr(_nt);
+  Memb_list* d_ml = cnrn_target_deviceptr(_ml);
   nrn_cur_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif
@@ -652,8 +679,8 @@ _cntml_padded = _ml->_nodecount_padded;
 _thread = _ml->_thread;
 
 #if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  NrnThread* d_nt = acc_deviceptr(_nt);
-  Memb_list* d_ml = acc_deviceptr(_ml);
+  NrnThread* d_nt = cnrn_target_deviceptr(_nt);
+  Memb_list* d_ml = cnrn_target_deviceptr(_ml);
   nrn_state_launcher(d_nt, d_ml, _type, _cntml_actual);
   return;
 #endif
@@ -688,26 +715,15 @@ for (;;) { /* help clang-format properly indent */
 
 static void terminal(){}
 
-static void _initlists(){
+static void _initlists(Memb_list *_ml){
  double _x; double* _p = &_x;
- int _i; static int _first = 1;
+ int _i;
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
-  if (!_first) return;
- 
- _slist1 = (int*)malloc(sizeof(int)*2);
- _dlist1 = (int*)malloc(sizeof(int)*2);
  _slist1[0] = &(m) - _p;  _dlist1[0] = &(Dm) - _p;
  _slist1[1] = &(n) - _p;  _dlist1[1] = &(Dn) - _p;
- #pragma acc enter data copyin(_slist1[0:2])
- #pragma acc enter data copyin(_dlist1[0:2])
-
- _slist2 = (int*)malloc(sizeof(int)*2);
  _slist2[0] = &(m) - _p;
  _slist2[1] = &(n) - _p;
- #pragma acc enter data copyin(_slist2[0:2])
-
-_first = 0;
-}
+ }
 } // namespace coreneuron_lib
