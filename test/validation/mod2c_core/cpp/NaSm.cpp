@@ -102,14 +102,14 @@
 #define t _nt->_t
 #define dt _nt->_dt
 #define gnasmbar _p[0*_STRIDE]
-#define minf _p[1*_STRIDE]
-#define mtau _p[2*_STRIDE]
-#define gnasm _p[3*_STRIDE]
-#define m _p[4*_STRIDE]
-#define Dm _p[5*_STRIDE]
-#define ina _p[6*_STRIDE]
-#define _v_unused _p[7*_STRIDE]
-#define _g_unused _p[8*_STRIDE]
+#define mtau (_p + 1*_STRIDE*2)
+#define minf _p[3*_STRIDE]
+#define gnasm (_p + 4*_STRIDE*1)
+#define m _p[5*_STRIDE]
+#define Dm _p[6*_STRIDE]
+#define ina _p[7*_STRIDE]
+#define _v_unused _p[8*_STRIDE]
+#define _g_unused _p[9*_STRIDE]
  
 #ifndef NRN_PRCELLSTATE
 #define NRN_PRCELLSTATE 0
@@ -203,9 +203,9 @@ void nrn_state(NrnThread*, Memb_list*, int);
 "NaSm",
  "gnasmbar_NaSm",
  0,
+ "mtau_NaSm[2]",
  "minf_NaSm",
- "mtau_NaSm",
- "gnasm_NaSm",
+ "gnasm_NaSm[1]",
  0,
  "m_NaSm",
  0,
@@ -227,7 +227,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  static void _initlists(Memb_list *_ml);
  static void _update_ion_pointer(Datum*);
  
-#define _psize 9
+#define _psize 10
 #define _ppsize 2
  void _NaSm_reg() {
 	int _vectorized = 1;
@@ -324,19 +324,19 @@ static int _ode_spec1(_threadargsproto_);
 /*CVODE*/
  static int _ode_spec1 (_threadargsproto_) {int _reset = 0; {
    rates ( _threadargscomma_ v ) ;
-   Dm = ( minf - m ) / mtau ;
+   Dm = ( minf - m ) / mtau [ 1 ] ;
    }
  return _reset;
 }
  static int _ode_matsol1 (_threadargsproto_) {
  rates ( _threadargscomma_ v ) ;
- Dm = Dm  / (1. - dt*( ( ( ( - 1.0 ) ) ) / mtau )) ;
+ Dm = Dm  / (1. - dt*( ( ( ( - 1.0 ) ) ) / mtau[1] )) ;
  return 0;
 }
  /*END CVODE*/
  static int states (_threadargsproto_) { {
    rates ( _threadargscomma_ v ) ;
-    m = m + (1. - exp(dt*(( ( ( - 1.0 ) ) ) / mtau)))*(- ( ( ( minf ) ) / mtau ) / ( ( ( ( - 1.0) ) ) / mtau ) - m) ;
+    m = m + (1. - exp(dt*(( ( ( - 1.0 ) ) ) / mtau[1])))*(- ( ( ( minf ) ) / mtau[1] ) / ( ( ( ( - 1.0) ) ) / mtau[1] ) - m) ;
    }
   return 0;
 }
@@ -346,7 +346,7 @@ static int  rates ( _threadargsprotocomma_ double _lv ) {
  _lq10 = 2.5 ;
    _ltadj = pow( _lq10 , ( ( celsius - Etemp ) / 10.0 ) ) ;
    minf = 1.0 / ( 1.0 + exp ( - ( _lv - Vsm ) / ksm ) ) ;
-   mtau = tom / ( exp ( - ( _lv - Vtm ) / ktm ) + exp ( ( _lv - Vtm ) / ktm ) ) / _ltadj ;
+   mtau [ 1 ] = tom / ( exp ( - ( _lv - Vtm ) / ktm ) + exp ( ( _lv - Vtm ) / ktm ) ) / _ltadj ;
     return 0; }
  
 #if 0 /*BBCORE*/
@@ -416,8 +416,8 @@ for (;;) { /* help clang-format properly indent */
 }
 
 static double _nrn_current(_threadargsproto_, double _v){double _current=0.;v=_v;{ {
-   gnasm = gnasmbar * m ;
-   ina = gnasm * ( v - ena ) ;
+   gnasm [ 0 ] = gnasmbar * m ;
+   ina = gnasm [ 0 ] * ( v - ena ) ;
    }
  _current += ina;
 
