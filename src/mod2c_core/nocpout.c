@@ -1908,7 +1908,7 @@ static void defs_h(s)
 	Item *q;
 	
 	if (s->subtype & ARRAY) {
-		Sprintf(buf, "#define %s (_p + %d*_STRIDE)\n", s->name, parraycount);
+		Sprintf(buf, "#define %s (_p + %d*_STRIDE*%d)\n", s->name, parraycount, s->araydim);
 		q = lappendstr(defs_list, buf);
 	} else {
 		Sprintf(buf, "#define %s _p[%d*_STRIDE]\n", s->name, parraycount);

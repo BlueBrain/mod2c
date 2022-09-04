@@ -43,15 +43,15 @@ ASSIGNED {
 	v  (mV)
         ina (mA/cm2)
 	celsius		(degC)
+	mtau[2]
  	minf
-	mtau
-	gnasm
+	gnasm[1]
 }
  
 BREAKPOINT {
         SOLVE states METHOD cnexp
-        gnasm = gnasmbar*m
-        ina = gnasm*(v - ena)
+        gnasm[0] = gnasmbar*m
+        ina = gnasm[0]*(v - ena)
   
 }
  
@@ -66,7 +66,7 @@ INITIAL {
 DERIVATIVE states {  :Computes states variable m at the current v and dt.
         rates(v)      
        
-	m' = ( minf - m ) / mtau
+	m' = ( minf - m ) / mtau[1]
 }
  
 PROCEDURE rates(v) {  :Computes rate and other constants at current v. Call once from HOC to initialize inf at resting v.
@@ -74,7 +74,7 @@ PROCEDURE rates(v) {  :Computes rate and other constants at current v. Call once
         q10 = 2.5
 	tadj=q10^((celsius-Etemp)/10)
         minf=1/(1+exp(-(v-Vsm)/ksm))
-	mtau=tom/(exp(-(v-Vtm)/ktm)+exp((v-Vtm)/ktm))/tadj
+	mtau[1]=tom/(exp(-(v-Vtm)/ktm)+exp((v-Vtm)/ktm))/tadj
       
 }
  
