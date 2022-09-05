@@ -958,7 +958,7 @@ s->name, s->name, s->name, s->name);
 	ITERATE(q, table) {
 		s = SYM(q);
 		if (s->subtype & ARRAY) {
-			Sprintf(buf, "static double *_t_%s[%d] = nullptr;\n",
+			Sprintf(buf, "static double *_t_%s[%d] = {nullptr};\n",
 			 s->name, s->araydim);
 		}else{
 			Sprintf(buf, "static double *_t_%s = nullptr;\n", s->name);
