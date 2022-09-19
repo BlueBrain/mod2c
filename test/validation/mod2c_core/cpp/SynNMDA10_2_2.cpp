@@ -222,7 +222,7 @@ void _net_buf_receive(NrnThread*);
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
- static double mg = 1;
+ static double mg_NMDA10_2_2 = 1;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -266,7 +266,7 @@ void _net_buf_receive(NrnThread*);
  static double delta_t = 1;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "mg_NMDA10_2_2", &mg,
+ "mg_NMDA10_2_2", &mg_NMDA10_2_2,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -423,7 +423,7 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->celsius = celsius;
-   _global_variables->mg = mg;
+   _global_variables->mg = mg_NMDA10_2_2;
    _global_variables->CB20 = CB20;
    _global_variables->CB10 = CB10;
    _global_variables->CB00 = CB00;

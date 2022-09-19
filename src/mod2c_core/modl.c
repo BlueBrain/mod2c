@@ -86,6 +86,7 @@ int global_variables_capacity = 0;
 // add new global variable that needs to be printed
 void add_global_var(const char* type,
         const char* name,
+        int is_nrnglobal,
         int is_array,
         int array_length,
         int skip_initialisation) {
@@ -107,6 +108,7 @@ void add_global_var(const char* type,
     int i = global_variables_count;
     strncpy(global_variables[i].type, type, NRN_VARTYPE_BUFSIZE);
     strncpy(global_variables[i].name, name, NRN_BUFSIZE);
+    global_variables[i].is_nrnglobal = is_nrnglobal;
     global_variables[i].is_array = is_array;
     global_variables[i].array_length = array_length;
     global_variables[i].skip_initialisation = skip_initialisation;

@@ -460,9 +460,9 @@ Sprintf(buf, "{int _reset=0;\n");
 	fun->used = count;
 
 	Sprintf(buf, "_slist%d", numlist);
-	add_global_var("int", buf, 1, count, 1);
+	add_global_var("int", buf, 0, 1, count, 1);
 	Sprintf(buf, "_dlist%d", numlist);
-	add_global_var("int", buf, 1, count, 1);
+	add_global_var("int", buf, 0, 1, count, 1);
 
 	insertstr(q4, "  } return _reset;\n");
 	movelist(q1, q4, procfunc);

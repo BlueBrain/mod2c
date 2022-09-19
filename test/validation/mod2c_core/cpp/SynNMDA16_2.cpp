@@ -231,26 +231,26 @@ void _net_buf_receive(NrnThread*);
  static int _thread1data_inuse = 0;
 static double _thread1data[6];
 #define _gth 2
- static double Kcs0 = 0.27;
- static double Kna = 34.4;
- static double Kcs = 0;
- static double Mg = 1;
- static double V0 = -100;
- static double Vdep = 175;
- static double a = -21;
- static double b = -55;
- static double c = 52.7;
- static double d = -50;
- static double gmax = 50;
- static double kNi0 = 0.0618;
- static double kNo0 = 110;
- static double kP0 = 1100;
- static double kfB0 = 0.175;
- static double kfF0 = 2.836;
- static double ksB0 = 0.23;
- static double ksF0 = 0.048;
- static double koff = 0.0381;
- static double kon = 2.83;
+ static double Kcs0_NMDA16_2 = 0.27;
+ static double Kna_NMDA16_2 = 34.4;
+ static double Kcs_NMDA16_2 = 0;
+ static double Mg_NMDA16_2 = 1;
+ static double V0_NMDA16_2 = -100;
+ static double Vdep_NMDA16_2 = 175;
+ static double a_NMDA16_2 = -21;
+ static double b_NMDA16_2 = -55;
+ static double c_NMDA16_2 = 52.7;
+ static double d_NMDA16_2 = -50;
+ static double gmax_NMDA16_2 = 50;
+ static double kNi0_NMDA16_2 = 0.0618;
+ static double kNo0_NMDA16_2 = 110;
+ static double kP0_NMDA16_2 = 1100;
+ static double kfB0_NMDA16_2 = 0.175;
+ static double kfF0_NMDA16_2 = 2.836;
+ static double ksB0_NMDA16_2 = 0.23;
+ static double ksF0_NMDA16_2 = 0.048;
+ static double koff_NMDA16_2 = 0.0381;
+ static double kon_NMDA16_2 = 2.83;
 #define kfB_NMDA16_2 _thread1data[0]
 #define kfB _thread[_gth]._pval[0]
 #define kfF_NMDA16_2 _thread1data[1]
@@ -263,9 +263,9 @@ static double _thread1data[6];
 #define kMgB _thread[_gth]._pval[4]
 #define kMgF_NMDA16_2 _thread1data[5]
 #define kMgF _thread[_gth]._pval[5]
- static double kNi = 0;
- static double kNo = 0;
- static double kP = 0;
+ static double kNi_NMDA16_2 = 0;
+ static double kNo_NMDA16_2 = 0;
+ static double kP_NMDA16_2 = 0;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -338,35 +338,35 @@ static double _thread1data[6];
  static double delta_t = 1;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "gmax_NMDA16_2", &gmax,
- "Mg_NMDA16_2", &Mg,
- "kon_NMDA16_2", &kon,
- "koff_NMDA16_2", &koff,
- "ksF0_NMDA16_2", &ksF0,
- "ksB0_NMDA16_2", &ksB0,
- "kfF0_NMDA16_2", &kfF0,
- "kfB0_NMDA16_2", &kfB0,
- "Vdep_NMDA16_2", &Vdep,
- "V0_NMDA16_2", &V0,
- "Kna_NMDA16_2", &Kna,
- "Kcs0_NMDA16_2", &Kcs0,
- "a_NMDA16_2", &a,
- "kP0_NMDA16_2", &kP0,
- "b_NMDA16_2", &b,
- "kNo0_NMDA16_2", &kNo0,
- "c_NMDA16_2", &c,
- "kNi0_NMDA16_2", &kNi0,
- "d_NMDA16_2", &d,
- "ksF_NMDA16_2", &ksF,
- "ksB_NMDA16_2", &ksB,
- "kfF_NMDA16_2", &kfF,
- "kfB_NMDA16_2", &kfB,
- "kMgF_NMDA16_2", &kMgF,
- "kMgB_NMDA16_2", &kMgB,
- "Kcs_NMDA16_2", &Kcs,
- "kP_NMDA16_2", &kP,
- "kNo_NMDA16_2", &kNo,
- "kNi_NMDA16_2", &kNi,
+ "gmax_NMDA16_2", &gmax_NMDA16_2,
+ "Mg_NMDA16_2", &Mg_NMDA16_2,
+ "kon_NMDA16_2", &kon_NMDA16_2,
+ "koff_NMDA16_2", &koff_NMDA16_2,
+ "ksF0_NMDA16_2", &ksF0_NMDA16_2,
+ "ksB0_NMDA16_2", &ksB0_NMDA16_2,
+ "kfF0_NMDA16_2", &kfF0_NMDA16_2,
+ "kfB0_NMDA16_2", &kfB0_NMDA16_2,
+ "Vdep_NMDA16_2", &Vdep_NMDA16_2,
+ "V0_NMDA16_2", &V0_NMDA16_2,
+ "Kna_NMDA16_2", &Kna_NMDA16_2,
+ "Kcs0_NMDA16_2", &Kcs0_NMDA16_2,
+ "a_NMDA16_2", &a_NMDA16_2,
+ "kP0_NMDA16_2", &kP0_NMDA16_2,
+ "b_NMDA16_2", &b_NMDA16_2,
+ "kNo0_NMDA16_2", &kNo0_NMDA16_2,
+ "c_NMDA16_2", &c_NMDA16_2,
+ "kNi0_NMDA16_2", &kNi0_NMDA16_2,
+ "d_NMDA16_2", &d_NMDA16_2,
+ "ksF_NMDA16_2", &ksF_NMDA16_2,
+ "ksB_NMDA16_2", &ksB_NMDA16_2,
+ "kfF_NMDA16_2", &kfF_NMDA16_2,
+ "kfB_NMDA16_2", &kfB_NMDA16_2,
+ "kMgF_NMDA16_2", &kMgF_NMDA16_2,
+ "kMgB_NMDA16_2", &kMgB_NMDA16_2,
+ "Kcs_NMDA16_2", &Kcs_NMDA16_2,
+ "kP_NMDA16_2", &kP_NMDA16_2,
+ "kNo_NMDA16_2", &kNo_NMDA16_2,
+ "kNi_NMDA16_2", &kNi_NMDA16_2,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -562,29 +562,29 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->celsius = celsius;
-   _global_variables->Kcs0 = Kcs0;
-   _global_variables->Kna = Kna;
-   _global_variables->Kcs = Kcs;
-   _global_variables->Mg = Mg;
-   _global_variables->V0 = V0;
-   _global_variables->Vdep = Vdep;
-   _global_variables->a = a;
-   _global_variables->b = b;
-   _global_variables->c = c;
-   _global_variables->d = d;
-   _global_variables->gmax = gmax;
-   _global_variables->kNi0 = kNi0;
-   _global_variables->kNo0 = kNo0;
-   _global_variables->kP0 = kP0;
-   _global_variables->kfB0 = kfB0;
-   _global_variables->kfF0 = kfF0;
-   _global_variables->ksB0 = ksB0;
-   _global_variables->ksF0 = ksF0;
-   _global_variables->koff = koff;
-   _global_variables->kon = kon;
-   _global_variables->kNi = kNi;
-   _global_variables->kNo = kNo;
-   _global_variables->kP = kP;
+   _global_variables->Kcs0 = Kcs0_NMDA16_2;
+   _global_variables->Kna = Kna_NMDA16_2;
+   _global_variables->Kcs = Kcs_NMDA16_2;
+   _global_variables->Mg = Mg_NMDA16_2;
+   _global_variables->V0 = V0_NMDA16_2;
+   _global_variables->Vdep = Vdep_NMDA16_2;
+   _global_variables->a = a_NMDA16_2;
+   _global_variables->b = b_NMDA16_2;
+   _global_variables->c = c_NMDA16_2;
+   _global_variables->d = d_NMDA16_2;
+   _global_variables->gmax = gmax_NMDA16_2;
+   _global_variables->kNi0 = kNi0_NMDA16_2;
+   _global_variables->kNo0 = kNo0_NMDA16_2;
+   _global_variables->kP0 = kP0_NMDA16_2;
+   _global_variables->kfB0 = kfB0_NMDA16_2;
+   _global_variables->kfF0 = kfF0_NMDA16_2;
+   _global_variables->ksB0 = ksB0_NMDA16_2;
+   _global_variables->ksF0 = ksF0_NMDA16_2;
+   _global_variables->koff = koff_NMDA16_2;
+   _global_variables->kon = kon_NMDA16_2;
+   _global_variables->kNi = kNi_NMDA16_2;
+   _global_variables->kNo = kNo_NMDA16_2;
+   _global_variables->kP = kP_NMDA16_2;
    _global_variables->OMg0 = OMg0;
    _global_variables->O0 = O0;
    _global_variables->RA2sMg0 = RA2sMg0;

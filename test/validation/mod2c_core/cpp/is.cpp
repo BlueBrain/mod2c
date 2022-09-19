@@ -205,10 +205,10 @@ static double _thread1data[4];
  static double n0 = 0;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "minf_Is", &minf,
- "ninf_Is", &ninf,
- "mtau_Is", &mtau,
- "ntau_Is", &ntau,
+ "minf_Is", &minf_Is,
+ "ninf_Is", &ninf_Is,
+ "mtau_Is", &mtau_Is,
+ "ntau_Is", &ntau_Is,
  0,0
 };
  static DoubVec hoc_vdoub[] = {

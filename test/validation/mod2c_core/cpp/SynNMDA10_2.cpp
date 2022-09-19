@@ -217,13 +217,13 @@ void _net_buf_receive(NrnThread*);
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
- static double Rc = 0.0916;
- static double Ro = 0.0465;
- static double Rr = 0.0018;
- static double Rd = 0.0084;
- static double Ru = 0.0055;
- static double Rb = 5;
- static double mg = 1;
+ static double Rc_NMDA10_2 = 0.0916;
+ static double Ro_NMDA10_2 = 0.0465;
+ static double Rr_NMDA10_2 = 0.0018;
+ static double Rd_NMDA10_2 = 0.0084;
+ static double Ru_NMDA10_2 = 0.0055;
+ static double Rb_NMDA10_2 = 5;
+ static double mg_NMDA10_2 = 1;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -268,13 +268,13 @@ void _net_buf_receive(NrnThread*);
  static double delta_t = 1;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "mg_NMDA10_2", &mg,
- "Rb_NMDA10_2", &Rb,
- "Ru_NMDA10_2", &Ru,
- "Rd_NMDA10_2", &Rd,
- "Rr_NMDA10_2", &Rr,
- "Ro_NMDA10_2", &Ro,
- "Rc_NMDA10_2", &Rc,
+ "mg_NMDA10_2", &mg_NMDA10_2,
+ "Rb_NMDA10_2", &Rb_NMDA10_2,
+ "Ru_NMDA10_2", &Ru_NMDA10_2,
+ "Rd_NMDA10_2", &Rd_NMDA10_2,
+ "Rr_NMDA10_2", &Rr_NMDA10_2,
+ "Ro_NMDA10_2", &Ro_NMDA10_2,
+ "Rc_NMDA10_2", &Rc_NMDA10_2,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -413,13 +413,13 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->celsius = celsius;
-   _global_variables->Rc = Rc;
-   _global_variables->Ro = Ro;
-   _global_variables->Rr = Rr;
-   _global_variables->Rd = Rd;
-   _global_variables->Ru = Ru;
-   _global_variables->Rb = Rb;
-   _global_variables->mg = mg;
+   _global_variables->Rc = Rc_NMDA10_2;
+   _global_variables->Ro = Ro_NMDA10_2;
+   _global_variables->Rr = Rr_NMDA10_2;
+   _global_variables->Rd = Rd_NMDA10_2;
+   _global_variables->Ru = Ru_NMDA10_2;
+   _global_variables->Rb = Rb_NMDA10_2;
+   _global_variables->mg = mg_NMDA10_2;
    _global_variables->CB20 = CB20;
    _global_variables->CB10 = CB10;
    _global_variables->CB00 = CB00;

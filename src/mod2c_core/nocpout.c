@@ -562,13 +562,13 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 			// following are remaining two global variables used as extern from
 			// coreneuron side and hence add them to global variable list.
 			if (strcmp(s->name, "secondorder") || strcmp(s->name, "pi"))  {
-				add_global_var("double", s->name, 0, 0, 0);
+				add_global_var("double", s->name, 0, 0, 0, 0);
             }
         }
     }
 	if (add_celsius) {
 		Lappendstr(defs_list, "extern double celsius;\n");
-		add_global_var("double", "celsius", 0, 0, 0);
+		add_global_var("double", "celsius", 0, 0, 0, 0);
 	}
 	if (redefine_nrn_ghk) {
 		Lappendstr(defs_list, "#define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)\n");
@@ -777,11 +777,11 @@ s->name, suffix, gind, s->name, gind);
 		    }
 			decode_ustr(s, &d1, &d2, buf);
 			if (s->subtype & ARRAY) {
-				Sprintf(buf, "static double %s[%d];\n", s->name, s->araydim);
-				add_global_var("double", s->name, 1, s->araydim, 0);
+				Sprintf(buf, "static double %s%s[%d];\n", s->name, suffix, s->araydim);
+				add_global_var("double", s->name, 1, 1, s->araydim, 0);
 			}else{
-				Sprintf(buf, "static double %s = %g;\n", s->name, d1);
-				add_global_var("double", s->name, 0, 0, 0);
+				Sprintf(buf, "static double %s%s = %g;\n", s->name, suffix, d1);
+				add_global_var("double", s->name, 1, 0, 0, 0);
 			}
 			Lappendstr(defs_list, buf);
 		}
@@ -826,11 +826,11 @@ diag("No statics allowed for thread safe models:", s->name);
 			if (s->subtype & ARRAY) {
 				Sprintf(buf, "static double %s[%d];\n",
                              s->name, s->araydim);
-				add_global_var("double", s->name, 1, s->araydim, 0);
+				add_global_var("double", s->name, 0, 1, s->araydim, 0);
 			}else{
 				Sprintf(buf, "static double %s = %g;\n",
                              s->name, d1);
-				add_global_var("double", s->name, 0, 0, 0);
+				add_global_var("double", s->name, 0, 0, 0, 0);
 			}
 			Lappendstr(defs_list, buf);
 		}
@@ -841,7 +841,7 @@ diag("No statics allowed for thread safe models:", s->name);
  	ITERATE(q, syminorder) {
 		s = SYM(q);
 		if (s->nrntype & NRNGLOBAL && !(s->subtype & ARRAY)) {
-			Sprintf(buf, "\"%s%s\", &%s,\n", s->name, suffix, s->name);
+			Sprintf(buf, "\"%s%s\", &%s%s,\n", s->name, suffix, s->name, suffix);
 			Lappendstr(defs_list, buf);
 		}
 	}
@@ -1099,21 +1099,31 @@ static const char *_mechanism[] = {\n\
             continue;
         }
 
+        // variable of type NRNGLOBAL needs to have a suffix
+        // of mod file as they are registered at interpreter
+        // level.
+        const char* var_suffix = "";
+        if (global_variables[i].is_nrnglobal) {
+            var_suffix = suffix;
+        }
+
         if(global_variables[i].is_array) {
             // if there is an array, initialize all elements
             for(int j=0; j<global_variables[i].array_length; j++) {
-                Sprintf(buf, "  _global_variables->%s[%d] = %s[%d];\n",
+                Sprintf(buf, "  _global_variables->%s[%d] = %s%s[%d];\n",
                         global_variables[i].name,
                         j,
                         global_variables[i].name,
+                        var_suffix,
                         j);
                 Lappendstr(globals_update_list, buf);
             }
         } else {
             // scalar variable
-            Sprintf(buf, "  _global_variables->%s = %s;\n",
+            Sprintf(buf, "  _global_variables->%s = %s%s;\n",
                     global_variables[i].name,
-                    global_variables[i].name);
+                    global_variables[i].name,
+                    var_suffix);
             Lappendstr(globals_update_list, buf);
         }
     }

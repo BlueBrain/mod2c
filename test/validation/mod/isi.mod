@@ -13,7 +13,7 @@ NEURON {
 	USEION na READ nao, nai WRITE ina
 	
 	RANGE P, ica, ik, ina, isi
-	GLOBAL minf, mtau, hinf, htau	
+	RANGE minf, mtau, hinf, htau
 }
 
 PARAMETER {

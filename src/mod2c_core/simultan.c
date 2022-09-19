@@ -190,7 +190,7 @@ Sprintf(buf, "if(_counte != %d) printf( \"Number of equations, %%d,\
 	}
 	freeqnqueue();
 	Sprintf(buf, "_slist%d", numlist);
-	add_global_var("int", buf, 1, counts*(1 + sens_parm), 1);
+	add_global_var("int", buf, 0, 1, counts*(1 + sens_parm), 1);
 	return counts;
 }
 
@@ -394,7 +394,7 @@ Sprintf(buf, "if(_counte != %d) printf( \"Number of equations, %%d,\
 	Linsertstr(procfunc, buf);
 
 	Sprintf(buf, "_slist%d", numlist);
-	add_global_var("int", buf, 1, nstate*(1 + sens_parm), 1);
+	add_global_var("int", buf, 0, 1, nstate*(1 + sens_parm), 1);
 
 	Sprintf(buf, "\n#define _RHS%d(arg) _coef%d[arg][%d]\n",
 		numlist, numlist, nstate);

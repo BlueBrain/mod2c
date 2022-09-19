@@ -1,4 +1,8 @@
 /* Created by Language version: 6.2.0 */
+
+#undef DISABLE_OPENACC
+#define DISABLE_OPENACC
+
 /* VECTORIZED */
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +31,7 @@
 #endif
  namespace coreneuron {
  
-#define _thread_present_ /**/ 
+#define _thread_present_ /**/ , _thread[0:1] 
  
 #if defined(_OPENACC) && !defined(DISABLE_OPENACC)
 #include <openacc.h>
@@ -70,19 +74,18 @@
 #define _STRIDE _cntml_padded + _iml
 #endif
  
-#define nrn_init _nrn_init__napIn
-#define nrn_cur _nrn_cur__napIn
-#define _nrn_current _nrn_current__napIn
-#define nrn_jacob _nrn_jacob__napIn
-#define nrn_state _nrn_state__napIn
-#define initmodel initmodel__napIn
-#define _net_receive _net_receive__napIn
-#define _net_init _net_init__napIn
-#define nrn_state_launcher nrn_state_napIn_launcher
-#define nrn_cur_launcher nrn_cur_napIn_launcher
-#define nrn_jacob_launcher nrn_jacob_napIn_launcher 
-#define states states_napIn 
-#define trates trates_napIn 
+#define nrn_init _nrn_init__VecStim
+#define nrn_cur _nrn_cur__VecStim
+#define _nrn_current _nrn_current__VecStim
+#define nrn_jacob _nrn_jacob__VecStim
+#define nrn_state _nrn_state__VecStim
+#define initmodel initmodel__VecStim
+#define _net_receive _net_receive__VecStim
+#define _net_init _net_init__VecStim
+#define nrn_state_launcher nrn_state_VecStim_launcher
+#define nrn_cur_launcher nrn_cur_VecStim_launcher
+#define nrn_jacob_launcher nrn_jacob_VecStim_launcher 
+#define position position_VecStim 
  
 #undef _threadargscomma_
 #undef _threadargsprotocomma_
@@ -101,34 +104,19 @@
  
 #define t _nt->_t
 #define dt _nt->_dt
-#define gbar _p[0*_STRIDE]
-#define htau _p[1*_STRIDE]
-#define thegna _p[2*_STRIDE]
-#define minf _p[3*_STRIDE]
-#define hinf _p[4*_STRIDE]
-#define mtau _p[5*_STRIDE]
-#define m _p[6*_STRIDE]
-#define h _p[7*_STRIDE]
-#define ena _p[8*_STRIDE]
-#define ina _p[9*_STRIDE]
-#define Dm _p[10*_STRIDE]
-#define Dh _p[11*_STRIDE]
-#define _v_unused _p[12*_STRIDE]
-#define _g_unused _p[13*_STRIDE]
+#define _v_unused _p[0*_STRIDE]
  
 #ifndef NRN_PRCELLSTATE
 #define NRN_PRCELLSTATE 0
 #endif
 #if NRN_PRCELLSTATE
 #define _PRCELLSTATE_V _v_unused = _v;
-#define _PRCELLSTATE_G _g_unused = _g;
+#define _PRCELLSTATE_G /**/
 #else
 #define _PRCELLSTATE_V /**/
 #define _PRCELLSTATE_G /**/
 #endif
-#define _ion_ena		_nt_data[_ppvar[0*_STRIDE]]
-#define _ion_ina	_nt_data[_ppvar[1*_STRIDE]]
-#define _ion_dinadv	_nt_data[_ppvar[2*_STRIDE]]
+#define _nd_area  _nt_data[_ppvar[0*_STRIDE]]
  
 #if MAC
 #if !defined(v)
@@ -145,22 +133,49 @@
  #define nrn_ghk(v, ci, co, z) nrn_ghk(v, ci, co, z, celsius)
  #if 0 /*BBCORE*/
  /* declaration of user functions */
- static void _hoc_trates(void);
+ static double _hoc_position();
  
 #endif /*BBCORE*/
  static int _mechtype;
+ static int _pointtype;
+ 
+#if 0 /*BBCORE*/
+ static void* _hoc_create_pnt(_ho) Object* _ho; { void* create_point_process();
+ return create_point_process(_pointtype, _ho);
+}
+ static void _hoc_destroy_pnt();
+ static double _hoc_loc_pnt(_vptr) void* _vptr; {double loc_point_process();
+ return loc_point_process(_pointtype, _vptr);
+}
+ static double _hoc_has_loc(_vptr) void* _vptr; {double has_loc_point();
+ return has_loc_point(_vptr);
+}
+ static double _hoc_get_loc_pnt(_vptr)void* _vptr; {
+ double get_loc_point_process(); return (get_loc_point_process(_vptr));
+}
+ 
+#endif /*BBCORE*/
  
 #if 0 /*BBCORE*/
  /* connect user functions to hoc names */
  static VoidFunc hoc_intfunc[] = {
- "setdata_napIn", _hoc_setdata,
- "trates_napIn", _hoc_trates,
+ 0,0
+};
+ static Member_func _member_func[] = {
+ "loc", _hoc_loc_pnt,
+ "has_loc", _hoc_has_loc,
+ "get_loc", _hoc_get_loc_pnt,
+ "position", _hoc_position,
  0, 0
 };
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
- static double eNa_napIn = 55;
+ static int _thread1data_inuse = 0;
+static double _thread1data[1];
+#define _gth 0
+#define xpos_VecStim _thread1data[0]
+#define xpos _thread[_gth]._pval[0]
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -168,21 +183,13 @@
  0,0,0
 };
  static HocParmUnits _hoc_parm_units[] = {
- "eNa_napIn", "mV",
- "gbar_napIn", "mho/cm2",
- "htau_napIn", "ms",
- "thegna_napIn", "mho/cm2",
- "mtau_napIn", "ms",
  0,0
 };
  
 #endif /*BBCORE*/
- static double delta_t = 0.01;
- static double h0 = 0;
- static double m0 = 0;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "eNa_napIn", &eNa_napIn,
+ "xpos_VecStim", &xpos_VecStim,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -194,71 +201,63 @@
  static void nrn_alloc(double*, Datum*, int);
 void nrn_init(NrnThread*, Memb_list*, int);
 void nrn_state(NrnThread*, Memb_list*, int);
- void nrn_cur(NrnThread*, Memb_list*, int);
+ 
+#if 0 /*BBCORE*/
+ static void _hoc_destroy_pnt(_vptr) void* _vptr; {
+   destroy_point_process(_vptr);
+}
+ 
+#endif /*BBCORE*/
  /* connect range variables in _p that hoc is supposed to know about */
  static const char *_mechanism[] = {
  "6.2.0",
-"napIn",
- "gbar_napIn",
- "htau_napIn",
+"VecStim",
  0,
- "thegna_napIn",
- "minf_napIn",
- "hinf_napIn",
- "mtau_napIn",
  0,
- "m_napIn",
- "h_napIn",
  0,
  0};
- static int _na_type;
  
 static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  
 #if 0 /*BBCORE*/
  	/*initialize range parameters*/
- 	gbar = 0.0052085;
- 	htau = 15;
- prop_ion = need_memb(_na_sym);
- nrn_promote(prop_ion, 0, 1);
- 	_ppvar[0]._pval = &prop_ion->param[0]; /* ena */
- 	_ppvar[1]._pval = &prop_ion->param[3]; /* ina */
- 	_ppvar[2]._pval = &prop_ion->param[4]; /* _ion_dinadv */
  
 #endif /* BBCORE */
  
 }
  static void _initlists(Memb_list *_ml);
- static void _update_ion_pointer(Datum*);
+ static void _thread_mem_init(ThreadDatum*);
+ static void _thread_cleanup(ThreadDatum*);
  
-#define _psize 14
-#define _ppsize 3
- void _NapIn_reg() {
+#define _psize 1
+#define _ppsize 2
+ void _vecevent_reg() {
 	int _vectorized = 1;
   _mechtype = nrn_get_mechtype(_mechanism[1]);
  if (_mechtype == -1) return;
  _nrn_layout_reg(_mechtype, LAYOUT);
- _na_type = nrn_get_mechtype("na_ion"); 
+ 
 #if 0 /*BBCORE*/
- 	ion_reg("na", -10000.);
- 	_na_sym = hoc_lookup("na_ion");
  
 #endif /*BBCORE*/
-  register_mech(_mechanism, nrn_alloc,nrn_cur, NULL, nrn_state, nrn_init, _create_global_variables, _destroy_global_variables, hoc_nrnpointerindex, 1);
+ 	_pointtype = point_register_mech(_mechanism,
+	 nrn_alloc,NULL, NULL, NULL, nrn_init, _create_global_variables, _destroy_global_variables,
+	 hoc_nrnpointerindex,
+	 NULL/*_hoc_create_pnt*/, NULL/*_hoc_destroy_pnt*/, /*_member_func,*/
+	 2);
+  _extcall_thread = (ThreadDatum*)ecalloc(1, sizeof(ThreadDatum));
+  _thread_mem_init(_extcall_thread);
+  _thread1data_inuse = 0;
+     _nrn_thread_reg1(_mechtype, _thread_mem_init);
+     _nrn_thread_reg0(_mechtype, _thread_cleanup);
   hoc_register_prop_size(_mechtype, _psize, _ppsize);
-  hoc_register_dparam_semantics(_mechtype, 0, "na_ion");
-  hoc_register_dparam_semantics(_mechtype, 1, "na_ion");
-  hoc_register_dparam_semantics(_mechtype, 2, "na_ion");
+  hoc_register_dparam_semantics(_mechtype, 0, "area");
+  hoc_register_dparam_semantics(_mechtype, 1, "pntproc");
+ add_nrn_artcell(_mechtype, 0);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
  struct _global_variables_t : public MemoryManaged {
-   int _slist1[2];
-   int _dlist1[2];
    double celsius;
-   double eNa;
-   double delta_t;
-   double h0;
-   double m0;
  };
 
  
@@ -280,93 +279,56 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->celsius = celsius;
-   _global_variables->eNa = eNa_napIn;
-   _global_variables->delta_t = delta_t;
-   _global_variables->h0 = h0;
-   _global_variables->m0 = m0;
- #ifdef CORENEURON_ENABLE_GPU
-   if (_nt->compute_gpu) {
-       cnrn_target_update_on_device(_global_variables);
-   }
- #endif
  }
 
- #define _slist1 static_cast<_global_variables_t*>(_ml->global_variables)->_slist1
- #define _dlist1 static_cast<_global_variables_t*>(_ml->global_variables)->_dlist1
  #define celsius static_cast<_global_variables_t*>(_ml->global_variables)->celsius
- #define eNa static_cast<_global_variables_t*>(_ml->global_variables)->eNa
- #define delta_t static_cast<_global_variables_t*>(_ml->global_variables)->delta_t
- #define h0 static_cast<_global_variables_t*>(_ml->global_variables)->h0
- #define m0 static_cast<_global_variables_t*>(_ml->global_variables)->m0
  
-static const char *modelname = "nap";
+static const char *modelname = "";
 
 static int error;
 static int _ninits = 0;
 static int _match_recurse=1;
 static void _modl_cleanup(){ _match_recurse=1;}
-static inline int trates(_threadargsprotocomma_ double);
+static inline int position(_threadargsprotocomma_ double);
  
-static int _ode_spec1(_threadargsproto_);
-/*static int _ode_matsol1(_threadargsproto_);*/
- static inline int states(_threadargsproto_);
- 
-/*CVODE*/
- static int _ode_spec1 (_threadargsproto_) {int _reset = 0; {
-   trates ( _threadargscomma_ v ) ;
-   Dm = ( minf - m ) / mtau ;
-   Dh = ( hinf - h ) / htau ;
-   }
- return _reset;
-}
- static int _ode_matsol1 (_threadargsproto_) {
- trates ( _threadargscomma_ v ) ;
- Dm = Dm  / (1. - dt*( ( ( ( - 1.0 ) ) ) / mtau )) ;
- Dh = Dh  / (1. - dt*( ( ( ( - 1.0 ) ) ) / htau )) ;
- return 0;
-}
- /*END CVODE*/
- static int states (_threadargsproto_) { {
-   trates ( _threadargscomma_ v ) ;
-    m = m + (1. - exp(dt*(( ( ( - 1.0 ) ) ) / mtau)))*(- ( ( ( minf ) ) / mtau ) / ( ( ( ( - 1.0) ) ) / mtau ) - m) ;
-    h = h + (1. - exp(dt*(( ( ( - 1.0 ) ) ) / htau)))*(- ( ( ( hinf ) ) / htau ) / ( ( ( ( - 1.0) ) ) / htau ) - h) ;
-   }
-  return 0;
-}
- 
-static int  trates ( _threadargsprotocomma_ double _lvm ) {
-   mtau = 1.0 ;
-   minf = 1.0 / ( 1.0 + exp ( - ( v + 52.3 ) / 6.8 ) ) ;
-   hinf = 1.0 / ( 1.0 + exp ( ( v + 48.0 ) / 10.0 ) ) ;
+static int  position ( _threadargsprotocomma_ double _la ) {
+   xpos = _la ;
     return 0; }
  
 #if 0 /*BBCORE*/
  
-static void _hoc_trates(void) {
-  double _r;
+static double _hoc_position(void* _vptr) {
+ double _r;
    double* _p; Datum* _ppvar; ThreadDatum* _thread; NrnThread* _nt;
-   if (_extcall_prop) {_p = _extcall_prop->param; _ppvar = _extcall_prop->dparam;}else{ _p = (double*)0; _ppvar = (Datum*)0; }
+   _p = ((Point_process*)_vptr)->_prop->param;
+  _ppvar = ((Point_process*)_vptr)->_prop->dparam;
   _thread = _extcall_thread;
-  _nt = nrn_threads;
+  _nt = (NrnThread*)((Point_process*)_vptr)->_vnt;
  _r = 1.;
- trates ( _threadargs_, *getarg(1) ;
- hoc_retpushx(_r);
+ position ( _threadargs_, *getarg(1) );
+ return(_r);
 }
  
 #endif /*BBCORE*/
- static void _update_ion_pointer(Datum* _ppvar) {
+ 
+static void _thread_mem_init(ThreadDatum* _thread) {
+  if (_thread1data_inuse) {_thread[_gth]._pval = (double*)ecalloc(1, sizeof(double));
+ }else{
+ _thread[_gth]._pval = _thread1data; _thread1data_inuse = 1;
+ }
+ }
+ 
+static void _thread_cleanup(ThreadDatum* _thread) {
+  if (_thread[_gth]._pval == _thread1data) {
+   _thread1data_inuse = 0;
+  }else{
+   free((void*)_thread[_gth]._pval);
+  }
  }
 
 static inline void initmodel(_threadargsproto_) {
   int _i; double _save;{
-  h = h0;
-  m = m0;
- {
-   trates ( _threadargscomma_ v ) ;
-   m = minf ;
-   h = hinf ;
-   }
- 
+
 }
 }
 
@@ -390,32 +352,18 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
  _p = _ml->_data + _iml*_psize; _ppvar = _ml->_pdata + _iml*_ppsize;
 #elif LAYOUT == 0 /*SoA*/
  _p = _ml->_data; _ppvar = _ml->_pdata;
-/* insert compiler dependent ivdep like pragma */
-_PRAGMA_FOR_VECTOR_LOOP_
 _PRAGMA_FOR_INIT_ACC_LOOP_
 for (_iml = 0; _iml < _cntml_actual; ++_iml) {
 #else /* LAYOUT > 1 */ /*AoSoA*/
 #error AoSoA not implemented.
 for (;;) { /* help clang-format properly indent */
 #endif
-    int _nd_idx = _ni[_iml];
-    _v = _vec_v[_nd_idx];
-    _PRCELLSTATE_V
- v = _v;
- _PRCELLSTATE_V
-  ena = _ion_ena;
  initmodel(_threadargs_);
- }
+}
   }
 }
 
-static double _nrn_current(_threadargsproto_, double _v){double _current=0.;v=_v;{ {
-   trates ( _threadargscomma_ v ) ;
-   thegna = gbar * m * h ;
-   ina = thegna * ( v - eNa ) ;
-   }
- _current += ina;
-
+static double _nrn_current(_threadargsproto_, double _v){double _current=0.;v=_v;{
 } return _current;
 }
 
@@ -425,59 +373,6 @@ static double _nrn_current(_threadargsproto_, double _v){double _current=0.;v=_v
   void nrn_cur_launcher(NrnThread*, Memb_list*, int, int);
 #endif
 
-
-void nrn_cur(NrnThread* _nt, Memb_list* _ml, int _type) {
-double* _p; Datum* _ppvar; ThreadDatum* _thread;
-int* _ni; double _rhs, _g, _v, v; int _iml, _cntml_padded, _cntml_actual;
-    _ni = _ml->_nodeindices;
-_cntml_actual = _ml->_nodecount;
-_cntml_padded = _ml->_nodecount_padded;
-_thread = _ml->_thread;
-double * _vec_rhs = _nt->_actual_rhs;
-double * _vec_d = _nt->_actual_d;
-
-#if defined(ENABLE_CUDA_INTERFACE) && defined(_OPENACC) && !defined(DISABLE_OPENACC)
-  NrnThread* d_nt = cnrn_target_deviceptr(_nt);
-  Memb_list* d_ml = cnrn_target_deviceptr(_ml);
-  nrn_cur_launcher(d_nt, d_ml, _type, _cntml_actual);
-  return;
-#endif
-
-double * _nt_data = _nt->_data;
-double * _vec_v = _nt->_actual_v;
-int stream_id = _nt->stream_id;
-#if LAYOUT == 1 /*AoS*/
-for (_iml = 0; _iml < _cntml_actual; ++_iml) {
- _p = _ml->_data + _iml*_psize; _ppvar = _ml->_pdata + _iml*_ppsize;
-#elif LAYOUT == 0 /*SoA*/
- _p = _ml->_data; _ppvar = _ml->_pdata;
-/* insert compiler dependent ivdep like pragma */
-_PRAGMA_FOR_VECTOR_LOOP_
-_PRAGMA_FOR_CUR_ACC_LOOP_
-for (_iml = 0; _iml < _cntml_actual; ++_iml) {
-#else /* LAYOUT > 1 */ /*AoSoA*/
-#error AoSoA not implemented.
-for (;;) { /* help clang-format properly indent */
-#endif
-    int _nd_idx = _ni[_iml];
-    _v = _vec_v[_nd_idx];
-    _PRCELLSTATE_V
-  ena = _ion_ena;
- _g = _nrn_current(_threadargs_, _v + .001);
- 	{ double _dina;
-  _dina = ina;
- _rhs = _nrn_current(_threadargs_, _v);
-  _ion_dinadv += (_dina - ina)/.001 ;
- 	}
- _g = (_g - _rhs)/.001;
-  _ion_ina += ina ;
- _PRCELLSTATE_G
-	_vec_rhs[_nd_idx] -= _rhs;
-	_vec_d[_nd_idx] += _g;
- 
-}
- 
-}
 
 void nrn_state(NrnThread* _nt, Memb_list* _ml, int _type) {
 double* _p; Datum* _ppvar; ThreadDatum* _thread;
@@ -510,14 +405,9 @@ for (_iml = 0; _iml < _cntml_actual; ++_iml) {
 #error AoSoA not implemented.
 for (;;) { /* help clang-format properly indent */
 #endif
-    int _nd_idx = _ni[_iml];
-    _v = _vec_v[_nd_idx];
-    _PRCELLSTATE_V
  v=_v;
 {
-  ena = _ion_ena;
- {   states(_threadargs_);
-  } }}
+}}
 
 }
 
@@ -529,7 +419,5 @@ static void _initlists(Memb_list *_ml){
  int _cntml_actual=1;
  int _cntml_padded=1;
  int _iml=0;
- _slist1[0] = &(m) - _p;  _dlist1[0] = &(Dm) - _p;
- _slist1[1] = &(h) - _p;  _dlist1[1] = &(Dh) - _p;
  }
 } // namespace coreneuron_lib

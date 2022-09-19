@@ -222,35 +222,35 @@ void _net_buf_receive(NrnThread*);
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
- static double Rmc2u = 0.00504192;
- static double Rmc2b = 5e-05;
- static double Rmc1u = 0.00243831;
- static double Rmc1b = 5e-05;
- static double Rmd2u = 0.00295341;
- static double Rmd2b = 5e-05;
- static double Rmd1u = 0.00298874;
- static double Rmd1b = 5e-05;
- static double RcMg = 0.548;
- static double RoMg = 0.01;
- static double Rr2Mg = 0.00042;
- static double Rd2Mg = 0.00026;
- static double Rr1Mg = 0.00087;
- static double Rd1Mg = 0.0021;
- static double RuMg = 0.0171;
- static double RbMg = 10;
- static double Rmu = 12.8;
- static double Rmb = 0.05;
- static double Rc = 0.273;
- static double Ro = 0.01;
- static double Rr2 = 0.0005;
- static double Rd2 = 0.00043;
- static double Rr1 = 0.0016;
- static double Rd1 = 0.0022;
- static double Ru = 0.0056;
- static double Rb = 10;
- static double memb_fraction = 0.8;
- static double mg = 1;
- static double valence = -2;
+ static double Rmc2u_NMDA10_1 = 0.00504192;
+ static double Rmc2b_NMDA10_1 = 5e-05;
+ static double Rmc1u_NMDA10_1 = 0.00243831;
+ static double Rmc1b_NMDA10_1 = 5e-05;
+ static double Rmd2u_NMDA10_1 = 0.00295341;
+ static double Rmd2b_NMDA10_1 = 5e-05;
+ static double Rmd1u_NMDA10_1 = 0.00298874;
+ static double Rmd1b_NMDA10_1 = 5e-05;
+ static double RcMg_NMDA10_1 = 0.548;
+ static double RoMg_NMDA10_1 = 0.01;
+ static double Rr2Mg_NMDA10_1 = 0.00042;
+ static double Rd2Mg_NMDA10_1 = 0.00026;
+ static double Rr1Mg_NMDA10_1 = 0.00087;
+ static double Rd1Mg_NMDA10_1 = 0.0021;
+ static double RuMg_NMDA10_1 = 0.0171;
+ static double RbMg_NMDA10_1 = 10;
+ static double Rmu_NMDA10_1 = 12.8;
+ static double Rmb_NMDA10_1 = 0.05;
+ static double Rc_NMDA10_1 = 0.273;
+ static double Ro_NMDA10_1 = 0.01;
+ static double Rr2_NMDA10_1 = 0.0005;
+ static double Rd2_NMDA10_1 = 0.00043;
+ static double Rr1_NMDA10_1 = 0.0016;
+ static double Rd1_NMDA10_1 = 0.0022;
+ static double Ru_NMDA10_1 = 0.0056;
+ static double Rb_NMDA10_1 = 10;
+ static double memb_fraction_NMDA10_1 = 0.8;
+ static double mg_NMDA10_1 = 1;
+ static double valence_NMDA10_1 = -2;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -323,35 +323,35 @@ void _net_buf_receive(NrnThread*);
  static double delta_t = 1;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "mg_NMDA10_1", &mg,
- "valence_NMDA10_1", &valence,
- "memb_fraction_NMDA10_1", &memb_fraction,
- "Rb_NMDA10_1", &Rb,
- "Ru_NMDA10_1", &Ru,
- "Ro_NMDA10_1", &Ro,
- "Rc_NMDA10_1", &Rc,
- "Rd1_NMDA10_1", &Rd1,
- "Rr1_NMDA10_1", &Rr1,
- "Rd2_NMDA10_1", &Rd2,
- "Rr2_NMDA10_1", &Rr2,
- "Rmb_NMDA10_1", &Rmb,
- "Rmu_NMDA10_1", &Rmu,
- "Rmc1b_NMDA10_1", &Rmc1b,
- "Rmc1u_NMDA10_1", &Rmc1u,
- "Rmc2b_NMDA10_1", &Rmc2b,
- "Rmc2u_NMDA10_1", &Rmc2u,
- "Rmd1b_NMDA10_1", &Rmd1b,
- "Rmd1u_NMDA10_1", &Rmd1u,
- "Rmd2b_NMDA10_1", &Rmd2b,
- "Rmd2u_NMDA10_1", &Rmd2u,
- "RbMg_NMDA10_1", &RbMg,
- "RuMg_NMDA10_1", &RuMg,
- "RoMg_NMDA10_1", &RoMg,
- "RcMg_NMDA10_1", &RcMg,
- "Rd1Mg_NMDA10_1", &Rd1Mg,
- "Rr1Mg_NMDA10_1", &Rr1Mg,
- "Rd2Mg_NMDA10_1", &Rd2Mg,
- "Rr2Mg_NMDA10_1", &Rr2Mg,
+ "mg_NMDA10_1", &mg_NMDA10_1,
+ "valence_NMDA10_1", &valence_NMDA10_1,
+ "memb_fraction_NMDA10_1", &memb_fraction_NMDA10_1,
+ "Rb_NMDA10_1", &Rb_NMDA10_1,
+ "Ru_NMDA10_1", &Ru_NMDA10_1,
+ "Ro_NMDA10_1", &Ro_NMDA10_1,
+ "Rc_NMDA10_1", &Rc_NMDA10_1,
+ "Rd1_NMDA10_1", &Rd1_NMDA10_1,
+ "Rr1_NMDA10_1", &Rr1_NMDA10_1,
+ "Rd2_NMDA10_1", &Rd2_NMDA10_1,
+ "Rr2_NMDA10_1", &Rr2_NMDA10_1,
+ "Rmb_NMDA10_1", &Rmb_NMDA10_1,
+ "Rmu_NMDA10_1", &Rmu_NMDA10_1,
+ "Rmc1b_NMDA10_1", &Rmc1b_NMDA10_1,
+ "Rmc1u_NMDA10_1", &Rmc1u_NMDA10_1,
+ "Rmc2b_NMDA10_1", &Rmc2b_NMDA10_1,
+ "Rmc2u_NMDA10_1", &Rmc2u_NMDA10_1,
+ "Rmd1b_NMDA10_1", &Rmd1b_NMDA10_1,
+ "Rmd1u_NMDA10_1", &Rmd1u_NMDA10_1,
+ "Rmd2b_NMDA10_1", &Rmd2b_NMDA10_1,
+ "Rmd2u_NMDA10_1", &Rmd2u_NMDA10_1,
+ "RbMg_NMDA10_1", &RbMg_NMDA10_1,
+ "RuMg_NMDA10_1", &RuMg_NMDA10_1,
+ "RoMg_NMDA10_1", &RoMg_NMDA10_1,
+ "RcMg_NMDA10_1", &RcMg_NMDA10_1,
+ "Rd1Mg_NMDA10_1", &Rd1Mg_NMDA10_1,
+ "Rr1Mg_NMDA10_1", &Rr1Mg_NMDA10_1,
+ "Rd2Mg_NMDA10_1", &Rd2Mg_NMDA10_1,
+ "Rr2Mg_NMDA10_1", &Rr2Mg_NMDA10_1,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -520,35 +520,35 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->celsius = celsius;
-   _global_variables->Rmc2u = Rmc2u;
-   _global_variables->Rmc2b = Rmc2b;
-   _global_variables->Rmc1u = Rmc1u;
-   _global_variables->Rmc1b = Rmc1b;
-   _global_variables->Rmd2u = Rmd2u;
-   _global_variables->Rmd2b = Rmd2b;
-   _global_variables->Rmd1u = Rmd1u;
-   _global_variables->Rmd1b = Rmd1b;
-   _global_variables->RcMg = RcMg;
-   _global_variables->RoMg = RoMg;
-   _global_variables->Rr2Mg = Rr2Mg;
-   _global_variables->Rd2Mg = Rd2Mg;
-   _global_variables->Rr1Mg = Rr1Mg;
-   _global_variables->Rd1Mg = Rd1Mg;
-   _global_variables->RuMg = RuMg;
-   _global_variables->RbMg = RbMg;
-   _global_variables->Rmu = Rmu;
-   _global_variables->Rmb = Rmb;
-   _global_variables->Rc = Rc;
-   _global_variables->Ro = Ro;
-   _global_variables->Rr2 = Rr2;
-   _global_variables->Rd2 = Rd2;
-   _global_variables->Rr1 = Rr1;
-   _global_variables->Rd1 = Rd1;
-   _global_variables->Ru = Ru;
-   _global_variables->Rb = Rb;
-   _global_variables->memb_fraction = memb_fraction;
-   _global_variables->mg = mg;
-   _global_variables->valence = valence;
+   _global_variables->Rmc2u = Rmc2u_NMDA10_1;
+   _global_variables->Rmc2b = Rmc2b_NMDA10_1;
+   _global_variables->Rmc1u = Rmc1u_NMDA10_1;
+   _global_variables->Rmc1b = Rmc1b_NMDA10_1;
+   _global_variables->Rmd2u = Rmd2u_NMDA10_1;
+   _global_variables->Rmd2b = Rmd2b_NMDA10_1;
+   _global_variables->Rmd1u = Rmd1u_NMDA10_1;
+   _global_variables->Rmd1b = Rmd1b_NMDA10_1;
+   _global_variables->RcMg = RcMg_NMDA10_1;
+   _global_variables->RoMg = RoMg_NMDA10_1;
+   _global_variables->Rr2Mg = Rr2Mg_NMDA10_1;
+   _global_variables->Rd2Mg = Rd2Mg_NMDA10_1;
+   _global_variables->Rr1Mg = Rr1Mg_NMDA10_1;
+   _global_variables->Rd1Mg = Rd1Mg_NMDA10_1;
+   _global_variables->RuMg = RuMg_NMDA10_1;
+   _global_variables->RbMg = RbMg_NMDA10_1;
+   _global_variables->Rmu = Rmu_NMDA10_1;
+   _global_variables->Rmb = Rmb_NMDA10_1;
+   _global_variables->Rc = Rc_NMDA10_1;
+   _global_variables->Ro = Ro_NMDA10_1;
+   _global_variables->Rr2 = Rr2_NMDA10_1;
+   _global_variables->Rd2 = Rd2_NMDA10_1;
+   _global_variables->Rr1 = Rr1_NMDA10_1;
+   _global_variables->Rd1 = Rd1_NMDA10_1;
+   _global_variables->Ru = Ru_NMDA10_1;
+   _global_variables->Rb = Rb_NMDA10_1;
+   _global_variables->memb_fraction = memb_fraction_NMDA10_1;
+   _global_variables->mg = mg_NMDA10_1;
+   _global_variables->valence = valence_NMDA10_1;
    _global_variables->ClMg0 = ClMg0;
    _global_variables->Cl0 = Cl0;
    _global_variables->D2Mg0 = D2Mg0;

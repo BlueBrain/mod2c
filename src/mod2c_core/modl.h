@@ -334,6 +334,11 @@ typedef struct global_variable_t {
     // in the file.
     int skip_initialisation;
 
+    // > 0 if the variable is of type NRNGLOBAL
+    // i.e. global variable in context of NMODL
+    // language
+    int is_nrnglobal;
+
 } global_variable_t;
 
 // all global variables in the program
@@ -346,7 +351,7 @@ extern int global_variables_count;
 extern int global_variables_capacity;
 
 // add new global variable
-void add_global_var(const char* type, const char* name, int is_array, int array_length, int skip_initialisation);
+void add_global_var(const char* type, const char* name, int is_nrnglobal, int is_array, int array_length, int skip_initialisation);
 
 // free global variable object
 void free_global_variables();
