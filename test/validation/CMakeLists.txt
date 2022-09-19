@@ -47,7 +47,7 @@ foreach(mod2c "mod2c_core")
 	set(mod ${modfile})
 	string(REGEX REPLACE "\\.mod$" "" mod "${modfile}")
 
-	set(TEST_ARGS ${CMAKE_BINARY_DIR}/bin/${mod2c} ${test_data}/mod/${mod}.mod ${test_data}/cpp/${mod}.cpp)
+	set(TEST_ARGS ${CMAKE_BINARY_DIR}/bin/${mod2c} ${test_data}/mod/${mod}.mod ${test_data}/mod ${test_data}/cpp/${mod}.cpp)
 	add_test_script("${mod2c}-${mod}" "${CMAKE_CURRENT_BINARY_DIR}/test_${mod2c}" "/bin/bash")
     endforeach()
 endforeach()

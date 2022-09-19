@@ -160,7 +160,7 @@
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
- static double eNa = 55;
+ static double eNa_nap = 55;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -180,7 +180,7 @@
  static double m0 = 0;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "eNa_nap", &eNa,
+ "eNa_nap", &eNa_nap,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -281,7 +281,7 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->celsius = celsius;
-   _global_variables->eNa = eNa;
+   _global_variables->eNa = eNa_nap;
    _global_variables->delta_t = delta_t;
    _global_variables->m0 = m0;
  #ifdef CORENEURON_ENABLE_GPU

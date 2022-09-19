@@ -591,9 +591,9 @@ if (s->subtype & ARRAY) { int dim = s->araydim;
 	derfun->used = count;
 
 	Sprintf(buf, "_slist%d", numlist);
-	add_global_var("int", buf, 1, count, 1);
+	add_global_var("int", buf, 0, 1, count, 1);
 	Sprintf(buf, "_dlist%d", numlist);
-	add_global_var("int", buf, 1, count, 1);
+	add_global_var("int", buf, 0, 1, count, 1);
 	
 #if CVODE
 	Lappendstr(procfunc, "\n/*CVODE*/\n");

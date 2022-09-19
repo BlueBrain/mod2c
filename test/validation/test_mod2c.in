@@ -1,15 +1,16 @@
 #!/bin/sh
 
-# usage: test_mod2c MOD2C MODFILE CFILE
+# usage: test_mod2c MOD2C MODFILE MODFILE_DIR CFILE
 
-if [ $# -ne 3 ]; then
-    echo 'usage: test_mod2c MOD2C MODFILE CFILE' >&2
+if [ $# -ne 4 ]; then
+    echo 'usage: test_mod2c MOD2C MODFILE MODFILE_DIR CFILE' >&2
     exit 1
 fi
 
 mod2c="$1"
 modinput="$2"
-cmpfile="$3"
+modinput_dir="$3"
+cmpfile="$4"
 
 # mod2c writes to the directory in which it finds
 # the MOD file, so make a temporary directory for
@@ -29,8 +30,9 @@ function realpath {
     echo "$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
 }
 
-
 cp "$modinput" "$tmpdir"
+cp "$modinput_dir"/*.inc "$tmpdir"
+
 modpfx=$(basename "$modinput" .mod)
 
 # canonicalize output

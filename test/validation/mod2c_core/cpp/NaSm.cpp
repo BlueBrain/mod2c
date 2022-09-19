@@ -154,13 +154,13 @@
  
 #endif /*BBCORE*/
  /* declare global and static user variables */
- static double Etemp = 21;
- static double Vtm = -33.5;
- static double Vsm = -16;
- static double ena = 40;
- static double ktm = 26.3;
- static double ksm = 9.4;
- static double tom = 637.8;
+ static double Etemp_NaSm = 21;
+ static double Vtm_NaSm = -33.5;
+ static double Vsm_NaSm = -16;
+ static double ena_NaSm = 40;
+ static double ktm_NaSm = 26.3;
+ static double ksm_NaSm = 9.4;
+ static double tom_NaSm = 637.8;
  
 #if 0 /*BBCORE*/
  /* some parameters have upper and lower limits */
@@ -178,13 +178,13 @@
  static double m0 = 0;
  /* connect global user variables to hoc */
  static DoubScal hoc_scdoub[] = {
- "ena_NaSm", &ena,
- "Etemp_NaSm", &Etemp,
- "Vsm_NaSm", &Vsm,
- "ksm_NaSm", &ksm,
- "tom_NaSm", &tom,
- "Vtm_NaSm", &Vtm,
- "ktm_NaSm", &ktm,
+ "ena_NaSm", &ena_NaSm,
+ "Etemp_NaSm", &Etemp_NaSm,
+ "Vsm_NaSm", &Vsm_NaSm,
+ "ksm_NaSm", &ksm_NaSm,
+ "tom_NaSm", &tom_NaSm,
+ "Vtm_NaSm", &Vtm_NaSm,
+ "ktm_NaSm", &ktm_NaSm,
  0,0
 };
  static DoubVec hoc_vdoub[] = {
@@ -280,13 +280,13 @@ static void _update_global_variables(NrnThread *_nt, Memb_list *_ml) {
    }
    auto* const _global_variables = static_cast<_global_variables_t*>(_ml->global_variables);
    _global_variables->celsius = celsius;
-   _global_variables->Etemp = Etemp;
-   _global_variables->Vtm = Vtm;
-   _global_variables->Vsm = Vsm;
-   _global_variables->ena = ena;
-   _global_variables->ktm = ktm;
-   _global_variables->ksm = ksm;
-   _global_variables->tom = tom;
+   _global_variables->Etemp = Etemp_NaSm;
+   _global_variables->Vtm = Vtm_NaSm;
+   _global_variables->Vsm = Vsm_NaSm;
+   _global_variables->ena = ena_NaSm;
+   _global_variables->ktm = ktm_NaSm;
+   _global_variables->ksm = ksm_NaSm;
+   _global_variables->tom = tom_NaSm;
    _global_variables->delta_t = delta_t;
    _global_variables->m0 = m0;
  #ifdef CORENEURON_ENABLE_GPU
