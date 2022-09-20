@@ -2026,7 +2026,7 @@ void bablk(ba, type, q1, q2)
 "  _thread = _ml->_thread;\n"
 "  double * _nt_data = _nt->_data;\n"
 "  double * _vec_v = _nt->_actual_v;\n"
-"  int stream_id = _nt->stream_id;\n"
+"  int stream_id = _nt->streams[_nt->stream_id];\n"
 "  #if LAYOUT == 1 /*AoS*/\n"
 "  for (_iml = 0; _iml < _cntml_actual; ++_iml) {\n"
 "    _p = _ml->_data + _iml*_psize; _ppvar = _ml->_pdata + _iml*_ppsize;\n"
@@ -3054,7 +3054,7 @@ void emit_net_receive_buffering_code() {
 
 sprintf(buf, "\
 \n  int _di;\
-\n  int stream_id = _nt->stream_id;\
+\n  int stream_id = _nt->streams[_nt->stream_id];\
 \n  Point_process* _pnt = _nt->pntprocs;\
 \n  int _pnt_length = _nt->n_pntproc - _nrb->_pnt_offset;\
 \n  int _displ_cnt = _nrb->_displ_cnt;\
@@ -3173,7 +3173,7 @@ static void emit_nrn_watch_check_code() {
 "  _thread = _ml->_thread;\n"
 "  double * _nt_data = _nt->_data;\n"
 "  double * _vec_v = _nt->_actual_v;\n"
-"  int stream_id = _nt->stream_id;\n"
+"  int stream_id = _nt->streams[_nt->stream_id];\n"
 );
 	/* for gpu, performance may be better factored into below ITERATE */
 	Lappendstr(procfunc, "\n"
