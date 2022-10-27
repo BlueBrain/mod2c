@@ -2519,6 +2519,14 @@ Sprintf(buf, "#define _ion_di%sdv\t_nt_data[_ppvar[%d*_STRIDE]]\n", sion->name, 
 			}
 		}
 		if (need_style) {
+      /* Needed to match NEURON */
+      Sprintf(buf, "#define _ion_%s_erev\t_ppvar[%d]\n", sion->name, ioncount);
+      q2 = lappendstr(defs_list, buf);
+      q2->itemtype = VERBATIM;
+      /* olupton 2022-10-27: The ppvar semantics here are a bit of a guess */
+      sprintf(buf, "%s", ionname);
+      ppvar_semantics(ioncount, buf);
+      ioncount++;
 Sprintf(buf, "#define _style_%s\t_ppvar[%d]\n", sion->name, ioncount);
 			q2 = lappendstr(defs_list, buf);
 			q2->itemtype = VERBATIM;
