@@ -234,6 +234,7 @@ int main(int argc, char** argv) {
  */
   consistency();
   chk_thread_safe();
+  check_useion_variables();
   parout();
   c_out();   /* print .c file */
 

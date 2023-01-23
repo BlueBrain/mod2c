@@ -89,6 +89,7 @@ void net_receive();
 void net_init();
 void fornetcon();
 void chk_thread_safe();
+void check_useion_variables();
 void threadsafe_seen();
 void explicit_decl();
 void parm_array_install();

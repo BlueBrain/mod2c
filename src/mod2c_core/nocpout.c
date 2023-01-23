@@ -127,6 +127,7 @@ not thread safe and _p and _ppvar are static.
 #define NRNPOINTER	04000
 #define IONCONC		010000
 #define NRNBBCOREPOINTER	020000
+#define IONCONC_IMPLICIT 040000
 
 #define IONEREV 0	/* Parameter */
 #define IONIN	1
@@ -1653,6 +1654,52 @@ static void _destructor(Prop* _prop) {\n\
 	}
 }
 
+static void add_readion(List* read_variables, const char* name) {
+	Symbol* const sym = install(name, NAME);
+    sym->nrntype |= IONCONC;
+    sym->nrntype |= IONCONC_IMPLICIT;
+    lappendsym(read_variables, sym);
+}
+static void check_sufficient_ion_read_statements(char* ion_name,
+                                                 List* read_variables,
+                                                 List* write_variables) {
+	int have_ionin = 0, have_ionout = 0;
+	for (int l = 0; l < 2; ++l) {
+		Item* var;
+		List* list = l ? read_variables : write_variables;
+		ITERATE(var, list) {
+			const Symbol* var_sym = SYM(var);
+			int type = iontype(var_sym->name, ion_name);
+			if (type == IONIN) {
+				have_ionin = 1;
+			}
+			if (type == IONOUT) {
+				have_ionout = 1;
+			}
+		}
+	}
+	char local_buf[1024];
+    if (have_ionin && !have_ionout) {
+		snprintf(local_buf, sizeof(local_buf), "%so", ion_name);
+        add_readion(read_variables, local_buf);
+    } else if (have_ionout && !have_ionin) {
+		snprintf(local_buf, sizeof(local_buf), "%si", ion_name);
+        add_readion(read_variables, local_buf);
+    }
+}
+
+// check semantics of read & write variables from USEION statements
+void check_useion_variables() {
+    Item const* ion_var;
+    ITERATE(ion_var, useion) {
+		// we need to add implicit USEION READ statements to match changes needed in NEURON for SoA data
+        check_sufficient_ion_read_statements(SYM(ion_var)->name,
+                                             LST(ion_var->next),
+                                             LST(ion_var->next->next));
+		ion_var = ion_var->next->next->next;	
+	}
+}
+
 void warn_ignore(s) Symbol* s; {
 	int b;
 	double d1, d2;
@@ -2413,6 +2460,9 @@ List *get_ion_variables(block)
 	ITERATE(q, useion) {
 		q = q->next;
 		ITERATE(q1, LST(q)) {
+			if (SYM(q1)->nrntype & IONCONC_IMPLICIT) {
+                continue;
+            }
 			if (block == 2 && (SYM(q1)->nrntype & IONCONC) && (SYM(q1)->subtype & STAT)) {
 				continue;
 			}
@@ -2424,6 +2474,9 @@ Fprintf(stderr, "WARNING: Dimensions may be wrong for READ %s with POINT_PROCESS
 		}
 		q = q->next;
 		ITERATE(q1, LST(q)) {
+			if (SYM(q1)->nrntype & IONCONC_IMPLICIT) {
+                continue;
+            }			
 			if (block == 2 && (SYM(q1)->nrntype & IONCONC) && (SYM(q1)->subtype & STAT)) {
 				continue;
 			}
