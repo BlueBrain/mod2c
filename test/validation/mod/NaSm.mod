@@ -59,7 +59,9 @@ UNITSOFF
  
 INITIAL {
 	rates(v)
-	m= minf
+    MUTEXLOCK
+	m= minf + 1.1
+    MUTEXUNLOCK
 	
 }
 

@@ -44,21 +44,7 @@
 #define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma("")
 #endif
  
-#if defined(__ICC) || defined(__INTEL_COMPILER)
-#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("ivdep")
-#elif defined(__IBMC__) || defined(__IBMCPP__)
-#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("ibm independent_loop")
-#elif defined(__PGI)
-#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("vector")
-#elif defined(_CRAYC)
-#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("_CRI ivdep")
-#elif defined(__clang__)
-#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("clang loop vectorize(enable)")
-#elif defined(__GNUC__) || defined(__GNUG__)
-#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma("GCC ivdep")
-#else
 #define _PRAGMA_FOR_VECTOR_LOOP_
-#endif // _PRAGMA_FOR_VECTOR_LOOP_
  
 #if !defined(LAYOUT)
 /* 1 means AoS, >1 means AoSoA, <= 0 means SOA */
@@ -371,8 +357,11 @@ static inline void initmodel(_threadargsproto_) {
   m = m0;
  {
    rates ( _threadargscomma_ v ) ;
-   m = minf ;
+   #pragma omp critical
+   {
+    m = minf + 1.1 ;
    }
+ }
  
 }
 }
