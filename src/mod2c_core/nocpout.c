@@ -354,9 +354,6 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#endif\
 \n#endif\n\
 ");
-	if (protect_include_) {
-		Lappendstr(defs_list, "\n#include \"nmodlmutex.h\"");
-	}
 	if (use_bbcorepointer) {
         Lappendstr(defs_list, "#define _threadargsproto_namespace int _iml, int _cntml_padded, double* _p, coreneuron::Datum* _ppvar, coreneuron::ThreadDatum* _thread, coreneuron::NrnThread* _nt, coreneuron::Memb_list* _ml, double v\n");
 
@@ -368,7 +365,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 	if (vectorize) {
         /* macros for compiler dependent ivdep like pragma and memory layout. INIT and STATE pragma are same
          * except that sync clause absent because we saw issue only in CaDynamics_E2 */
-		extra_pragma_loop_arg = lappendstr(defs_list, "\
+		lappendstr(defs_list, "\
 \n#if defined(_OPENACC) && !defined(DISABLE_OPENACC)\
 \n#include <openacc.h>\
 \n#define _PRAGMA_FOR_INIT_ACC_LOOP_ _Pragma(\"acc parallel loop present(_ni[0:_cntml_actual], _nt_data[0:_nt->_ndata], _p[0:_cntml_padded*_psize], _ppvar[0:_cntml_padded*_ppsize], _vec_v[0:_nt->end], nrn_ion_global_map[0:nrn_ion_global_map_size][0:ion_global_map_member_size], _nt[0:1] _thread_present_) if(_nt->compute_gpu)\")\
@@ -384,22 +381,6 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#define _PRAGMA_FOR_NETRECV_ACC_LOOP_ _Pragma(\"\")\
 \n#endif\
 \n \
-\n#if defined(__ICC) || defined(__INTEL_COMPILER)\
-\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"ivdep\")\
-\n#elif defined(__IBMC__) || defined(__IBMCPP__)\
-\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"ibm independent_loop\")\
-\n#elif defined(__PGI)\
-\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"vector\")\
-\n#elif defined(_CRAYC)\
-\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"_CRI ivdep\")\
-\n#elif defined(__clang__)\
-\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"clang loop vectorize(enable)\")\
-\n#elif defined(__GNUC__) || defined(__GNUG__)\
-\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"GCC ivdep\")\
-\n#else\
-\n#define _PRAGMA_FOR_VECTOR_LOOP_\
-\n#endif // _PRAGMA_FOR_VECTOR_LOOP_\
-\n \
 \n#if !defined(LAYOUT)\
 \n/* 1 means AoS, >1 means AoSoA, <= 0 means SOA */\
 \n#define LAYOUT 1\
@@ -410,6 +391,32 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
 \n#define _STRIDE _cntml_padded + _iml\
 \n#endif\
 \n");
+
+       // if protect is used then do not enable vectorisation with ivdep like pragmas
+       // mod2c doesn't have fine grain mechanism to check where PROTECT appears (e.g. via AST)
+       // and hence just disable vectorisation at the top level (usage of PROTECT is/would be rare
+       // and not critical in mod2c anyway)
+       if (protect_include_) {
+           extra_pragma_loop_arg = insertstr(defs_list, "\n#define _PRAGMA_FOR_VECTOR_LOOP_\n");
+       } else {
+           extra_pragma_loop_arg = insertstr(defs_list, "\n"
+               "\n#if defined(__ICC) || defined(__INTEL_COMPILER)"
+               "\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"ivdep\")"
+               "\n#elif defined(__IBMC__) || defined(__IBMCPP__)"
+               "\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"ibm independent_loop\")"
+               "\n#elif defined(__PGI)"
+               "\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"vector\")"
+               "\n#elif defined(_CRAYC)"
+               "\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"_CRI ivdep\")"
+               "\n#elif defined(__clang__)"
+               "\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"clang loop vectorize(enable)\")"
+               "\n#elif defined(__GNUC__) || defined(__GNUG__)"
+               "\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"GCC ivdep\")"
+               "\n#else"
+               "\n#define _PRAGMA_FOR_VECTOR_LOOP_"
+               "\n#endif // _PRAGMA_FOR_VECTOR_LOOP_\n");
+       }
+
 	}else{
 		Lappendstr(defs_list, "\
 \n#undef LAYOUT\
