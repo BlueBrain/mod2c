@@ -357,7 +357,7 @@ static inline void initmodel(_threadargsproto_) {
   m = m0;
  {
    rates ( _threadargscomma_ v ) ;
-    m = minf + 1.1 ;
+   m = minf + 1.1 ;
  }
  
 }

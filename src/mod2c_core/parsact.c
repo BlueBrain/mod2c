@@ -1276,12 +1276,14 @@ void nrnmutex(int on, Item* q) { /* MUTEXLOCK or MUTEXUNLOCK */
 			diag("MUTEXLOCK invoked after MUTEXLOCK", (char*)0);
 		}
 		toggle = 1;
+		replacstr(q, "");
 		protect_include_ = 1;
 	}else if (on == 0) {
 		if (toggle != 1) {
 			diag("MUTEXUNLOCK invoked with no earlier MUTEXLOCK", (char*)0);
 		}
 		toggle = 0;
+		replacstr(q, "");
 		protect_include_ = 1;
 	}else{
 		if (toggle != 0) {
