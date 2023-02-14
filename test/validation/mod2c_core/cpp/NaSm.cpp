@@ -357,10 +357,7 @@ static inline void initmodel(_threadargsproto_) {
   m = m0;
  {
    rates ( _threadargscomma_ v ) ;
-   #pragma omp critical
-   {
     m = minf + 1.1 ;
-   }
  }
  
 }
