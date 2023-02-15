@@ -1263,7 +1263,7 @@ void threadsafe(char* s) {
 
 Item* protect_astmt(Item* q1, Item* q2) { /* PROTECT, ';' */
 	Item* q;
-	replacstr(q1, "#pragma omp atomic update\n #pragma acc atomic update\n");
+	replacstr(q1, "#pragma acc atomic update\n");
 	q = insertstr(q2->next, "\n");
 	protect_include_ = 1;
 	return q;
@@ -1276,14 +1276,14 @@ void nrnmutex(int on, Item* q) { /* MUTEXLOCK or MUTEXUNLOCK */
 			diag("MUTEXLOCK invoked after MUTEXLOCK", (char*)0);
 		}
 		toggle = 1;
-		replacstr(q, "#pragma omp critical\n {\n");
+		replacstr(q, "");
 		protect_include_ = 1;
 	}else if (on == 0) {
 		if (toggle != 1) {
 			diag("MUTEXUNLOCK invoked with no earlier MUTEXLOCK", (char*)0);
 		}
 		toggle = 0;
-		replacstr(q, "\n}\n");
+		replacstr(q, "");
 		protect_include_ = 1;
 	}else{
 		if (toggle != 0) {

@@ -363,7 +363,6 @@ static int  rates ( _threadargsproto_ ) {
      }
    hAlpha = ( 0.00001 * ( v - - 50.0 ) ) / ( 1.0 - ( exp ( - ( v - - 50.0 ) / 13.0 ) ) ) ;
    if ( v  == - 75.0 ) {
-     #pragma omp atomic update
      #pragma acc atomic update
      v = v + 0.0001 ;
      }
