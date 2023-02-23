@@ -125,12 +125,13 @@
 #define _PRCELLSTATE_G /**/
 #endif
 #define _ion_cai		_nt_data[_ppvar[0*_STRIDE]]
-#define _ion_ica	_nt_data[_ppvar[1*_STRIDE]]
-#define _ion_dicadv	_nt_data[_ppvar[2*_STRIDE]]
-#define _ion_ics	_nt_data[_ppvar[3*_STRIDE]]
-#define _ion_dicsdv	_nt_data[_ppvar[4*_STRIDE]]
-#define _ion_ins	_nt_data[_ppvar[5*_STRIDE]]
-#define _ion_dinsdv	_nt_data[_ppvar[6*_STRIDE]]
+#define _ion_cao		_nt_data[_ppvar[1*_STRIDE]]
+#define _ion_ica	_nt_data[_ppvar[2*_STRIDE]]
+#define _ion_dicadv	_nt_data[_ppvar[3*_STRIDE]]
+#define _ion_ics	_nt_data[_ppvar[4*_STRIDE]]
+#define _ion_dicsdv	_nt_data[_ppvar[5*_STRIDE]]
+#define _ion_ins	_nt_data[_ppvar[6*_STRIDE]]
+#define _ion_dinsdv	_nt_data[_ppvar[7*_STRIDE]]
  
 #if MAC
 #if !defined(v)
@@ -246,14 +247,15 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  prop_ion = need_memb(_ca_sym);
  nrn_promote(prop_ion, 1, 0);
  	_ppvar[0]._pval = &prop_ion->param[1]; /* cai */
- 	_ppvar[1]._pval = &prop_ion->param[3]; /* ica */
- 	_ppvar[2]._pval = &prop_ion->param[4]; /* _ion_dicadv */
+ 	_ppvar[1]._pval = &prop_ion->param[2]; /* cao */
+ 	_ppvar[2]._pval = &prop_ion->param[3]; /* ica */
+ 	_ppvar[3]._pval = &prop_ion->param[4]; /* _ion_dicadv */
  prop_ion = need_memb(_cs_sym);
- 	_ppvar[3]._pval = &prop_ion->param[3]; /* ics */
- 	_ppvar[4]._pval = &prop_ion->param[4]; /* _ion_dicsdv */
+ 	_ppvar[4]._pval = &prop_ion->param[3]; /* ics */
+ 	_ppvar[5]._pval = &prop_ion->param[4]; /* _ion_dicsdv */
  prop_ion = need_memb(_ns_sym);
- 	_ppvar[5]._pval = &prop_ion->param[3]; /* ins */
- 	_ppvar[6]._pval = &prop_ion->param[4]; /* _ion_dinsdv */
+ 	_ppvar[6]._pval = &prop_ion->param[3]; /* ins */
+ 	_ppvar[7]._pval = &prop_ion->param[4]; /* _ion_dinsdv */
  
 #endif /* BBCORE */
  
@@ -264,7 +266,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  static void _update_ion_pointer(Datum*);
  
 #define _psize 12
-#define _ppsize 7
+#define _ppsize 8
  void _is_reg() {
 	int _vectorized = 1;
   _mechtype = nrn_get_mechtype(_mechanism[1]);
@@ -290,10 +292,11 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   hoc_register_dparam_semantics(_mechtype, 0, "ca_ion");
   hoc_register_dparam_semantics(_mechtype, 1, "ca_ion");
   hoc_register_dparam_semantics(_mechtype, 2, "ca_ion");
-  hoc_register_dparam_semantics(_mechtype, 3, "cs_ion");
+  hoc_register_dparam_semantics(_mechtype, 3, "ca_ion");
   hoc_register_dparam_semantics(_mechtype, 4, "cs_ion");
-  hoc_register_dparam_semantics(_mechtype, 5, "ns_ion");
+  hoc_register_dparam_semantics(_mechtype, 5, "cs_ion");
   hoc_register_dparam_semantics(_mechtype, 6, "ns_ion");
+  hoc_register_dparam_semantics(_mechtype, 7, "ns_ion");
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
  struct _global_variables_t : public MemoryManaged {

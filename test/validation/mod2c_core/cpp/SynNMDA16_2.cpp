@@ -174,6 +174,7 @@ void _net_buf_receive(NrnThread*);
 #endif
 #define _nd_area  _nt_data[_ppvar[0*_STRIDE]]
 #define _ion_nao		_nt_data[_ppvar[2*_STRIDE]]
+#define _ion_nai		_nt_data[_ppvar[3*_STRIDE]]
  
 #if MAC
 #if !defined(v)
@@ -440,17 +441,18 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  prop_ion = need_memb(_na_sym);
  nrn_promote(prop_ion, 1, 0);
  	_ppvar[2]._pval = &prop_ion->param[2]; /* nao */
+ 	_ppvar[3]._pval = &prop_ion->param[1]; /* nai */
  
 #endif /* BBCORE */
  
 }
  static void _initlists(Memb_list *_ml);
  
-#define _tqitem &(_nt->_vdata[_ppvar[3*_STRIDE]])
+#define _tqitem &(_nt->_vdata[_ppvar[4*_STRIDE]])
  
 #if NET_RECEIVE_BUFFERING
 #undef _tqitem
-#define _tqitem _ppvar[3*_STRIDE]
+#define _tqitem _ppvar[4*_STRIDE]
 #endif
 
  void _net_receive(Point_process*, int, double);
@@ -459,7 +461,7 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  static void _update_ion_pointer(Datum*);
  
 #define _psize 50
-#define _ppsize 4
+#define _ppsize 5
  void _SynNMDA16_2_reg() {
 	int _vectorized = 1;
   _mechtype = nrn_get_mechtype(_mechanism[1]);
@@ -485,7 +487,8 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
   hoc_register_dparam_semantics(_mechtype, 0, "area");
   hoc_register_dparam_semantics(_mechtype, 1, "pntproc");
   hoc_register_dparam_semantics(_mechtype, 2, "na_ion");
-  hoc_register_dparam_semantics(_mechtype, 3, "netsend");
+  hoc_register_dparam_semantics(_mechtype, 3, "na_ion");
+  hoc_register_dparam_semantics(_mechtype, 4, "netsend");
  
 #if NET_RECEIVE_BUFFERING
   hoc_register_net_receive_buffering(_net_buf_receive, _mechtype);
