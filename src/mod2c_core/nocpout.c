@@ -400,7 +400,7 @@ fprintf(stderr, "Notice: ARTIFICIAL_CELL models that would require thread specif
            extra_pragma_loop_arg = insertstr(defs_list, "\n#define _PRAGMA_FOR_VECTOR_LOOP_\n");
        } else {
            extra_pragma_loop_arg = insertstr(defs_list, "\n"
-               "\n#if defined(__ICC) || defined(__INTEL_COMPILER)"
+               "\n#if defined(__ICC) || defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER)"
                "\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"ivdep\")"
                "\n#elif defined(__IBMC__) || defined(__IBMCPP__)"
                "\n#define _PRAGMA_FOR_VECTOR_LOOP_ _Pragma(\"ibm independent_loop\")"
