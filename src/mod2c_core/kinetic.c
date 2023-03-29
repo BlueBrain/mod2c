@@ -960,7 +960,10 @@ Insertstr(rlst->position, "}");
 	*(_getelm(_row + 1, _col + 1))\n", fun->u.i);
 	qv = linsertstr(procfunc, buf);
 #if VECTORIZE
-	Sprintf(buf, "\nconstexpr coreneuron::scopmath::enabled_code code_to_enable{coreneuron::scopmath::enabled_code::all};\n#define _MATELM%d(_row,_col) coreneuron::scopmath::sparse::thread_getelm<code_to_enable>(static_cast<SparseObj*>(_so), _row + 1, _col + 1, _iml)[_iml]\n", fun->u.i);
+	Sprintf(buf, "#ifndef _MATELM%d\n"
+				 "constexpr coreneuron::scopmath::enabled_code code_to_enable{coreneuron::scopmath::enabled_code::all};\n"
+			     "#define _MATELM%d(_row,_col) coreneuron::scopmath::sparse::thread_getelm<code_to_enable>(static_cast<SparseObj*>(_so), _row + 1, _col + 1, _iml)[_iml]\n"
+				 "#endif\n", fun->u.i, fun->u.i);
 	vectorize_substitute(qv, buf);
 #endif
 	{static int first = 1; if (first) {
