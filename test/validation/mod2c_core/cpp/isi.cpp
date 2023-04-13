@@ -357,9 +357,9 @@ static void nrn_alloc(double* _p, Datum* _ppvar, int _type) {
  	hoc_register_var(hoc_scdoub, hoc_vdoub, NULL);
  }
  
-static double F = /* 0x1.78e555060882cp+16; */ 96485.3321233100141;
+static double F = 0x1.78e555060882cp+16;
  
-static double R = /* 0x1.0a1013e8990bep+3; */ 8.3144626181532395;
+static double R = 0x1.0a1013e8990bep+3;
  /*Top LOCAL _zRT */
  static double *_t_minf = nullptr;
  static double *_t_mtau = nullptr;
