@@ -1,3 +1,5 @@
+MOD2C was part of https://github.com/neuronsimulator/nrn but is now deprecated for https://github.com/BlueBrain/nmodl
+
 # MOD2C
 > NMODL to C converter for CoreNEURON
 
